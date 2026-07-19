@@ -380,6 +380,63 @@ async function main() {
     }
   }
 
+  console.log("Seeding monthly reading challenge...");
+  const now = new Date();
+  const yohBookId = bookIdByCode.get("yoh");
+  if (yohBookId) {
+    const challenge = await prisma.readingChallenge.upsert({
+      where: { month_year: { month: now.getMonth() + 1, year: now.getFullYear() } },
+      update: {},
+      create: {
+        title: "Baca Injil Yohanes Bersama-sama",
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        bookCode: "yoh",
+        chapterFrom: 1,
+        chapterTo: 10,
+        description:
+          "Yuk baca 10 pasal pertama Injil Yohanes bulan ini. Setiap hari kamu login dan menandai satu pasal selesai dibaca, kamu akan mendapatkan poin dan menaikkan levelmu.",
+        active: true,
+      },
+    });
+
+    const demoProgress = await prisma.challengeProgress.findUnique({
+      where: { userId_challengeId: { userId: demoUser.id, challengeId: challenge.id } },
+    });
+    if (!demoProgress) {
+      await prisma.challengeProgress.create({
+        data: {
+          userId: demoUser.id,
+          challengeId: challenge.id,
+          chaptersRead: "1,2,3",
+          currentStreak: 3,
+          longestStreak: 3,
+          lastReadAt: now,
+          pointsEarned: 42,
+        },
+      });
+      await prisma.user.update({ where: { id: demoUser.id }, data: { points: { increment: 42 } } });
+    }
+  }
+
+  console.log("Seeding a sample journal entry for demo user...");
+  const existingJournal = await prisma.journalEntry.findFirst({ where: { userId: demoUser.id } });
+  if (!existingJournal) {
+    const comfortVerse = await prisma.bibleVerse.findFirst({
+      where: { book: { code: "flp" }, chapter: 4, verse: 6 },
+    });
+    await prisma.journalEntry.create({
+      data: {
+        userId: demoUser.id,
+        title: "Hari yang berat",
+        body: "Tuhan, hari ini terasa berat. Aku cemas dengan pekerjaan dan masa depan yang belum jelas. Tolong berikan aku kekuatan dan ketenangan.",
+        mood: "cemas",
+        suggestedVerseId: comfortVerse?.id,
+        suggestedVerseNote: "Bawa kekuatiranmu kepada Tuhan dalam doa — Ia mengundangmu untuk tidak memikulnya sendiri.",
+      },
+    });
+  }
+
   console.log("Seeding settings...");
   await prisma.setting.upsert({
     where: { key: "app_name" },

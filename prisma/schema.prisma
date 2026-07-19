@@ -51,6 +51,10 @@ model User {
   reportsFiled       Report[]          @relation("ReportFiler")
   auditLogs          AuditLog[]
   moderationActions  ModerationAction[] @relation("ModeratorActions")
+  journalEntries     JournalEntry[]
+  pushSubscriptions  PushSubscription[]
+  challengeProgress  ChallengeProgress[]
+  points             Int      @default(0)
 
   @@index([role])
 }
@@ -173,6 +177,8 @@ model BibleVerse {
   verse      Int
   text       String
   translation String  @default("TB")
+
+  journalEntries JournalEntry[]
 
   @@unique([bookId, chapter, verse, translation])
   @@index([bookId, chapter])
@@ -350,4 +356,73 @@ model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+// ---------- Journal ("Curhat kepada Tuhan") ----------
+
+/// mood: "damai" | "sukacita" | "bersyukur" | "sedih" | "cemas" | "marah" | "lelah" | "bingung"
+model JournalEntry {
+  id                 String      @id @default(cuid())
+  userId             String
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String?
+  body               String
+  mood               String?
+  suggestedVerseId   String?
+  suggestedVerse     BibleVerse? @relation(fields: [suggestedVerseId], references: [id])
+  suggestedVerseNote String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// ---------- Web Push ----------
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------- Monthly Reading Challenge / Leveling ----------
+
+model ReadingChallenge {
+  id          String   @id @default(cuid())
+  title       String
+  month       Int
+  year        Int
+  bookCode    String
+  chapterFrom Int
+  chapterTo   Int
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  progress ChallengeProgress[]
+
+  @@unique([month, year])
+}
+
+model ChallengeProgress {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId   String
+  challenge     ReadingChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  chaptersRead  String    @default("") // comma-separated chapter numbers completed
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastReadAt    DateTime?
+  pointsEarned  Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, challengeId])
 }

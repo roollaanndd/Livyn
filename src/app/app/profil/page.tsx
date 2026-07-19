@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight } from "lucide-react";
+import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight, BookHeart, Trophy } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { hasRole } from "@/lib/auth/rbac";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/profile/theme-toggle";
 import { LogoutButton } from "@/components/profile/logout-button";
+import { PushToggle } from "@/components/push/push-toggle";
 
 export default async function ProfilePage() {
   const session = await getCurrentUser();
@@ -66,8 +67,21 @@ export default async function ProfilePage() {
       </div>
 
       <div className="mt-6">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notifikasi</p>
+        <Card className="flex items-center justify-between p-4">
+          <div>
+            <span className="text-sm font-medium">Notifikasi Push</span>
+            <p className="text-xs text-muted-foreground">Pengingat doa, ayat harian, dan tantangan bulanan</p>
+          </div>
+          <PushToggle />
+        </Card>
+      </div>
+
+      <div className="mt-6">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Menu</p>
         <Card className="divide-y divide-border">
+          <ProfileLink href="/app/jurnal" icon={BookHeart} label="Jurnal Curhatku" />
+          <ProfileLink href="/app/tantangan" icon={Trophy} label="Tantangan Bulanan" />
           <ProfileLink href="/app/devosi/tersimpan" icon={BookmarkCheck} label="Renungan Tersimpan" />
           <ProfileLink href="/app/profil/keamanan" icon={ShieldCheck} label="Keamanan & Sesi Login" />
           <ProfileLink href="/app/profil/perangkat" icon={Smartphone} label="Perangkat Terhubung" />

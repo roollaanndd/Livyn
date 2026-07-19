@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart } from "lucide-react";
+import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -11,6 +11,8 @@ import {
   getUpcomingReminders,
   getPrayerStreak,
 } from "@/lib/queries/home";
+import { getCurrentChallenge, getChallengeProgress } from "@/lib/queries/challenge";
+import { getLevelForPoints, getNextTier } from "@/lib/gamification/levels";
 import { upcomingChristianEvents } from "@/lib/christian-calendar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,8 +32,8 @@ export default async function HomePage() {
   const session = await getCurrentUser();
   if (!session) redirect("/masuk");
 
-  const [user, verse, devotion, sermon, continueWatching, reminders, streak, events] = await Promise.all([
-    prisma.user.findUnique({ where: { id: session.sub }, select: { name: true, avatarUrl: true } }),
+  const [user, verse, devotion, sermon, continueWatching, reminders, streak, events, challenge] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.sub }, select: { name: true, avatarUrl: true, points: true } }),
     getTodayVerse(),
     getTodayDevotion(),
     getLatestSermon(),
@@ -39,9 +41,16 @@ export default async function HomePage() {
     getUpcomingReminders(session.sub),
     getPrayerStreak(session.sub),
     Promise.resolve(upcomingChristianEvents(3)),
+    getCurrentChallenge(),
   ]);
 
   const firstName = (user?.name ?? session.name).split(" ")[0];
+  const points = user?.points ?? 0;
+  const level = getLevelForPoints(points);
+  const nextTier = getNextTier(points);
+  const challengeProgress = challenge ? await getChallengeProgress(session.sub, challenge.id) : null;
+  const chaptersReadCount = challengeProgress ? challengeProgress.chaptersRead.split(",").filter(Boolean).length : 0;
+  const totalChapters = challenge ? challenge.chapterTo - challenge.chapterFrom + 1 : 0;
 
   return (
     <div>
@@ -99,6 +108,42 @@ export default async function HomePage() {
             </Card>
           </Link>
         )}
+
+        {/* Level & challenge widget */}
+        <Link href="/app/tantangan">
+          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-[#6C5CE7] to-[#4b3fc4] p-5 text-white active:scale-[0.99] transition-transform">
+            <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Level {level.name}</p>
+                <p className="font-display text-lg font-bold">{points} Poin</p>
+                {challenge ? (
+                  <p className="mt-1 text-sm text-white/75">
+                    {chaptersReadCount}/{totalChapters} pasal · {challenge.title}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-white/75">Nantikan tantangan bulan berikutnya</p>
+                )}
+                {nextTier && <p className="mt-1 text-xs text-white/60">{nextTier.minPoints - points} poin menuju {nextTier.name}</p>}
+              </div>
+              <Trophy className="h-9 w-9 text-amber-300" />
+            </div>
+          </Card>
+        </Link>
+
+        {/* Journal / curhat widget */}
+        <Link href="/app/jurnal/baru">
+          <Card className="flex items-center gap-3 p-4 active:scale-[0.99] transition-transform">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <PenLine className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="font-display font-bold">Curhat kepada Tuhan</p>
+              <p className="text-sm text-muted-foreground">Tulis catatan harianmu, dapatkan ayat penguat</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Card>
+        </Link>
 
         {/* Prayer reminder widget */}
         <Card>
