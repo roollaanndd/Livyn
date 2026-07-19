@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/supabase-rest";
 
 export async function logAudit(params: {
   userId?: string | null;
@@ -8,14 +8,12 @@ export async function logAudit(params: {
   metadata?: Record<string, unknown>;
   ipAddress?: string;
 }) {
-  await prisma.auditLog.create({
-    data: {
-      userId: params.userId ?? null,
-      action: params.action,
-      targetType: params.targetType,
-      targetId: params.targetId,
-      metadata: params.metadata ? JSON.stringify(params.metadata) : null,
-      ipAddress: params.ipAddress,
-    },
+  await db.audit.create({
+    userId: params.userId ?? null,
+    action: params.action,
+    targetType: params.targetType,
+    targetId: params.targetId,
+    metadata: params.metadata ? JSON.stringify(params.metadata) : null,
+    ipAddress: params.ipAddress,
   });
 }

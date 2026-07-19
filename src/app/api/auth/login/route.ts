@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/supabase-rest";
 import { loginSchema } from "@/lib/validation/auth";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken } from "@/lib/auth/jwt";
 import { issueRefreshToken } from "@/lib/auth/tokens";
 import { setSessionCookies } from "@/lib/auth/session";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
-import { logAudit } from "@/lib/audit";
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
@@ -30,20 +29,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await db.user.findByEmail(email);
     const genericError = () => NextResponse.json({ error: "Email atau kata sandi salah" }, { status: 401 });
 
     if (!user || !user.passwordHash) {
-      await prisma.loginEvent.create({
-        data: { userId: user?.id ?? "unknown", ipAddress: ip, userAgent, success: false, reason: "no_such_user" },
+      db.loginEvent.create({
+        userId: user?.id ?? "unknown", ipAddress: ip, userAgent, success: false, reason: "no_such_user",
       }).catch(() => {});
       return genericError();
     }
 
     const valid = await verifyPassword(user.passwordHash, password);
     if (!valid) {
-      await prisma.loginEvent.create({
-        data: { userId: user.id, ipAddress: ip, userAgent, success: false, reason: "bad_password" },
+      db.loginEvent.create({
+        userId: user.id, ipAddress: ip, userAgent, success: false, reason: "bad_password",
       }).catch(() => {});
       return genericError();
     }
@@ -56,8 +55,7 @@ export async function POST(req: NextRequest) {
     const { token: refreshToken } = await issueRefreshToken(user.id);
     await setSessionCookies(accessToken, refreshToken);
 
-    await prisma.loginEvent.create({ data: { userId: user.id, ipAddress: ip, userAgent, success: true } }).catch(() => {});
-    await logAudit({ userId: user.id, action: "auth.login", ipAddress: ip }).catch(() => {});
+    db.loginEvent.create({ userId: user.id, ipAddress: ip, userAgent, success: true }).catch(() => {});
 
     return NextResponse.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },

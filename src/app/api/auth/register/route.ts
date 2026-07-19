@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/supabase-rest";
 import { registerSchema } from "@/lib/validation/auth";
 import { hashPassword } from "@/lib/auth/password";
 import { signAccessToken } from "@/lib/auth/jwt";
 import { issueRefreshToken } from "@/lib/auth/tokens";
 import { setSessionCookies } from "@/lib/auth/session";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
-import { logAudit } from "@/lib/audit";
+import { randomBytes } from "crypto";
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
@@ -24,24 +24,24 @@ export async function POST(req: NextRequest) {
   const { name, email, password } = parsed.data;
 
   try {
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await db.user.findByEmail(email);
     if (existing) {
       return NextResponse.json({ error: "Email sudah terdaftar" }, { status: 409 });
     }
 
     const passwordHash = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: { name, email, passwordHash, role: "user" },
+    const user = await db.user.create({
+      id: randomBytes(12).toString("hex"),
+      name,
+      email,
+      passwordHash,
     });
 
     const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
     const { token: refreshToken } = await issueRefreshToken(user.id);
     await setSessionCookies(accessToken, refreshToken);
 
-    await logAudit({ userId: user.id, action: "auth.register", ipAddress: ip }).catch(() => {});
-    await prisma.loginEvent.create({
-      data: { userId: user.id, ipAddress: ip, userAgent: req.headers.get("user-agent") ?? undefined, success: true },
-    }).catch(() => {});
+    db.loginEvent.create({ userId: user.id, ipAddress: ip, userAgent: req.headers.get("user-agent") ?? undefined, success: true }).catch(() => {});
 
     return NextResponse.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },

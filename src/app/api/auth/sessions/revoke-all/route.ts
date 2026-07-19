@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/supabase-rest";
 import { getCurrentUser, REFRESH_COOKIE } from "@/lib/auth/session";
 import { hashToken } from "@/lib/auth/tokens";
 import { logAudit } from "@/lib/audit";
@@ -14,10 +14,7 @@ export async function POST(req: NextRequest) {
   const currentToken = store.get(REFRESH_COOKIE)?.value;
   const currentHash = currentToken ? hashToken(currentToken) : null;
 
-  await prisma.refreshToken.updateMany({
-    where: { userId: session.sub, revokedAt: null, ...(currentHash ? { tokenHash: { not: currentHash } } : {}) },
-    data: { revokedAt: new Date() },
-  });
+  await db.session.revokeOtherSessions(session.sub, currentHash);
 
   await logAudit({ userId: session.sub, action: "auth.revoke_other_sessions", ipAddress: clientIp(req.headers) });
 
