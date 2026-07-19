@@ -6,8 +6,8 @@ Aplikasi pendamping rohani harian: renungan, Alkitab, pengingat doa, dan khotbah
 
 ```bash
 npm install
-cp .env.example .env          # sudah berisi default yang aman untuk dev lokal
-npx prisma migrate dev        # membuat prisma/dev.db (SQLite)
+cp .env.example .env          # isi DATABASE_URL dengan connection string Postgres (mis. Supabase)
+npx prisma migrate deploy     # menerapkan skema ke database
 npm run db:seed               # mengisi data contoh (kategori, Alkitab, renungan, khotbah, pengguna)
 npm run dev
 ```
@@ -27,7 +27,7 @@ Buka http://localhost:3000.
 ## Arsitektur
 
 - **Next.js 16 App Router + TypeScript + Tailwind v4** — satu aplikasi full-stack (UI, API routes, dan proxy/middleware) dalam satu deploy unit.
-- **Prisma + SQLite** untuk pengembangan lokal; skema ditulis Postgres-ready (tanpa fitur khusus SQLite) — ganti `datasource.url` ke `postgresql://...` (mis. Supabase) untuk produksi.
+- **Prisma + PostgreSQL (Supabase)** — satu database yang sama dipakai untuk dev dan produksi lewat `DATABASE_URL`. Row-Level Security aktif di semua tabel (deny-all secara default) untuk mengunci REST API bawaan Supabase; aplikasi ini sendiri hanya terhubung lewat koneksi Postgres langsung via Prisma, bukan lewat API tersebut.
 - **Autentikasi kustom**: hashing kata sandi Argon2id (`@node-rs/argon2`), JWT access token (15 menit, `jose`) di cookie httpOnly, refresh token rotation dengan deteksi reuse (family revocation) tersimpan sebagai hash di database.
 - **RBAC**: `user < contributor < moderator < admin < super_admin`, ditegakkan di `src/proxy.ts` (proteksi route) *dan* di setiap route handler API (defense in depth).
 - **Keamanan**: rate limiting in-memory pada endpoint auth, security headers + CSP di `src/proxy.ts`, validasi input Zod di semua route mutasi, audit log (`AuditLog`) untuk aksi sensitif, riwayat login (`LoginEvent`), refresh-token-reuse detection.
@@ -60,6 +60,8 @@ Master prompt aslinya meminta stack yang jauh lebih besar (aplikasi native Flutt
 
 ## Deploy ke produksi
 
-1. Provisioning Postgres (mis. Supabase/Cloud SQL), set `DATABASE_URL`, ganti `datasource.provider` di `prisma/schema.prisma` ke `postgresql`.
-2. Set `JWT_ACCESS_SECRET` dan `JWT_REFRESH_SECRET` yang kuat (`openssl rand -base64 48`).
-3. Deploy ke platform Node.js (Vercel/Cloud Run/dll). `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.
+Database Postgres (Supabase, proyek `livyn`, region `ap-southeast-1`) sudah disiapkan dan diisi data awal yang sama seperti di atas.
+
+1. Set `DATABASE_URL` di Vercel ke connection string Supabase (Project Settings → Database → Connection string; gunakan mode "Transaction" / connection pooling untuk fungsi serverless).
+2. Set `JWT_ACCESS_SECRET` dan `JWT_REFRESH_SECRET` yang kuat (`openssl rand -base64 48`) sebagai environment variable di Vercel — jangan pakai nilai dev.
+3. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.

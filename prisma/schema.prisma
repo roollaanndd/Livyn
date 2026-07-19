@@ -1,15 +1,14 @@
 // Livyn — Christian Daily Companion App
-// Data model. Provider is SQLite for local/dev; swap `provider`/`url` to
-// "postgresql" + DATABASE_URL for production (Supabase/Cloud SQL/etc).
+// Data model. Postgres (Supabase) in dev and production, one DATABASE_URL.
 // Role/status fields are plain Strings (not Prisma enums) so this schema
-// works unmodified on SQLite, which has no native enum support.
+// stays portable if a provider ever needs SQLite again (no native enums there).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
