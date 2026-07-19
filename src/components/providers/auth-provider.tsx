@@ -30,7 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("/api/auth/me", { cache: "no-store" });
       const data = await res.json();
-      setUser(data.user ?? null);
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+        if (refreshRes.ok) {
+          const retryRes = await fetch("/api/auth/me", { cache: "no-store" });
+          const retryData = await retryRes.json();
+          setUser(retryData.user ?? null);
+        } else {
+          setUser(null);
+        }
+      }
     } catch {
       setUser(null);
     } finally {
