@@ -1,0 +1,354 @@
+// Livyn — Christian Daily Companion App
+// Data model. Provider is SQLite for local/dev; swap `provider`/`url` to
+// "postgresql" + DATABASE_URL for production (Supabase/Cloud SQL/etc).
+// Role/status fields are plain Strings (not Prisma enums) so this schema
+// works unmodified on SQLite, which has no native enum support.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Identity & Access ----------
+
+/// role: "user" | "contributor" | "moderator" | "admin" | "super_admin"
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  emailVerified     Boolean  @default(false)
+  passwordHash      String?
+  name              String
+  avatarUrl         String?
+  role              String   @default("user")
+  status            String   @default("active") // active | suspended | banned
+  authProvider      String   @default("email") // email | google | apple
+  googleId          String?  @unique
+  appleId           String?  @unique
+  twoFactorEnabled  Boolean  @default(false)
+  twoFactorSecret   String?
+  fontSize          String   @default("md")
+  themePreference   String   @default("system") // light | dark | system
+  language          String   @default("id")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  contributorProfile ContributorProfile?
+  sessions           Session[]
+  refreshTokens      RefreshToken[]
+  loginHistory       LoginEvent[]
+  devices            Device[]
+  devotions          Devotion[]        @relation("DevotionAuthor")
+  sermons            Sermon[]          @relation("SermonAuthor")
+  bookmarks          Bookmark[]
+  highlights         Highlight[]
+  notes              Note[]
+  prayerReminders    PrayerReminder[]
+  prayerLogs         PrayerLog[]
+  notifications      Notification[]
+  reportsFiled       Report[]          @relation("ReportFiler")
+  auditLogs          AuditLog[]
+  moderationActions  ModerationAction[] @relation("ModeratorActions")
+
+  @@index([role])
+}
+
+model ContributorProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName  String
+  bio          String?
+  church       String?
+  verified     Boolean  @default(false)
+  suspended    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId     String?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+}
+
+model RefreshToken {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String   @unique
+  family       String
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedBy   String?
+}
+
+model LoginEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress  String?
+  userAgent  String?
+  location   String?
+  success    Boolean
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
+model Device {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fingerprint  String
+  name         String?
+  lastSeenAt   DateTime @default(now())
+  trusted      Boolean  @default(false)
+
+  @@unique([userId, fingerprint])
+}
+
+// ---------- Content ----------
+
+model Category {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  icon      String?
+  devotions Devotion[]
+  sermons   Sermon[]
+}
+
+/// status: "draft" | "pending" | "published" | "rejected"
+model Devotion {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  excerpt       String
+  body          String
+  bibleRefs     String   // comma-separated refs, e.g. "Yohanes 3:16, Mazmur 23:1"
+  readingTimeMin Int     @default(3)
+  coverImageUrl String?
+  status        String   @default("draft")
+  rejectReason  String?
+  authorId      String
+  author        User     @relation("DevotionAuthor", fields: [authorId], references: [id])
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  publishDate   DateTime?
+  viewCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookmarks     Bookmark[]
+
+  @@index([status])
+  @@index([publishDate])
+}
+
+model BibleBook {
+  id           String   @id @default(cuid())
+  code         String   @unique // e.g. "yoh"
+  name         String   // e.g. "Yohanes"
+  testament    String   // "old" | "new"
+  orderIndex   Int
+  chapterCount Int
+  verses       BibleVerse[]
+
+  @@index([testament, orderIndex])
+}
+
+model BibleVerse {
+  id         String   @id @default(cuid())
+  bookId     String
+  book       BibleBook @relation(fields: [bookId], references: [id])
+  chapter    Int
+  verse      Int
+  text       String
+  translation String  @default("TB")
+
+  @@unique([bookId, chapter, verse, translation])
+  @@index([bookId, chapter])
+}
+
+/// status: "draft" | "pending" | "published" | "rejected"
+model Sermon {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  description   String
+  videoUrl      String
+  thumbnailUrl  String?
+  durationSec   Int      @default(0)
+  pastor        String
+  church        String?
+  hasSubtitles  Boolean  @default(false)
+  transcript    String?
+  status        String   @default("draft")
+  rejectReason  String?
+  authorId      String
+  author        User     @relation("SermonAuthor", fields: [authorId], references: [id])
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  publishDate   DateTime?
+  viewCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  watchProgress WatchProgress[]
+
+  @@index([status])
+}
+
+model WatchProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  sermonId   String
+  sermon     Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  positionSec Int     @default(0)
+  completed  Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, sermonId])
+}
+
+// ---------- Engagement ----------
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  devotionId String
+  devotion   Devotion @relation(fields: [devotionId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, devotionId])
+}
+
+model Highlight {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookCode   String
+  chapter    Int
+  verse      Int
+  color      String   @default("gold")
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, bookCode, chapter, verse])
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookCode   String
+  chapter    Int
+  verse      Int
+  text       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+/// slot: "morning" | "lunch" | "evening" | "midnight" | "custom"
+model PrayerReminder {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  slot        String
+  time        String   // "HH:mm"
+  daysOfWeek  String   // comma-separated 0-6
+  ringtone    String   @default("default")
+  repeat      Boolean  @default(true)
+  verseAfter  Boolean  @default(true)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  logs        PrayerLog[]
+}
+
+model PrayerLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminderId  String?
+  reminder    PrayerReminder? @relation(fields: [reminderId], references: [id], onDelete: SetNull)
+  prayedAt    DateTime @default(now())
+  note        String?
+}
+
+// ---------- Platform ----------
+
+/// type: "daily_verse" | "reminder" | "new_sermon" | "contributor_update" | "holiday" | "system"
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+/// status: "open" | "reviewed" | "dismissed"
+model Report {
+  id           String   @id @default(cuid())
+  filedById    String
+  filedBy      User     @relation("ReportFiler", fields: [filedById], references: [id])
+  targetType   String   // "devotion" | "sermon" | "user"
+  targetId     String
+  reason       String
+  status       String   @default("open")
+  createdAt    DateTime @default(now())
+}
+
+model ModerationAction {
+  id           String   @id @default(cuid())
+  moderatorId  String
+  moderator    User     @relation("ModeratorActions", fields: [moderatorId], references: [id])
+  targetType   String
+  targetId     String
+  action       String // "approve" | "reject" | "suspend" | "edit"
+  reason       String?
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

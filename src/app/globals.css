@@ -1,0 +1,84 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f7f8fa;
+  --foreground: #0b0d1a;
+  --surface: #ffffff;
+  --surface-muted: #f5e9d6;
+  --primary: #6c5ce7;
+  --primary-foreground: #ffffff;
+  --secondary: #a78bfa;
+  --accent: #6ee7c1;
+  --muted-foreground: #6b6f80;
+  --border: #e6e2da;
+  --radius: 1.25rem;
+}
+
+.dark {
+  --background: #0b0d1a;
+  --foreground: #f7f8fa;
+  --surface: #12142430;
+  --surface: #141726;
+  --surface-muted: #1c1f33;
+  --primary: #8b7cf6;
+  --primary-foreground: #0b0d1a;
+  --secondary: #a78bfa;
+  --accent: #6ee7c1;
+  --muted-foreground: #9296ad;
+  --border: #23263a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 0.4rem);
+  --radius-sm: calc(var(--radius) - 0.7rem);
+  --font-display: var(--font-manrope);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Reading-mode font scale, driven by data-font-size on <html> */
+html[data-font-size="sm"] .devotion-body { font-size: 0.95rem; line-height: 1.75rem; }
+html[data-font-size="md"] .devotion-body { font-size: 1.075rem; line-height: 1.9rem; }
+html[data-font-size="lg"] .devotion-body { font-size: 1.25rem; line-height: 2.1rem; }
+html[data-font-size="xl"] .devotion-body { font-size: 1.45rem; line-height: 2.35rem; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.5s ease-out both; }
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; }
