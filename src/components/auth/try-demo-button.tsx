@@ -16,9 +16,9 @@ export function TryDemoButton({ variant = "secondary", className }: { variant?: 
     setLoading(true);
     try {
       const res = await fetch("/api/auth/demo", { method: "POST" });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(data.error ?? "Gagal masuk ke akun demo");
+        toast.error(data?.error ?? "Gagal masuk ke akun demo. Coba lagi nanti.");
         return;
       }
       localStorage.setItem("livyn_onboarded", "1");
@@ -26,7 +26,7 @@ export function TryDemoButton({ variant = "secondary", className }: { variant?: 
       toast.success("Selamat datang di demo Livyn!");
       router.replace("/app");
     } catch {
-      toast.error("Terjadi kesalahan jaringan");
+      toast.error("Terjadi kesalahan jaringan. Periksa koneksi internet Anda.");
     } finally {
       setLoading(false);
     }

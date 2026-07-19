@@ -22,7 +22,8 @@ export function SplashScreen() {
     if (user) {
       router.replace("/app");
     } else {
-      router.replace("/onboarding");
+      const onboarded = localStorage.getItem("livyn_onboarded");
+      router.replace(onboarded ? "/masuk" : "/onboarding");
     }
   }, [ready, loading, user, router]);
 

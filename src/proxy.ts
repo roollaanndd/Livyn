@@ -44,8 +44,35 @@ export default async function proxy(req: NextRequest) {
   if (!match) return res;
 
   const token = req.cookies.get("livyn_at")?.value;
+  const refreshToken = req.cookies.get("livyn_rt")?.value;
+
   if (!token) {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL("/masuk", req.url));
+    }
+
+    const refreshUrl = new URL("/api/auth/refresh", req.url);
+    const refreshRes = await fetch(refreshUrl, {
+      method: "POST",
+      headers: { Cookie: `livyn_rt=${refreshToken}` },
+    });
+
+    if (!refreshRes.ok) {
+      const redirect = NextResponse.redirect(new URL("/masuk", req.url));
+      redirect.cookies.delete("livyn_at");
+      redirect.cookies.delete("livyn_rt");
+      return redirect;
+    }
+
+    const refreshedRes = NextResponse.next();
+    refreshedRes.headers.set("X-Frame-Options", "DENY");
+    refreshedRes.headers.set("X-Content-Type-Options", "nosniff");
+    refreshedRes.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    const setCookies = refreshRes.headers.getSetCookie();
+    for (const cookie of setCookies) {
+      refreshedRes.headers.append("Set-Cookie", cookie);
+    }
+    return refreshedRes;
   }
 
   try {
@@ -55,7 +82,29 @@ export default async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/app", req.url));
     }
   } catch {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL("/masuk", req.url));
+    }
+
+    const refreshUrl = new URL("/api/auth/refresh", req.url);
+    const refreshRes = await fetch(refreshUrl, {
+      method: "POST",
+      headers: { Cookie: `livyn_rt=${refreshToken}` },
+    });
+
+    if (!refreshRes.ok) {
+      const redirect = NextResponse.redirect(new URL("/masuk", req.url));
+      redirect.cookies.delete("livyn_at");
+      redirect.cookies.delete("livyn_rt");
+      return redirect;
+    }
+
+    const refreshedRes = NextResponse.next();
+    const setCookies = refreshRes.headers.getSetCookie();
+    for (const cookie of setCookies) {
+      refreshedRes.headers.append("Set-Cookie", cookie);
+    }
+    return refreshedRes;
   }
 
   return res;

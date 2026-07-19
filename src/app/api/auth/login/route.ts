@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
   const userAgent = req.headers.get("user-agent") ?? undefined;
 
-  // Brute-force protection: limit both per-IP and per-attempted-email.
   const ipLimit = rateLimit(`login-ip:${ip}`, 10, 10 * 60 * 1000);
   if (!ipLimit.ok) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
@@ -30,36 +29,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  const genericError = () => NextResponse.json({ error: "Email atau kata sandi salah" }, { status: 401 });
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    const genericError = () => NextResponse.json({ error: "Email atau kata sandi salah" }, { status: 401 });
 
-  if (!user || !user.passwordHash) {
-    await prisma.loginEvent.create({
-      data: { userId: user?.id ?? "unknown", ipAddress: ip, userAgent, success: false, reason: "no_such_user" },
-    }).catch(() => {});
-    return genericError();
-  }
+    if (!user || !user.passwordHash) {
+      await prisma.loginEvent.create({
+        data: { userId: user?.id ?? "unknown", ipAddress: ip, userAgent, success: false, reason: "no_such_user" },
+      }).catch(() => {});
+      return genericError();
+    }
 
-  const valid = await verifyPassword(user.passwordHash, password);
-  if (!valid) {
-    await prisma.loginEvent.create({
-      data: { userId: user.id, ipAddress: ip, userAgent, success: false, reason: "bad_password" },
+    const valid = await verifyPassword(user.passwordHash, password);
+    if (!valid) {
+      await prisma.loginEvent.create({
+        data: { userId: user.id, ipAddress: ip, userAgent, success: false, reason: "bad_password" },
+      }).catch(() => {});
+      return genericError();
+    }
+
+    if (user.status !== "active") {
+      return NextResponse.json({ error: "Akun ini tidak aktif. Hubungi admin." }, { status: 403 });
+    }
+
+    const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    const { token: refreshToken } = await issueRefreshToken(user.id);
+    await setSessionCookies(accessToken, refreshToken);
+
+    await prisma.loginEvent.create({ data: { userId: user.id, ipAddress: ip, userAgent, success: true } }).catch(() => {});
+    await logAudit({ userId: user.id, action: "auth.login", ipAddress: ip }).catch(() => {});
+
+    return NextResponse.json({
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
-    return genericError();
+  } catch {
+    return NextResponse.json({ error: "Layanan sedang tidak tersedia. Coba lagi nanti." }, { status: 503 });
   }
-
-  if (user.status !== "active") {
-    return NextResponse.json({ error: "Akun ini tidak aktif. Hubungi admin." }, { status: 403 });
-  }
-
-  const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
-  const { token: refreshToken } = await issueRefreshToken(user.id);
-  await setSessionCookies(accessToken, refreshToken);
-
-  await prisma.loginEvent.create({ data: { userId: user.id, ipAddress: ip, userAgent, success: true } });
-  await logAudit({ userId: user.id, action: "auth.login", ipAddress: ip });
-
-  return NextResponse.json({
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
-  });
 }

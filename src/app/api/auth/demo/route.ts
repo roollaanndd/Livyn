@@ -19,21 +19,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
-  if (!user || user.status !== "active") {
-    return NextResponse.json({ error: "Akun demo tidak tersedia saat ini." }, { status: 503 });
+  try {
+    const user = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
+    if (!user || user.status !== "active") {
+      return NextResponse.json({ error: "Akun demo tidak tersedia saat ini." }, { status: 503 });
+    }
+
+    const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    const { token: refreshToken } = await issueRefreshToken(user.id);
+    await setSessionCookies(accessToken, refreshToken);
+
+    await prisma.loginEvent.create({
+      data: { userId: user.id, ipAddress: ip, userAgent: req.headers.get("user-agent") ?? undefined, success: true, reason: "demo" },
+    }).catch(() => {});
+    await logAudit({ userId: user.id, action: "auth.demo_login", ipAddress: ip }).catch(() => {});
+
+    return NextResponse.json({
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch {
+    return NextResponse.json({ error: "Layanan sedang tidak tersedia. Coba lagi nanti." }, { status: 503 });
   }
-
-  const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
-  const { token: refreshToken } = await issueRefreshToken(user.id);
-  await setSessionCookies(accessToken, refreshToken);
-
-  await prisma.loginEvent.create({
-    data: { userId: user.id, ipAddress: ip, userAgent: req.headers.get("user-agent") ?? undefined, success: true, reason: "demo" },
-  });
-  await logAudit({ userId: user.id, action: "auth.demo_login", ipAddress: ip });
-
-  return NextResponse.json({
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
-  });
 }
