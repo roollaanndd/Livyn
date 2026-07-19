@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpenText, HandHeart, Clapperboard, Sparkles, AlarmClock } from "lucide-react";
+import { BookOpenText, HandHeart, Clapperboard, Sparkles, AlarmClock, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { TryDemoButton } from "@/components/auth/try-demo-button";
+import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
 const SLIDES = [
@@ -43,26 +44,34 @@ const SLIDES = [
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [index, setIndex] = useState(0);
+  const [entering, setEntering] = useState(false);
   const isLast = index === SLIDES.length - 1;
   const slide = SLIDES[index];
 
-  function markOnboarded() {
-    localStorage.setItem("livyn_onboarded", "1");
-  }
-
-  function finish() {
-    markOnboarded();
-    router.replace("/daftar");
-  }
-
-  function goToLogin() {
-    markOnboarded();
-    router.replace("/masuk");
+  async function enterApp() {
+    if (entering) return;
+    setEntering(true);
+    try {
+      const res = await fetch("/api/auth/demo", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Gagal masuk ke Livyn");
+        setEntering(false);
+        return;
+      }
+      localStorage.setItem("livyn_onboarded", "1");
+      await refresh();
+      router.replace("/app");
+    } catch {
+      toast.error("Terjadi kesalahan jaringan");
+      setEntering(false);
+    }
   }
 
   function next() {
-    if (isLast) finish();
+    if (isLast) enterApp();
     else setIndex((i) => i + 1);
   }
 
@@ -70,8 +79,9 @@ export default function OnboardingPage() {
     <div className={cn("fixed inset-0 flex flex-col bg-gradient-to-br text-white transition-colors duration-700", slide.bg)}>
       <div className="flex justify-end p-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
         <button
-          onClick={goToLogin}
-          className="text-sm font-medium text-white/70 hover:text-white transition-colors"
+          onClick={enterApp}
+          disabled={entering}
+          className="text-sm font-medium text-white/70 hover:text-white transition-colors disabled:opacity-50"
         >
           Lewati
         </button>
@@ -110,23 +120,14 @@ export default function OnboardingPage() {
             />
           ))}
         </div>
-        <Button onClick={next} size="lg" className="w-full bg-white text-[#0B0D1A] hover:bg-white/90 shadow-lg shadow-black/20">
-          {isLast ? "Daftar Akun" : "Lanjut"}
+        <Button
+          onClick={next}
+          size="lg"
+          className="w-full bg-white text-[#0B0D1A] hover:bg-white/90 shadow-lg shadow-black/20"
+          disabled={entering}
+        >
+          {entering ? <Loader2 className="h-4 w-4 animate-spin" /> : isLast ? "Mulai Sekarang" : "Lanjut"}
         </Button>
-        {isLast && (
-          <TryDemoButton
-            variant="outline"
-            className="mt-3 w-full border-white/30 bg-transparent text-white hover:bg-white/10"
-          />
-        )}
-        {!isLast && (
-          <button
-            onClick={goToLogin}
-            className="mt-3 w-full text-center text-sm text-white/60 hover:text-white/90"
-          >
-            Sudah punya akun? Masuk
-          </button>
-        )}
       </div>
     </div>
   );

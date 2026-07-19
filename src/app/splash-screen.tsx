@@ -18,12 +18,9 @@ export function SplashScreen() {
 
   useEffect(() => {
     if (!ready || loading) return;
-    const seenOnboarding = typeof window !== "undefined" && localStorage.getItem("livyn_onboarded") === "1";
 
     if (user) {
       router.replace("/app");
-    } else if (seenOnboarding) {
-      router.replace("/masuk");
     } else {
       router.replace("/onboarding");
     }

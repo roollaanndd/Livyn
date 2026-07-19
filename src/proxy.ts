@@ -45,9 +45,7 @@ export default async function proxy(req: NextRequest) {
 
   const token = req.cookies.get("livyn_at")?.value;
   if (!token) {
-    const loginUrl = new URL("/masuk", req.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
   try {
@@ -57,9 +55,7 @@ export default async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/app", req.url));
     }
   } catch {
-    const loginUrl = new URL("/masuk", req.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
   return res;
