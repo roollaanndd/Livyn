@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/supabase-rest";
 import { REFRESH_COOKIE, setSessionCookies, clearSessionCookies } from "@/lib/auth/session";
 import { rotateRefreshToken } from "@/lib/auth/tokens";
 import { signAccessToken } from "@/lib/auth/jwt";
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Sesi tidak valid, silakan login kembali" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: result.userId } });
+    const user = await db.user.findById(result.userId);
     if (!user) {
       await clearSessionCookies();
       return NextResponse.json({ error: "Pengguna tidak ditemukan" }, { status: 401 });

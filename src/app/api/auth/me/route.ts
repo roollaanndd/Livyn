@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/supabase-rest";
 import { getCurrentUser } from "@/lib/auth/session";
 
 export async function GET() {
@@ -7,15 +7,22 @@ export async function GET() {
   if (!session) return NextResponse.json({ user: null }, { status: 200 });
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.sub },
-      select: {
-        id: true, name: true, email: true, role: true, avatarUrl: true,
-        themePreference: true, fontSize: true, emailVerified: true,
+    const user = await db.user.findById(session.sub);
+
+    if (!user) return NextResponse.json({ user: null }, { status: 200 });
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        themePreference: user.themePreference,
+        fontSize: user.fontSize,
+        emailVerified: user.emailVerified,
       },
     });
-
-    return NextResponse.json({ user });
   } catch {
     return NextResponse.json({ user: null }, { status: 200 });
   }
