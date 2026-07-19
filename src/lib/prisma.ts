@@ -7,18 +7,8 @@ function buildDatasourceUrl(): string | undefined {
   try {
     const url = new URL(raw);
 
-    // Supabase pooler: switch custom roles to "postgres" which Supavisor
-    // always recognizes. Keep the pooler host (direct port 5432 is blocked
-    // from Vercel serverless).
-    if (url.hostname.endsWith(".pooler.supabase.com")) {
-      const parts = url.username.split(".");
-      const projectRef = parts[parts.length - 1];
-      if (projectRef) {
-        url.username = `postgres.${projectRef}`;
-      }
-      url.searchParams.set("pgbouncer", "true");
-    }
-
+    // For pooled connections (port 6543), add pgbouncer=true to disable
+    // prepared statements which are incompatible with transaction mode.
     if (url.port === "6543" && !url.searchParams.has("pgbouncer")) {
       url.searchParams.set("pgbouncer", "true");
     }
