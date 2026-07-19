@@ -7,22 +7,18 @@ function buildDatasourceUrl(): string | undefined {
   try {
     const url = new URL(raw);
 
-    // Supabase pooler URLs use "role.project-ref" as the username and
-    // connect to *.pooler.supabase.com on port 6543. Supavisor can
-    // intermittently fail to resolve custom roles. Convert pooler URLs to
-    // direct connection (db.project-ref.supabase.co:5432) for reliability,
-    // and add pgbouncer=true to prevent "prepared statement already exists".
+    // Supabase pooler: switch custom roles to "postgres" which Supavisor
+    // always recognizes. Keep the pooler host (direct port 5432 is blocked
+    // from Vercel serverless).
     if (url.hostname.endsWith(".pooler.supabase.com")) {
-      const [role, projectRef] = url.username.split(".");
-      if (role && projectRef) {
-        url.hostname = `db.${projectRef}.supabase.co`;
-        url.port = "5432";
-        url.username = role;
-        url.searchParams.set("pgbouncer", "true");
+      const parts = url.username.split(".");
+      const projectRef = parts[parts.length - 1];
+      if (projectRef) {
+        url.username = `postgres.${projectRef}`;
       }
+      url.searchParams.set("pgbouncer", "true");
     }
 
-    // Ensure pgbouncer param is set for any pooled connection
     if (url.port === "6543" && !url.searchParams.has("pgbouncer")) {
       url.searchParams.set("pgbouncer", "true");
     }
