@@ -8,6 +8,7 @@ import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LivynMark } from "@/components/brand/logo";
+import { TryDemoButton } from "@/components/auth/try-demo-button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,13 @@ export default function RegisterPage() {
           <LivynMark className="h-14 w-14" />
           <h1 className="font-display mt-4 text-2xl font-bold">Mulai Bersama Livyn</h1>
           <p className="mt-1 text-center text-sm text-muted-foreground">Bangun kebiasaan rohani harianmu, mulai hari ini</p>
+        </div>
+
+        <TryDemoButton className="w-full" />
+        <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="h-px flex-1 bg-border" />
+          atau daftar dengan akun
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">

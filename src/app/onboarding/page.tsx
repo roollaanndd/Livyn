@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpenText, HandHeart, Clapperboard, Sparkles, AlarmClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TryDemoButton } from "@/components/auth/try-demo-button";
 import { cn } from "@/lib/utils";
 
 const SLIDES = [
@@ -110,8 +111,14 @@ export default function OnboardingPage() {
           ))}
         </div>
         <Button onClick={next} size="lg" className="w-full bg-white text-[#0B0D1A] hover:bg-white/90 shadow-lg shadow-black/20">
-          {isLast ? "Mulai Sekarang" : "Lanjut"}
+          {isLast ? "Daftar Akun" : "Lanjut"}
         </Button>
+        {isLast && (
+          <TryDemoButton
+            variant="outline"
+            className="mt-3 w-full border-white/30 bg-transparent text-white hover:bg-white/10"
+          />
+        )}
         {!isLast && (
           <button
             onClick={goToLogin}
