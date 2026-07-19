@@ -30,10 +30,10 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        toast.error(data.error ?? "Gagal mendaftar");
+        toast.error(data?.error ?? "Gagal mendaftar. Coba lagi nanti.");
         setLoading(false);
         return;
       }
@@ -41,7 +41,7 @@ export default function RegisterPage() {
       await refresh();
       router.replace("/app");
     } catch {
-      toast.error("Terjadi kesalahan jaringan");
+      toast.error("Terjadi kesalahan jaringan. Periksa koneksi internet Anda.");
       setLoading(false);
     }
   }

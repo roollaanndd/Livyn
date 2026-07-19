@@ -29,10 +29,10 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        toast.error(data.error ?? "Gagal masuk");
+        toast.error(data?.error ?? "Gagal masuk. Coba lagi nanti.");
         setLoading(false);
         return;
       }
@@ -40,7 +40,7 @@ export default function LoginPage() {
       await refresh();
       router.replace("/app");
     } catch {
-      toast.error("Terjadi kesalahan jaringan");
+      toast.error("Terjadi kesalahan jaringan. Periksa koneksi internet Anda.");
       setLoading(false);
     }
   }

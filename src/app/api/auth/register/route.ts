@@ -23,26 +23,30 @@ export async function POST(req: NextRequest) {
 
   const { name, email, password } = parsed.data;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "Email sudah terdaftar" }, { status: 409 });
+  try {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ error: "Email sudah terdaftar" }, { status: 409 });
+    }
+
+    const passwordHash = await hashPassword(password);
+    const user = await prisma.user.create({
+      data: { name, email, passwordHash, role: "user" },
+    });
+
+    const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    const { token: refreshToken } = await issueRefreshToken(user.id);
+    await setSessionCookies(accessToken, refreshToken);
+
+    await logAudit({ userId: user.id, action: "auth.register", ipAddress: ip }).catch(() => {});
+    await prisma.loginEvent.create({
+      data: { userId: user.id, ipAddress: ip, userAgent: req.headers.get("user-agent") ?? undefined, success: true },
+    }).catch(() => {});
+
+    return NextResponse.json({
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch {
+    return NextResponse.json({ error: "Layanan sedang tidak tersedia. Coba lagi nanti." }, { status: 503 });
   }
-
-  const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({
-    data: { name, email, passwordHash, role: "user" },
-  });
-
-  const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
-  const { token: refreshToken } = await issueRefreshToken(user.id);
-  await setSessionCookies(accessToken, refreshToken);
-
-  await logAudit({ userId: user.id, action: "auth.register", ipAddress: ip });
-  await prisma.loginEvent.create({
-    data: { userId: user.id, ipAddress: ip, userAgent: req.headers.get("user-agent") ?? undefined, success: true },
-  });
-
-  return NextResponse.json({
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
-  });
 }

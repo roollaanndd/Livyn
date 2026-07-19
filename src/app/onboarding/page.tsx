@@ -55,9 +55,9 @@ export default function OnboardingPage() {
     setEntering(true);
     try {
       const res = await fetch("/api/auth/demo", { method: "POST" });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(data.error ?? "Gagal masuk ke Livyn");
+        toast.error(data?.error ?? "Gagal masuk ke Livyn. Coba lagi nanti.");
         setEntering(false);
         return;
       }
@@ -65,7 +65,7 @@ export default function OnboardingPage() {
       await refresh();
       router.replace("/app");
     } catch {
-      toast.error("Terjadi kesalahan jaringan");
+      toast.error("Terjadi kesalahan jaringan. Periksa koneksi internet Anda.");
       setEntering(false);
     }
   }
