@@ -4,9 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpenText, HandHeart, Clapperboard, Sparkles, AlarmClock, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
 const SLIDES = [
@@ -44,30 +42,16 @@ const SLIDES = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { refresh } = useAuth();
   const [index, setIndex] = useState(0);
   const [entering, setEntering] = useState(false);
   const isLast = index === SLIDES.length - 1;
   const slide = SLIDES[index];
 
-  async function enterApp() {
+  function enterApp() {
     if (entering) return;
     setEntering(true);
-    try {
-      const res = await fetch("/api/auth/demo", { method: "POST" });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        toast.error(data?.error ?? "Gagal masuk ke Livyn. Coba lagi nanti.");
-        setEntering(false);
-        return;
-      }
-      localStorage.setItem("livyn_onboarded", "1");
-      await refresh();
-      router.replace("/app");
-    } catch {
-      toast.error("Terjadi kesalahan jaringan. Periksa koneksi internet Anda.");
-      setEntering(false);
-    }
+    localStorage.setItem("livyn_onboarded", "1");
+    router.replace("/masuk");
   }
 
   function next() {

@@ -14,7 +14,7 @@ export default async function DevotionListPage({
   searchParams: Promise<{ kategori?: string }>;
 }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { kategori } = await searchParams;
   const [devotions, categories, bookmarked] = await Promise.all([

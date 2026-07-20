@@ -8,7 +8,7 @@ import { RevokeSessionsButton } from "@/components/profile/revoke-sessions-butto
 
 export default async function SecurityPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const events = await prisma.loginEvent.findMany({
     where: { userId: session.sub },

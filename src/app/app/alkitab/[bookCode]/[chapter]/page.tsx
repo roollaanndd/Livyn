@@ -18,7 +18,7 @@ export default async function ChapterReaderPage({
   params: Promise<{ bookCode: string; chapter: string }>;
 }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { bookCode, chapter: chapterStr } = await params;
   const chapter = Number(chapterStr);

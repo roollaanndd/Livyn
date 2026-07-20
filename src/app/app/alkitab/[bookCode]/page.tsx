@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export default async function BookChaptersPage({ params }: { params: Promise<{ bookCode: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { bookCode } = await params;
   const book = await getBibleBookByCode(bookCode);

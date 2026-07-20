@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 
 export default async function NotificationsPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const notifications = await prisma.notification.findMany({
     where: { userId: session.sub },

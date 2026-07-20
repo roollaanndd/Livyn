@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 
 export default async function DevicesPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const events = await prisma.loginEvent.findMany({
     where: { userId: session.sub, success: true },

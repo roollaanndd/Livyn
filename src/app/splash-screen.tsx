@@ -13,7 +13,7 @@ export function SplashScreen() {
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 2200);
+    const timer = setTimeout(() => setReady(true), 1800);
     return () => clearTimeout(timer);
   }, []);
 

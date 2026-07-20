@@ -8,7 +8,7 @@ import { formatViewCount } from "@/lib/format";
 
 export default async function SermonDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { slug } = await params;
   const sermon = await getSermonBySlug(slug);

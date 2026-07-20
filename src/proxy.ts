@@ -48,7 +48,7 @@ export default async function proxy(req: NextRequest) {
 
   if (!token) {
     if (!refreshToken) {
-      return NextResponse.redirect(new URL("/masuk", req.url));
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
     const refreshUrl = new URL("/api/auth/refresh", req.url);
@@ -58,7 +58,7 @@ export default async function proxy(req: NextRequest) {
     });
 
     if (!refreshRes.ok) {
-      const redirect = NextResponse.redirect(new URL("/masuk", req.url));
+      const redirect = NextResponse.redirect(new URL("/", req.url));
       redirect.cookies.delete("livyn_at");
       redirect.cookies.delete("livyn_rt");
       return redirect;
@@ -83,7 +83,7 @@ export default async function proxy(req: NextRequest) {
     }
   } catch {
     if (!refreshToken) {
-      return NextResponse.redirect(new URL("/masuk", req.url));
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
     const refreshUrl = new URL("/api/auth/refresh", req.url);
@@ -93,7 +93,7 @@ export default async function proxy(req: NextRequest) {
     });
 
     if (!refreshRes.ok) {
-      const redirect = NextResponse.redirect(new URL("/masuk", req.url));
+      const redirect = NextResponse.redirect(new URL("/", req.url));
       redirect.cookies.delete("livyn_at");
       redirect.cookies.delete("livyn_rt");
       return redirect;

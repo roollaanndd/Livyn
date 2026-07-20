@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default async function SermonListPage({ searchParams }: { searchParams: Promise<{ kategori?: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { kategori } = await searchParams;
   const [sermons, categories] = await Promise.all([listPublishedSermons({ categorySlug: kategori }), listCategories()]);
