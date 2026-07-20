@@ -76,7 +76,12 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className={cn("fixed inset-0 flex flex-col bg-gradient-to-br text-white transition-colors duration-700", slide.bg)}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={cn("fixed inset-0 flex flex-col bg-gradient-to-br text-white transition-colors duration-700", slide.bg)}
+    >
       <div className="flex justify-end p-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
         <button
           onClick={enterApp}
@@ -129,6 +134,6 @@ export default function OnboardingPage() {
           {entering ? <Loader2 className="h-4 w-4 animate-spin" /> : isLast ? "Mulai Sekarang" : "Lanjut"}
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }

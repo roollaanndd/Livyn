@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,13 +48,23 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      className="flex min-h-dvh flex-col items-center justify-center bg-background px-6"
+    >
       <div className="w-full max-w-sm space-y-8">
-        <div className="flex flex-col items-center gap-2">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="flex flex-col items-center gap-2"
+        >
           <LivynMark className="h-14 w-14" />
           <LivynWordmark className="text-2xl" />
           <p className="text-sm text-muted-foreground">Buat akun baru</p>
-        </div>
+        </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -121,6 +132,6 @@ export default function RegisterPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -25,13 +25,17 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
+              className={cn(
+                "relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-transform duration-200",
+                active && "scale-105",
+              )}
             >
               <tab.icon
-                className={cn("h-5 w-5 transition-colors", active ? "text-primary" : "text-muted-foreground")}
+                className={cn("h-5 w-5 transition-colors duration-200", active ? "text-primary" : "text-muted-foreground")}
                 strokeWidth={active ? 2.3 : 1.8}
               />
-              <span className={cn(active ? "text-primary" : "text-muted-foreground")}>{tab.label}</span>
+              <span className={cn("transition-colors duration-200", active ? "text-primary" : "text-muted-foreground")}>{tab.label}</span>
+              {active && <span className="absolute -bottom-0 h-0.5 w-4 rounded-full bg-primary" />}
             </Link>
           );
         })}
