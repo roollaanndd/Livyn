@@ -11,7 +11,7 @@ import { FontSizeControl } from "@/components/devotion/font-size-control";
 
 export default async function DevotionDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { slug } = await params;
   const devotion = await getDevotionBySlug(slug);

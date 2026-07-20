@@ -11,10 +11,10 @@ import { PushToggle } from "@/components/push/push-toggle";
 
 export default async function ProfilePage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const user = await prisma.user.findUnique({ where: { id: session.sub } });
-  if (!user) redirect("/masuk");
+  if (!user) redirect("/");
 
   const [bookmarkCount, deviceCount, streakLogCount] = await Promise.all([
     prisma.bookmark.count({ where: { userId: user.id } }),

@@ -10,7 +10,7 @@ import { MOOD_META } from "@/lib/journal/mood-meta";
 
 export default async function JournalPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const entries = await prisma.journalEntry.findMany({
     where: { userId: session.sub },

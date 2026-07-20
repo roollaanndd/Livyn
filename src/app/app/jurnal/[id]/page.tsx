@@ -9,7 +9,7 @@ import { DeleteJournalButton } from "@/components/journal/delete-button";
 
 export default async function JournalEntryPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { id } = await params;
   const entry = await prisma.journalEntry.findUnique({

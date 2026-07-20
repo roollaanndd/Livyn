@@ -8,7 +8,7 @@ import { ChallengeView } from "@/components/challenge/challenge-view";
 
 export default async function ChallengePage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const [user, challenge] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.sub }, select: { points: true } }),

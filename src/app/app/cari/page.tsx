@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { q } = await searchParams;
   const results = q ? await unifiedSearch(q) : null;

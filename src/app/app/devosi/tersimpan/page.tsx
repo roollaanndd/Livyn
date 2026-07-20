@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function SavedDevotionsPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const devotions = await listUserBookmarkedDevotions(session.sub);
 

@@ -30,7 +30,7 @@ function greeting() {
 
 export default async function HomePage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const [user, verse, devotion, sermon, continueWatching, reminders, streak, events, challenge] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.sub }, select: { name: true, avatarUrl: true, points: true } }),

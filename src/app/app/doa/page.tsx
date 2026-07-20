@@ -6,7 +6,7 @@ import { PrayerReminders } from "@/components/prayer/prayer-reminders";
 
 export default async function PrayerPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const [reminders, doneToday, streak] = await Promise.all([
     getUserPrayerReminders(session.sub),

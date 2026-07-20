@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 
 export default async function BibleBooksPage({ searchParams }: { searchParams: Promise<{ cari?: string }> }) {
   const session = await getCurrentUser();
-  if (!session) redirect("/masuk");
+  if (!session) redirect("/");
 
   const { cari } = await searchParams;
   const [books, results] = await Promise.all([listBibleBooks(), cari ? searchBibleVerses(cari) : Promise.resolve([])]);
