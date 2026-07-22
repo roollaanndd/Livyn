@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { LivynMark } from "@/components/brand/logo";
 import { IconLink } from "@/components/nav/top-bar";
 import { formatDurationShort } from "@/lib/format";
+import { VerseShareCard } from "@/components/verse/verse-share-card";
 
 function greeting() {
   const h = new Date().getHours();
@@ -101,6 +102,10 @@ export default async function HomePage() {
                 <p className="mt-4 text-[13px] font-semibold text-primary">
                   {verse.book.name} {verse.chapter}:{verse.verse}
                 </p>
+                <VerseShareCard
+                  verseText={verse.text}
+                  verseRef={`${verse.book.name} ${verse.chapter}:${verse.verse}`}
+                />
               </div>
             </div>
           </HeroCard>

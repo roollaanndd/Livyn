@@ -1,0 +1,50 @@
+import { NextRequest } from "next/server";
+import { createOpenAI } from "@ai-sdk/openai";
+import { streamText } from "ai";
+import { getCurrentUser } from "@/lib/auth/session";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+import {
+  AI_PASTOR_SYSTEM_PROMPT,
+  AI_PASTOR_MODEL,
+  AI_PASTOR_MAX_TOKENS,
+  AI_PASTOR_TEMPERATURE,
+} from "@/lib/ai-pastor/guidelines";
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY ?? "",
+});
+
+export async function POST(req: NextRequest) {
+  const session = await getCurrentUser();
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const ip = clientIp(req.headers);
+  const limited = rateLimit(`ai-pastor:${session.sub}`, 60, 60 * 60 * 1000);
+  if (!limited.ok) {
+    return new Response(
+      JSON.stringify({ error: "Terlalu banyak permintaan. Coba lagi nanti." }),
+      { status: 429, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    return new Response(
+      JSON.stringify({ error: "OPENAI_API_KEY belum dikonfigurasi." }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: openai(AI_PASTOR_MODEL),
+    system: AI_PASTOR_SYSTEM_PROMPT,
+    messages,
+    maxOutputTokens: AI_PASTOR_MAX_TOKENS,
+    temperature: AI_PASTOR_TEMPERATURE,
+  });
+
+  return result.toUIMessageStreamResponse();
+}

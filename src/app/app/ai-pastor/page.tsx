@@ -1,18 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, BookOpenText, HandHeart, ArrowLeft, RotateCcw } from "lucide-react";
+import { Send, Sparkles, BookOpenText, HandHeart, ArrowLeft, RotateCcw, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LivynAiIcon } from "@/components/brand/logo";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
 
 const SUGGESTED_PROMPTS = [
   { icon: BookOpenText, text: "Jelaskan Yohanes 3:16", category: "Alkitab" },
@@ -36,8 +30,16 @@ function TypingIndicator() {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
-  const isUser = message.role === "user";
+function getMessageText(msg: { parts?: Array<{ type: string; text?: string }> }): string {
+  if (!msg.parts) return "";
+  return msg.parts
+    .filter((p): p is { type: "text"; text: string } => p.type === "text" && typeof p.text === "string")
+    .map((p) => p.text)
+    .join("");
+}
+
+function MessageBubble({ role, content }: { role: string; content: string }) {
+  const isUser = role === "user";
 
   return (
     <motion.div
@@ -59,7 +61,7 @@ function MessageBubble({ message }: { message: Message }) {
             : "bg-surface-muted text-heading rounded-bl-md",
         )}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p className="whitespace-pre-wrap">{content}</p>
       </div>
     </motion.div>
   );
@@ -67,11 +69,18 @@ function MessageBubble({ message }: { message: Message }) {
 
 export default function AiPastorPage() {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const { messages, sendMessage, setMessages, status, error } = useChat({
+    transport: {
+      type: "fetch" as const,
+      url: "/api/ai-pastor",
+    } as never,
+  });
+
+  const isActive = status === "submitted" || status === "streaming";
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -81,52 +90,13 @@ export default function AiPastorPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+  }, [messages, isActive, scrollToBottom]);
 
-  function generateResponse(userMessage: string): string {
-    const lower = userMessage.toLowerCase();
-    if (lower.includes("yohanes 3:16") || lower.includes("john 3:16")) {
-      return "\"Karena begitu besar kasih Allah akan dunia ini, sehingga Ia telah mengaruniakan Anak-Nya yang tunggal, supaya setiap orang yang percaya kepada-Nya tidak binasa, melainkan beroleh hidup yang kekal.\"\n\n— Yohanes 3:16\n\nAyat ini adalah inti dari Injil. Allah tidak menunggu kita menjadi sempurna — Dia mengasihi kita terlebih dahulu. Kasih-Nya bukan sekadar perasaan, tetapi tindakan nyata: mengirim Yesus untuk mati bagi kita.\n\nPertanyaan refleksi: Apakah kamu sudah merasakan kasih Allah yang begitu besar ini dalam hidupmu hari ini?";
-    }
-    if (lower.includes("cemas") || lower.includes("khawatir") || lower.includes("takut")) {
-      return "Saya mengerti perasaanmu. Kecemasan bisa terasa sangat berat.\n\nIngatlah firman Tuhan:\n\n\"Janganlah hendaknya kamu kuatir tentang apa pun juga, tetapi nyatakanlah dalam segala hal keinginanmu kepada Allah dalam doa dan permohonan dengan ucapan syukur.\"\n— Filipi 4:6\n\nTuhan tahu apa yang kamu rasakan. Dia tidak pernah meninggalkanmu. Serahkan kecemasanmu kepada-Nya dalam doa.\n\nMau berdoa bersama tentang hal ini?";
-    }
-    if (lower.includes("kasih") || lower.includes("cinta")) {
-      return "Kasih adalah tema sentral dalam iman Kristen.\n\n\"Kasih itu sabar; kasih itu murah hati; ia tidak cemburu. Ia tidak memegahkan diri dan tidak sombong. Ia tidak melakukan yang tidak sopan dan tidak mencari keuntungan diri sendiri.\"\n— 1 Korintus 13:4-5\n\nKasih Allah kepada kita adalah teladan sempurna. Kasih-Nya tanpa syarat, tanpa batas, dan tidak pernah berakhir.\n\nBagaimana kamu bisa menunjukkan kasih ini kepada orang di sekitarmu hari ini?";
-    }
-    if (lower.includes("doa") || lower.includes("berdoa")) {
-      return "Doa adalah percakapan pribadi dengan Tuhan. Tidak ada rumus khusus — yang terpenting adalah ketulusan hatimu.\n\nYesus mengajarkan pola doa dalam Matius 6:9-13:\n\n1. Memuji Tuhan — \"Bapa kami yang di surga\"\n2. Memohon kehendak-Nya — \"Jadilah kehendak-Mu\"\n3. Menyerahkan kebutuhan — \"Berilah kami rezeki\"\n4. Memohon pengampunan — \"Ampunilah kami\"\n5. Memohon perlindungan — \"Jauhkan kami dari yang jahat\"\n\nMulailah dengan berbicara kepada Tuhan seperti berbicara kepada Bapa yang mengasihimu. Dia selalu mendengar.";
-    }
-    return "Terima kasih sudah bertanya. Saat ini AI Pastor masih dalam pengembangan dan belum terhubung ke layanan AI.\n\nNamun, saya ingin mendorongmu untuk:\n\n1. Membaca Firman Tuhan setiap hari\n2. Berdoa dengan tulus dari hatimu\n3. Bergabung dengan komunitas iman\n\n\"Percayalah kepada Tuhan dengan segenap hatimu, dan janganlah bersandar kepada pengertianmu sendiri.\"\n— Amsal 3:5\n\nAda hal lain yang ingin kamu tanyakan?";
-  }
-
-  async function sendMessage(text?: string) {
+  function handleSend(text?: string) {
     const messageText = text || input.trim();
-    if (!messageText || isTyping) return;
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: messageText,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
+    if (!messageText || isActive) return;
     setInput("");
-    setIsTyping(true);
-
-    await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
-
-    const response = generateResponse(messageText);
-    const aiMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: response,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, aiMsg]);
-    setIsTyping(false);
+    sendMessage({ text: messageText });
   }
 
   const isEmpty = messages.length === 0;
@@ -147,7 +117,9 @@ export default function AiPastorPage() {
           </div>
           <div>
             <h1 className="font-display text-[15px] font-bold text-heading">AI Pastor</h1>
-            <p className="text-[11px] text-primary font-medium">Pendamping rohanimu</p>
+            <p className="text-[11px] text-primary font-medium">
+              {isActive ? "Mengetik..." : "Pendamping rohanimu"}
+            </p>
           </div>
         </div>
         {messages.length > 0 && (
@@ -171,7 +143,6 @@ export default function AiPastorPage() {
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center justify-center h-full min-h-[50vh] gap-6"
             >
-              {/* AI Icon */}
               <motion.div
                 animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -193,7 +164,6 @@ export default function AiPastorPage() {
                 </p>
               </div>
 
-              {/* Suggested Prompts */}
               <div className="w-full max-w-sm grid grid-cols-2 gap-2.5 mt-2">
                 {SUGGESTED_PROMPTS.map((prompt, i) => (
                   <motion.button
@@ -201,7 +171,7 @@ export default function AiPastorPage() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.08 }}
-                    onClick={() => sendMessage(prompt.text)}
+                    onClick={() => handleSend(prompt.text)}
                     className="flex flex-col gap-2 rounded-2xl border border-border-subtle bg-surface p-3.5 text-left hover:bg-surface-muted transition-colors active:scale-[0.97]"
                   >
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-soft">
@@ -215,9 +185,9 @@ export default function AiPastorPage() {
           ) : (
             <div className="space-y-4">
               {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
+                <MessageBubble key={msg.id} role={msg.role} content={getMessageText(msg)} />
               ))}
-              {isTyping && (
+              {status === "submitted" && (
                 <div className="flex items-start">
                   <div className="mr-2.5 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
                     <LivynAiIcon className="h-5 w-5" />
@@ -226,6 +196,21 @@ export default function AiPastorPage() {
                     <TypingIndicator />
                   </div>
                 </div>
+              )}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-3 rounded-2xl bg-red-500/10 border border-red-500/20 p-4"
+                >
+                  <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[13px] font-medium text-red-500">Gagal mengirim pesan</p>
+                    <p className="text-[12px] text-muted-foreground mt-1">
+                      Pastikan koneksi internet stabil dan coba lagi.
+                    </p>
+                  </div>
+                </motion.div>
               )}
             </div>
           )}
@@ -243,7 +228,7 @@ export default function AiPastorPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage();
+                  handleSend();
                 }
               }}
               placeholder="Ketik pesan..."
@@ -253,11 +238,11 @@ export default function AiPastorPage() {
             />
           </div>
           <motion.button
-            onClick={() => sendMessage()}
-            disabled={!input.trim() || isTyping}
+            onClick={() => handleSend()}
+            disabled={!input.trim() || isActive}
             className={cn(
               "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all",
-              input.trim() && !isTyping
+              input.trim() && !isActive
                 ? "bg-primary text-white shadow-[var(--shadow-glow)]"
                 : "bg-surface-muted text-muted-foreground",
             )}
