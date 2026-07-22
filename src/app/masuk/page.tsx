@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,14 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/providers/auth-provider";
 import { LivynMark, LivynWordmark } from "@/components/brand/logo";
 import { TryDemoButton } from "@/components/auth/try-demo-button";
+import { AuthLayout } from "@/components/auth/auth-layout";
 
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,27 +49,35 @@ export default function LoginPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="flex min-h-dvh flex-col items-center justify-center bg-background px-6"
-    >
-      <div className="w-full max-w-sm space-y-8">
+    <AuthLayout>
+      <div className="space-y-8">
+        {/* Brand header */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          className="flex flex-col items-center gap-2"
+          transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center gap-3"
         >
-          <LivynMark className="h-14 w-14" />
-          <LivynWordmark className="text-2xl" />
+          <div className="relative">
+            <div className="absolute inset-0 scale-150 blur-2xl">
+              <div className="h-full w-full rounded-full bg-primary/10" />
+            </div>
+            <LivynMark className="relative h-16 w-16" gradientId="login-mark" />
+          </div>
+          <LivynWordmark className="text-2xl text-heading" />
           <p className="text-sm text-muted-foreground">Masuk ke akunmu</p>
         </motion.div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Login form */}
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="space-y-4"
+        >
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
+            <label htmlFor="email" className="text-sm font-medium text-heading">
               Email
             </label>
             <Input
@@ -80,48 +90,64 @@ export default function LoginPage() {
               autoComplete="email"
             />
           </div>
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium">
+              <label htmlFor="password" className="text-sm font-medium text-heading">
                 Kata Sandi
               </label>
-              <Link href="/lupa-sandi" className="text-xs text-primary hover:underline">
+              <Link href="/lupa-sandi" className="text-xs font-medium text-primary hover:text-primary-hover transition-colors">
                 Lupa sandi?
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Masukkan kata sandi"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Masukkan kata sandi"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="pr-11"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+              </button>
+            </div>
           </div>
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Masuk"}
-          </Button>
-        </form>
 
+          <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Masuk"}
+          </Button>
+        </motion.form>
+
+        {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+            <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">atau</span>
+            <span className="bg-background px-3 text-muted-foreground/60 tracking-wider text-[11px]">atau</span>
           </div>
         </div>
 
+        {/* Demo */}
         <TryDemoButton className="w-full" />
 
+        {/* Sign up link */}
         <p className="text-center text-sm text-muted-foreground">
           Belum punya akun?{" "}
-          <Link href="/daftar" className="font-semibold text-primary hover:underline">
+          <Link href="/daftar" className="font-semibold text-primary hover:text-primary-hover transition-colors">
             Daftar
           </Link>
         </p>
       </div>
-    </motion.div>
+    </AuthLayout>
   );
 }

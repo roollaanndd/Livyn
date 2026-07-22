@@ -1,10 +1,10 @@
 {
-  "name": "Livyn — Faith. Every Day.",
+  "name": "Livyn — Faith. Every Day. Every Step.",
   "short_name": "Livyn",
-  "description": "Renungan harian, Alkitab, pengingat doa, dan khotbah dalam satu aplikasi.",
+  "description": "Renungan harian, Alkitab, AI Pastor, pengingat doa, dan khotbah dalam satu aplikasi.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0B0D1A",
-  "theme_color": "#0B0D1A",
+  "background_color": "#0D1512",
+  "theme_color": "#2D7D5F",
   "icons": []
 }

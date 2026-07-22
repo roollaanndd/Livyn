@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { TopBar } from "@/components/nav/top-bar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,9 +47,17 @@ export default function NewJournalEntryPage() {
     <div>
       <TopBar title="Curhat kepada Tuhan" back />
 
-      <div className="space-y-5 px-5 pb-8 pt-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="space-y-6 px-5 pb-8 pt-5"
+      >
+        {/* Mood selector */}
         <div>
-          <label className="mb-2 block text-sm font-medium">Bagaimana perasaanmu hari ini?</label>
+          <label className="mb-3 block text-[13px] font-semibold text-heading">
+            Bagaimana perasaanmu hari ini?
+          </label>
           <div className="flex flex-wrap gap-2">
             {Object.entries(MOOD_META).map(([key, meta]) => (
               <button
@@ -56,43 +65,52 @@ export default function NewJournalEntryPage() {
                 type="button"
                 onClick={() => setMood((m) => (m === key ? null : key))}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-                  mood === key ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground",
+                  "flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-[13px] font-medium transition-all",
+                  mood === key
+                    ? "border-primary bg-primary-soft text-primary shadow-[var(--shadow-sm)]"
+                    : "border-border-subtle text-muted-foreground hover:bg-surface-muted",
                 )}
               >
-                <span>{meta.emoji}</span> {meta.label}
+                <span className="text-base">{meta.emoji}</span> {meta.label}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Title */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Judul (opsional)</label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Hari yang berat" maxLength={100} />
+          <label className="mb-2 block text-[13px] font-semibold text-heading">Judul (opsional)</label>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Contoh: Hari yang berat"
+            maxLength={100}
+          />
         </div>
 
+        {/* Body */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Ceritakan kepada Tuhan</label>
+          <label className="mb-2 block text-[13px] font-semibold text-heading">Ceritakan kepada Tuhan</label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Tuliskan apa yang terjadi hari ini, apa yang kamu rasakan, atau apa yang ingin kamu doakan..."
             rows={10}
             maxLength={5000}
-            className="w-full resize-none rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/15 focus:shadow-[var(--shadow-glow)]"
           />
-          <p className="mt-1 text-right text-xs text-muted-foreground">{body.length}/5000</p>
+          <p className="mt-1.5 text-right text-[11px] text-muted-foreground">{body.length}/5000</p>
         </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
           Setelah kamu menyimpan, Livyn akan menyarankan satu ayat Alkitab yang relevan untuk menguatkan dan menghiburmu.
         </p>
 
         <Button onClick={submit} size="lg" className="w-full" disabled={loading}>
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {loading && <Loader2 className="h-4.5 w-4.5 animate-spin" />}
           Simpan Catatan
         </Button>
-      </div>
+      </motion.div>
     </div>
   );
 }

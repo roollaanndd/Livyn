@@ -9,15 +9,15 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Livyn — Faith. Every Day.",
-  description: "Livyn menemani perjalanan imanmu setiap hari: renungan, Alkitab, pengingat doa, dan khotbah — tanpa gangguan media sosial.",
+  title: "Livyn — Faith. Every Day. Every Step.",
+  description: "Livyn menemani perjalanan imanmu setiap hari: renungan, Alkitab, AI Pastor, pengingat doa, dan khotbah — tanpa gangguan media sosial.",
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0d1a" },
+    { media: "(prefers-color-scheme: light)", color: "#FAFAF8" },
+    { media: "(prefers-color-scheme: dark)", color: "#0D1512" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -30,7 +30,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             {children}
-            <Toaster richColors position="top-center" theme="system" />
+            <Toaster
+              richColors
+              position="top-center"
+              theme="system"
+              toastOptions={{
+                className: "!rounded-2xl !border-border-subtle !shadow-[var(--shadow-lg)] !font-sans",
+              }}
+            />
           </AuthProvider>
         </ThemeProvider>
       </body>
