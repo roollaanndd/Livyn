@@ -1,9 +1,9 @@
-import { Loader2 } from "lucide-react";
+import { LeafLoader } from "@/components/ui/loading";
 
 export default function AppLoading() {
   return (
     <div className="flex min-h-[60dvh] items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <LeafLoader size="lg" />
     </div>
   );
 }

@@ -1,9 +1,9 @@
-import { Loader2 } from "lucide-react";
+import { LeafLoader } from "@/components/ui/loading";
 
 export default function LoginLoading() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background">
-      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <LeafLoader size="md" />
     </div>
   );
 }

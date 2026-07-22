@@ -28,18 +28,25 @@ export default async function DevotionListPage({
       <TopBar
         title="Renungan Harian"
         actions={
-          <Link href="/app/devosi/tersimpan" className="rounded-full p-2 hover:bg-surface-muted" aria-label="Tersimpan">
-            <BookmarkCheck className="h-5 w-5" />
+          <Link
+            href="/app/devosi/tersimpan"
+            className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-surface-muted transition-colors"
+            aria-label="Tersimpan"
+          >
+            <BookmarkCheck className="h-[18px] w-[18px]" />
           </Link>
         }
       />
 
-      <div className="-mb-1 flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
+      {/* Category filter */}
+      <div className="flex gap-2 overflow-x-auto px-5 py-4 scrollbar-none">
         <Link
           href="/app/devosi"
           className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium",
-            !kategori ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground",
+            "shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition-all",
+            !kategori
+              ? "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
+              : "bg-surface-muted text-muted-foreground hover:bg-border",
           )}
         >
           Semua
@@ -49,8 +56,10 @@ export default async function DevotionListPage({
             key={c.id}
             href={`/app/devosi?kategori=${c.slug}`}
             className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium",
-              kategori === c.slug ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground",
+              "shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition-all",
+              kategori === c.slug
+                ? "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
+                : "bg-surface-muted text-muted-foreground hover:bg-border",
             )}
           >
             {c.name}
@@ -58,20 +67,27 @@ export default async function DevotionListPage({
         ))}
       </div>
 
-      <div className="space-y-3 px-4 pb-6 pt-2">
+      <div className="stagger space-y-3 px-5 pb-8">
         {devotions.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted-foreground">Belum ada renungan pada kategori ini.</p>
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft">
+              <BookmarkCheck className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-[13px] text-muted-foreground">Belum ada renungan pada kategori ini.</p>
+          </div>
         )}
         {devotions.map((d) => (
           <Link key={d.id} href={`/app/devosi/${d.slug}`}>
-            <Card className="p-4 active:scale-[0.99] transition-transform">
-              <div className="mb-1.5 flex items-center gap-2">
+            <Card className="animate-slide-up-fade p-5 active:scale-[0.98] transition-transform">
+              <div className="mb-2.5 flex items-center gap-2">
                 {d.category && <Badge variant="muted">{d.category.name}</Badge>}
-                {bookmarked.has(d.id) && <BookmarkCheck className="h-3.5 w-3.5 text-primary" />}
+                {bookmarked.has(d.id) && (
+                  <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
+                )}
               </div>
-              <h3 className="font-display font-bold leading-snug">{d.title}</h3>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.excerpt}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <h3 className="font-display text-[15px] font-bold leading-snug text-heading">{d.title}</h3>
+              <p className="mt-1.5 line-clamp-2 text-[13px] text-muted-foreground leading-relaxed">{d.excerpt}</p>
+              <p className="mt-3 text-[12px] text-muted-foreground">
                 {d.author.name} · {d.readingTimeMin} menit baca
               </p>
             </Card>

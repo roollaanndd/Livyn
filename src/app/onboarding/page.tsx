@@ -1,121 +1,322 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpenText, HandHeart, Clapperboard, Sparkles, AlarmClock, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LivynMark, LivynWordmark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 const SLIDES = [
   {
-    icon: BookOpenText,
-    title: "Baca Firman Tuhan Setiap Hari",
-    body: "Alkitab lengkap 66 kitab, renungan harian, dan pengingat lembut supaya kebiasaan rohanimu tetap terjaga.",
-    bg: "from-[#6C5CE7] to-[#4b3fc4]",
+    id: "welcome",
+    illustration: "leaf",
+    badge: null,
+    title: "Selamat Datang di Livyn",
+    body: "Aplikasi yang dirancang khusus untuk menemanimu bertumbuh lebih dekat dengan Yesus — setiap hari, setiap langkah.",
+    gradient: "from-[#0F1D17] via-[#152820] to-[#0D1512]",
+    accent: "#4CAF7D",
   },
   {
-    icon: Sparkles,
-    title: "Renungan Berdasarkan Topikmu",
-    body: "Kecemasan, keluarga, pekerjaan, pengampunan, atau iman — temukan renungan yang relevan dengan musim hidupmu.",
-    bg: "from-[#A78BFA] to-[#6C5CE7]",
+    id: "why",
+    illustration: "sunrise",
+    badge: "Mengapa Livyn?",
+    title: "Lebih dari Sekadar Aplikasi",
+    body: "Di tengah dunia yang penuh distraksi, Livyn hadir sebagai ruang tenang — tanpa like, tanpa scroll tanpa akhir. Hanya kamu dan Tuhan.",
+    gradient: "from-[#1A2F25] via-[#0F1D17] to-[#0D1512]",
+    accent: "#C89B3C",
   },
   {
-    icon: AlarmClock,
-    title: "Jangan Lewatkan Waktu Doa",
-    body: "Atur alarm doa pagi, siang, malam, atau tengah malam — lengkap dengan ayat penguat dan pencatat streak doamu.",
-    bg: "from-[#0B0D1A] to-[#2b2f4a]",
+    id: "bible",
+    illustration: "book",
+    badge: "Alkitab",
+    title: "Firman Tuhan di Ujung Jari",
+    body: "Alkitab lengkap 66 kitab dengan penanda ayat, catatan pribadi, dan pencarian cepat. Baca dimanapun kamu berada.",
+    gradient: "from-[#152820] via-[#1A2F25] to-[#0F1D17]",
+    accent: "#4CAF7D",
   },
   {
-    icon: Clapperboard,
-    title: "Dengarkan Khotbah Kapan Saja",
-    body: "Streaming khotbah dari gembala tepercaya, tersedia offline, dengan transkrip dan mode audio saja.",
-    bg: "from-[#6EE7C1] to-[#2fae87]",
+    id: "devotion",
+    illustration: "heart",
+    badge: "Renungan",
+    title: "Renungan yang Menyentuh Hati",
+    body: "Renungan harian berdasarkan topik hidupmu — kecemasan, keluarga, pekerjaan, pengampunan. Ditulis dengan kasih untuk musim hidupmu.",
+    gradient: "from-[#0D1512] via-[#152820] to-[#1A2F25]",
+    accent: "#6BCFA0",
   },
   {
-    icon: HandHeart,
-    title: "Bertumbuh, Bukan Sekadar Scroll",
-    body: "Tanpa like, tanpa followers, tanpa scroll tanpa akhir. Livyn dirancang untuk membentuk kebiasaan rohani, bukan mencuri waktumu.",
-    bg: "from-[#4b3fc4] to-[#0B0D1A]",
+    id: "prayer",
+    illustration: "pray",
+    badge: "Doa",
+    title: "Tak Pernah Lewatkan Waktu Doa",
+    body: "Atur pengingat doa pagi, siang, malam. Lacak streak doamu dan biarkan ayat penguat menguatkanmu setiap hari.",
+    gradient: "from-[#1A2F25] via-[#0D1512] to-[#152820]",
+    accent: "#C89B3C",
+  },
+  {
+    id: "ai",
+    illustration: "sparkle",
+    badge: "AI Pastor",
+    title: "Pendamping Rohani Pribadimu",
+    body: "Tanyakan apa saja tentang iman, Alkitab, atau pergumulanmu. AI Pastor hadir 24/7 untuk membimbingmu dengan kasih dan hikmat.",
+    gradient: "from-[#0F1D17] via-[#1A2F25] to-[#0D1512]",
+    accent: "#4CAF7D",
+  },
+  {
+    id: "ready",
+    illustration: "mountain",
+    badge: null,
+    title: "Perjalananmu Dimulai",
+    body: "Ribuan orang telah bertumbuh bersama Livyn. Sekarang giliranmu. Mari mulai perjalanan iman yang luar biasa ini.",
+    gradient: "from-[#152820] via-[#0F1D17] to-[#0D1512]",
+    accent: "#4CAF7D",
   },
 ];
+
+function SlideIllustration({ type, accent }: { type: string; accent: string }) {
+  const base = "h-28 w-28";
+  const illustrations: Record<string, React.ReactNode> = {
+    leaf: (
+      <div className={cn(base, "relative")}>
+        <LivynMark className="h-full w-full drop-shadow-[0_0_30px_rgba(45,125,95,0.4)]" gradientId="onb-leaf" />
+      </div>
+    ),
+    sunrise: (
+      <div className={cn(base, "relative flex items-end justify-center")}>
+        <svg viewBox="0 0 120 80" className="w-full" fill="none">
+          <defs>
+            <linearGradient id="sun-grad" x1="60" y1="0" x2="60" y2="80">
+              <stop offset="0%" stopColor={accent} stopOpacity="0.8" />
+              <stop offset="100%" stopColor={accent} stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="45" r="18" fill={accent} opacity="0.7" />
+          <path d="M0 60 Q30 35, 60 50 Q90 65, 120 45 L120 80 L0 80Z" fill="url(#sun-grad)" opacity="0.3" />
+          <path d="M0 70 Q40 50, 70 60 Q100 70, 120 55 L120 80 L0 80Z" fill={accent} opacity="0.15" />
+          {[35, 45, 55, 65, 75, 85].map((a, i) => (
+            <line key={i} x1="60" y1="45" x2={60 + Math.cos((a * Math.PI) / 180) * 30} y2={45 - Math.sin((a * Math.PI) / 180) * 30} stroke={accent} strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+          ))}
+        </svg>
+      </div>
+    ),
+    book: (
+      <div className={cn(base, "relative flex items-center justify-center")}>
+        <svg viewBox="0 0 80 80" className="h-20 w-20" fill="none">
+          <path d="M12 16C12 14 14 12 16 12H36C38 12 40 14 40 16V64C40 66 38 68 36 68H16C14 68 12 66 12 64V16Z" fill={accent} opacity="0.2" stroke={accent} strokeWidth="1.5" />
+          <path d="M40 16C40 14 42 12 44 12H64C66 12 68 14 68 16V64C68 66 66 68 64 68H44C42 68 40 66 40 64V16Z" fill={accent} opacity="0.15" stroke={accent} strokeWidth="1.5" />
+          <line x1="40" y1="12" x2="40" y2="68" stroke={accent} strokeWidth="2" />
+          {[24, 32, 40].map((y, i) => (
+            <line key={i} x1="18" y1={y} x2="34" y2={y} stroke={accent} strokeWidth="1" opacity="0.4" />
+          ))}
+        </svg>
+      </div>
+    ),
+    heart: (
+      <div className={cn(base, "relative flex items-center justify-center")}>
+        <svg viewBox="0 0 80 80" className="h-20 w-20" fill="none">
+          <path d="M40 68S10 48 10 30C10 18 20 10 30 10C35 10 38 12 40 16C42 12 45 10 50 10C60 10 70 18 70 30C70 48 40 68 40 68Z" fill={accent} opacity="0.25" stroke={accent} strokeWidth="1.5" />
+        </svg>
+      </div>
+    ),
+    pray: (
+      <div className={cn(base, "relative flex items-center justify-center")}>
+        <svg viewBox="0 0 80 80" className="h-20 w-20" fill="none">
+          <path d="M30 55L35 30C36 25 38 22 40 22C42 22 44 25 45 30L50 55" stroke={accent} strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+          <path d="M28 55C28 55 32 50 40 50C48 50 52 55 52 55" stroke={accent} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+          <circle cx="40" cy="16" r="3" fill={accent} opacity="0.5" />
+          {[0, 1, 2].map((i) => (
+            <circle key={i} cx={34 + i * 6} cy={10 - i * 2} r="1" fill={accent} opacity={0.3 + i * 0.1} />
+          ))}
+        </svg>
+      </div>
+    ),
+    sparkle: (
+      <div className={cn(base, "relative flex items-center justify-center")}>
+        <svg viewBox="0 0 80 80" className="h-20 w-20" fill="none">
+          <path d="M40 10L44 30L64 26L48 38L64 50L44 46L40 66L36 46L16 50L32 38L16 26L36 30L40 10Z" fill={accent} opacity="0.3" stroke={accent} strokeWidth="1.5" />
+          <circle cx="40" cy="38" r="6" fill={accent} opacity="0.5" />
+          <circle cx="22" cy="18" r="2" fill={accent} opacity="0.3" />
+          <circle cx="60" cy="62" r="2.5" fill={accent} opacity="0.25" />
+          <circle cx="62" cy="16" r="1.5" fill={accent} opacity="0.2" />
+        </svg>
+      </div>
+    ),
+    mountain: (
+      <div className={cn(base, "relative flex items-end justify-center")}>
+        <svg viewBox="0 0 120 80" className="w-full" fill="none">
+          <path d="M0 80L30 30L50 55L75 15L120 80Z" fill={accent} opacity="0.15" />
+          <path d="M0 80L45 40L65 58L90 25L120 80Z" fill={accent} opacity="0.1" />
+          <circle cx="90" cy="18" r="8" fill={accent} opacity="0.4" />
+        </svg>
+      </div>
+    ),
+  };
+  return <>{illustrations[type]}</>;
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [entering, setEntering] = useState(false);
+  const [direction, setDirection] = useState(1);
   const isLast = index === SLIDES.length - 1;
   const slide = SLIDES[index];
 
-  function enterApp() {
+  const enterApp = useCallback(() => {
     if (entering) return;
     setEntering(true);
     localStorage.setItem("livyn_onboarded", "1");
     router.replace("/masuk");
-  }
+  }, [entering, router]);
 
   function next() {
-    if (isLast) enterApp();
-    else setIndex((i) => i + 1);
+    if (isLast) {
+      enterApp();
+    } else {
+      setDirection(1);
+      setIndex((i) => i + 1);
+    }
+  }
+
+  function prev() {
+    if (index > 0) {
+      setDirection(-1);
+      setIndex((i) => i - 1);
+    }
   }
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className={cn("fixed inset-0 flex flex-col bg-gradient-to-br text-white transition-colors duration-700", slide.bg)}
+      transition={{ duration: 0.6 }}
+      className={cn(
+        "fixed inset-0 flex flex-col text-white transition-all duration-700 ease-out bg-gradient-to-br",
+        slide.gradient,
+      )}
     >
-      <div className="flex justify-end p-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
-        <button
-          onClick={enterApp}
-          disabled={entering}
-          className="text-sm font-medium text-white/70 hover:text-white transition-colors disabled:opacity-50"
-        >
-          Lewati
-        </button>
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          key={slide.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ duration: 0.8 }}
+          className="absolute top-1/4 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          style={{ background: `radial-gradient(circle, ${slide.accent}40 0%, transparent 70%)` }}
+        />
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-        <AnimatePresence mode="wait">
+      {/* Skip button */}
+      <div className="relative z-20 flex justify-end p-5 safe-top">
+        {!isLast && (
+          <button
+            onClick={enterApp}
+            disabled={entering}
+            className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
+          >
+            Lewati
+          </button>
+        )}
+      </div>
+
+      {/* Content */}
+      <div
+        className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 text-center"
+        onPointerDown={(e) => {
+          const startX = e.clientX;
+          const handler = (ev: PointerEvent) => {
+            const diff = ev.clientX - startX;
+            if (Math.abs(diff) > 50) {
+              if (diff < 0) next();
+              else prev();
+              document.removeEventListener("pointerup", handler);
+            }
+          };
+          document.addEventListener("pointerup", handler, { once: true });
+        }}
+      >
+        <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={index}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
+            custom={direction}
+            initial={{ opacity: 0, x: direction * 60, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -direction * 60, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center"
           >
-            <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white/15 backdrop-blur-sm">
-              <slide.icon className="h-11 w-11" strokeWidth={1.6} />
-            </div>
-            <h1 className="font-display max-w-sm text-2xl font-bold leading-snug">{slide.title}</h1>
-            <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-white/75">{slide.body}</p>
+            {/* Illustration */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="mb-10"
+            >
+              <SlideIllustration type={slide.illustration} accent={slide.accent} />
+            </motion.div>
+
+            {/* Badge */}
+            {slide.badge && (
+              <motion.span
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.4 }}
+                className="mb-3 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-widest"
+                style={{ background: `${slide.accent}20`, color: slide.accent }}
+              >
+                {slide.badge}
+              </motion.span>
+            )}
+
+            {/* Title */}
+            <h1 className="font-display max-w-[320px] text-[26px] font-bold leading-[1.2] tracking-tight">
+              {slide.title}
+            </h1>
+
+            {/* Body */}
+            <p className="mt-4 max-w-[300px] text-[15px] leading-[1.65] text-white/60">
+              {slide.body}
+            </p>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="px-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      {/* Bottom section */}
+      <div className="relative z-20 px-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        {/* Progress dots */}
         <div className="mb-7 flex items-center justify-center gap-2">
           {SLIDES.map((_, i) => (
             <button
               key={i}
-              onClick={() => setIndex(i)}
-              aria-label={`Ke slide ${i + 1}`}
+              onClick={() => {
+                setDirection(i > index ? 1 : -1);
+                setIndex(i);
+              }}
+              aria-label={`Slide ${i + 1}`}
               className={cn(
-                "h-1.5 rounded-full transition-all",
-                i === index ? "w-6 bg-white" : "w-1.5 bg-white/35",
+                "h-1.5 rounded-full transition-all duration-300",
+                i === index ? "w-7 bg-white" : "w-1.5 bg-white/25",
               )}
             />
           ))}
         </div>
+
+        {/* CTA button */}
         <Button
           onClick={next}
           size="lg"
-          className="w-full bg-white text-[#0B0D1A] hover:bg-white/90 shadow-lg shadow-black/20"
+          className="w-full rounded-2xl bg-white text-[#0F1D17] font-bold shadow-lg shadow-black/20 hover:bg-white/90 h-[52px] text-[15px]"
           disabled={entering}
         >
-          {entering ? <Loader2 className="h-4 w-4 animate-spin" /> : isLast ? "Mulai Sekarang" : "Lanjut"}
+          {entering ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : isLast ? (
+            "Mulai Perjalananmu"
+          ) : (
+            "Lanjut"
+          )}
         </Button>
       </div>
     </motion.div>
