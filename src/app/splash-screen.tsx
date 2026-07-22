@@ -6,44 +6,63 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LivynMark, LivynWordmark } from "@/components/brand/logo";
 import { useAuth } from "@/components/providers/auth-provider";
 
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+const rand = seededRandom(42);
 const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: 2 + Math.random() * 4,
-  delay: Math.random() * 2,
-  duration: 3 + Math.random() * 3,
+  x: rand() * 100,
+  y: rand() * 100,
+  size: 2 + rand() * 4,
+  delay: rand() * 2,
+  duration: 3 + rand() * 3,
 }));
 
 const VERSE = "Akulah terang dunia";
 const VERSE_REF = "Yohanes 8:12";
+
+const MAX_WAIT_MS = 5000;
 
 export function SplashScreen() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [ready, setReady] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setReady(true), 1800);
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setTimedOut(true), MAX_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const canProceed = !loading || timedOut;
+
   const navigate = useCallback(() => {
     if (user) {
       router.replace("/app");
     } else {
-      const onboarded = localStorage.getItem("livyn_onboarded");
+      const onboarded = typeof window !== "undefined" && localStorage.getItem("livyn_onboarded");
       router.replace(onboarded ? "/masuk" : "/onboarding");
     }
   }, [user, router]);
 
   useEffect(() => {
-    if (!ready || loading || exiting) return;
+    if (!ready || !canProceed || exiting) return;
     setExiting(true);
     const timeout = setTimeout(navigate, 600);
     return () => clearTimeout(timeout);
-  }, [ready, loading, exiting, navigate]);
+  }, [ready, canProceed, exiting, navigate]);
 
   return (
     <AnimatePresence>
