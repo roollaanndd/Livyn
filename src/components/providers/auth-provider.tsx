@@ -27,15 +27,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const res = await fetch("/api/auth/me", { cache: "no-store", signal: controller.signal });
       const data = await res.json();
       if (data.user) {
         setUser(data.user);
       } else {
-        const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+        const refreshRes = await fetch("/api/auth/refresh", { method: "POST", signal: controller.signal });
         if (refreshRes.ok) {
-          const retryRes = await fetch("/api/auth/me", { cache: "no-store" });
+          const retryRes = await fetch("/api/auth/me", { cache: "no-store", signal: controller.signal });
           const retryData = await retryRes.json();
           setUser(retryData.user ?? null);
         } else {
@@ -45,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setUser(null);
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }, []);
