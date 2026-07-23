@@ -56,16 +56,18 @@ export default function LoginPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col items-center gap-3"
+          className="flex flex-col items-center gap-4"
         >
           <div className="relative">
-            <div className="absolute inset-0 scale-150 blur-2xl">
-              <div className="h-full w-full rounded-full bg-primary/10" />
+            <div className="absolute inset-0 scale-[1.8] blur-3xl">
+              <div className="h-full w-full rounded-full bg-primary/12" />
             </div>
-            <LivynMark className="relative h-16 w-16" gradientId="login-mark" />
+            <LivynMark className="relative h-20 w-20" gradientId="login-mark" />
           </div>
-          <LivynWordmark className="text-2xl text-heading" />
-          <p className="text-sm text-muted-foreground">Masuk ke akunmu</p>
+          <div className="text-center">
+            <LivynWordmark className="text-2xl text-heading" />
+            <p className="mt-1.5 text-sm text-muted-foreground">Masuk ke akunmu</p>
+          </div>
         </motion.div>
 
         {/* Login form */}
@@ -77,7 +79,7 @@ export default function LoginPage() {
           className="space-y-4"
         >
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-heading">
+            <label htmlFor="email" className="text-sm font-semibold text-heading">
               Email
             </label>
             <Input
@@ -93,10 +95,10 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium text-heading">
+              <label htmlFor="password" className="text-sm font-semibold text-heading">
                 Kata Sandi
               </label>
-              <Link href="/lupa-sandi" className="text-xs font-medium text-primary hover:text-primary-hover transition-colors">
+              <Link href="/lupa-sandi" className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors">
                 Lupa sandi?
               </Link>
             </div>
@@ -122,8 +124,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Masuk"}
+          <Button type="submit" className="w-full h-[52px] text-[15px] font-bold" size="lg" disabled={loading}>
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Masuk"}
           </Button>
         </motion.form>
 
@@ -133,7 +135,7 @@ export default function LoginPage() {
             <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-3 text-muted-foreground/60 tracking-wider text-[11px]">atau</span>
+            <span className="bg-background px-4 text-muted-foreground/60 tracking-wider text-[11px] font-semibold">atau</span>
           </div>
         </div>
 
@@ -143,7 +145,7 @@ export default function LoginPage() {
         {/* Sign up link */}
         <p className="text-center text-sm text-muted-foreground">
           Belum punya akun?{" "}
-          <Link href="/daftar" className="font-semibold text-primary hover:text-primary-hover transition-colors">
+          <Link href="/daftar" className="font-bold text-primary hover:text-primary-hover transition-colors">
             Daftar
           </Link>
         </p>
