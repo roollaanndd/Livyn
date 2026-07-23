@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpenText, AlarmClock, Clapperboard } from "lucide-react";
+import { Home, BookOpenText, AlarmClock, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LivynAiIcon } from "@/components/brand/logo";
 
 const TABS = [
   { href: "/app", label: "Beranda", icon: Home, exact: true },
-  { href: "/app/devosi", label: "Devosi", icon: BookOpenText },
+  { href: "/app/alkitab", label: "Alkitab", icon: BookOpen },
   { href: "/app/ai-pastor", label: "AI Pastor", icon: null, isCenter: true },
+  { href: "/app/devosi", label: "Devosi", icon: BookOpenText },
   { href: "/app/doa", label: "Doa", icon: AlarmClock },
-  { href: "/app/khotbah", label: "Khotbah", icon: Clapperboard },
 ];
 
 export function BottomNav() {

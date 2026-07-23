@@ -79,17 +79,25 @@ export async function POST(req: NextRequest) {
   const query = getSearchQuery(text);
   const page = Math.floor(Math.random() * 5) + 1;
 
+  const apiKey = process.env.PEXELS_API_KEY!.trim();
+
   try {
     const searchRes = await fetch(
       `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=square&size=large&per_page=15&page=${page}`,
       {
-        headers: { Authorization: process.env.PEXELS_API_KEY },
+        headers: { Authorization: apiKey },
       },
     );
 
     if (!searchRes.ok) {
       const errText = await searchRes.text();
       console.error("[verse-image] Pexels search failed:", searchRes.status, errText);
+      if (searchRes.status === 401 || searchRes.status === 403) {
+        return NextResponse.json(
+          { error: "API key Pexels tidak valid. Periksa konfigurasi server." },
+          { status: 502 },
+        );
+      }
       return NextResponse.json(
         { error: "Gagal mencari gambar. Coba lagi." },
         { status: 502 },
@@ -100,6 +108,25 @@ export async function POST(req: NextRequest) {
     const photos = data.photos;
 
     if (!photos || photos.length === 0) {
+      const fallbackRes = await fetch(
+        `https://api.pexels.com/v1/search?query=beautiful+nature+landscape&orientation=square&size=large&per_page=15`,
+        { headers: { Authorization: apiKey } },
+      );
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData.photos?.length > 0) {
+          const photo = fallbackData.photos[Math.floor(Math.random() * fallbackData.photos.length)];
+          const imageUrl = photo.src.large2x || photo.src.large || photo.src.original;
+          const imgRes = await fetch(imageUrl);
+          if (imgRes.ok) {
+            const imgBuf = await imgRes.arrayBuffer();
+            const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+            return new Response(imgBuf, {
+              headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
+            });
+          }
+        }
+      }
       return NextResponse.json(
         { error: "Tidak ditemukan gambar yang cocok. Coba lagi." },
         { status: 404 },
