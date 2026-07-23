@@ -2,46 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 
-export const maxDuration = 60;
+export const maxDuration = 30;
 
-async function generateImage(
-  apiKey: string,
-  prompt: string,
-  model: string,
-): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
-  const body: Record<string, unknown> = {
-    model,
-    prompt,
-    n: 1,
-    size: "1024x1024",
-  };
-  if (model === "dall-e-3") {
-    body.quality = "standard";
-  }
+const VERSE_KEYWORDS: Record<string, string[]> = {
+  kasih: ["sunset landscape", "golden hour nature", "warm sunrise meadow"],
+  cinta: ["sunset landscape", "golden hour nature", "warm sunrise meadow"],
+  damai: ["calm lake mountains", "peaceful valley", "serene forest lake"],
+  sejahtera: ["calm lake mountains", "peaceful valley", "serene forest lake"],
+  terang: ["sunrise mountains", "light rays forest", "golden sunbeam"],
+  cahaya: ["sunrise mountains", "light rays forest", "golden sunbeam"],
+  kuasa: ["dramatic mountain peaks", "storm clouds landscape", "majestic waterfall"],
+  kuat: ["dramatic mountain peaks", "storm clouds landscape", "majestic waterfall"],
+  pengharapan: ["dawn sky", "sunrise over ocean", "morning mist valley"],
+  harapan: ["dawn sky", "sunrise over ocean", "morning mist valley"],
+  sukacita: ["bright meadow flowers", "sunlit valley", "beautiful garden landscape"],
+  iman: ["mountain summit", "starry night sky", "vast landscape horizon"],
+  percaya: ["mountain summit", "starry night sky", "vast landscape horizon"],
+  doa: ["peaceful morning nature", "quiet forest path", "misty mountains"],
+  berkat: ["lush green valley", "beautiful waterfall nature", "abundant nature scenery"],
+  perlindungan: ["sheltered valley mountains", "fortress rock landscape", "strong cliff ocean"],
+  takut: ["peaceful calm waters", "gentle sunrise", "still lake reflection"],
+  cemas: ["peaceful calm waters", "gentle sunrise", "still lake reflection"],
+  salib: ["dramatic sky clouds", "sunset cross silhouette landscape", "dramatic golden hour"],
+  yesus: ["beautiful dramatic sky", "glorious sunrise landscape", "majestic nature scenery"],
+  tuhan: ["majestic mountain landscape", "vast sky panorama", "awe inspiring nature"],
+};
 
-  const res = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
+function getSearchQuery(verseText: string): string {
+  const lower = verseText.toLowerCase();
 
-  if (!res.ok) {
-    const text = await res.text();
-    let msg = `${model} error (${res.status})`;
-    try {
-      const parsed = JSON.parse(text);
-      msg = parsed?.error?.message ?? msg;
-    } catch {
-      // use default msg
+  for (const [keyword, queries] of Object.entries(VERSE_KEYWORDS)) {
+    if (lower.includes(keyword)) {
+      return queries[Math.floor(Math.random() * queries.length)];
     }
-    return { ok: false, error: msg };
   }
 
-  const data = await res.json();
-  return { ok: true, url: data.data[0].url };
+  const fallback = [
+    "beautiful mountain landscape",
+    "serene nature scenery",
+    "dramatic sunset landscape",
+    "peaceful lake mountains",
+    "majestic waterfall nature",
+    "starry night sky mountains",
+    "misty forest morning",
+    "ocean horizon sunrise",
+  ];
+  return fallback[Math.floor(Math.random() * fallback.length)];
 }
 
 export async function POST(req: NextRequest) {
@@ -58,9 +64,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.PEXELS_API_KEY) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY belum dikonfigurasi di server." },
+      { error: "PEXELS_API_KEY belum dikonfigurasi di server." },
       { status: 503 },
     );
   }
@@ -70,49 +76,61 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "text and ref are required" }, { status: 400 });
   }
 
-  const prompt = [
-    "A breathtaking, serene landscape photograph suitable as a Bible verse background.",
-    `The scene should evoke the spiritual mood and theme of this verse: "${text}" (${ref}).`,
-    "Style: cinematic photography, ethereal natural lighting, dramatic sky.",
-    "Beautiful nature: mountains, valleys, lakes, forests, sunsets, sunrise, starry night sky, ocean, meadows, or waterfalls.",
-    "The image should have a slightly dark, moody, atmospheric quality with rich deep colors,",
-    "making it suitable for overlaying white text.",
-    "No text, no words, no letters, no numbers, no watermarks, no people, no animals in the image.",
-    "Ultra high quality, photorealistic, 4K cinematic feel.",
-  ].join(" ");
+  const query = getSearchQuery(text);
+  const page = Math.floor(Math.random() * 5) + 1;
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const models = ["gpt-image-1", "dall-e-3", "dall-e-2"];
-  let lastError = "";
+  try {
+    const searchRes = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=square&size=large&per_page=15&page=${page}`,
+      {
+        headers: { Authorization: process.env.PEXELS_API_KEY },
+      },
+    );
 
-  for (const model of models) {
-    try {
-      const result = await generateImage(apiKey, prompt, model);
-      if (!result.ok) {
-        console.error(`[verse-image] ${model} failed:`, result.error);
-        lastError = result.error;
-        continue;
-      }
-
-      const imgRes = await fetch(result.url);
-      if (!imgRes.ok) {
-        lastError = "Gagal mengunduh gambar dari OpenAI.";
-        continue;
-      }
-
-      const imgBuf = await imgRes.arrayBuffer();
-      return new Response(imgBuf, {
-        headers: {
-          "Content-Type": "image/png",
-          "Cache-Control": "no-store",
-        },
-      });
-    } catch (e) {
-      console.error(`[verse-image] ${model} exception:`, e);
-      lastError = e instanceof Error ? e.message : "Unknown error";
-      continue;
+    if (!searchRes.ok) {
+      const errText = await searchRes.text();
+      console.error("[verse-image] Pexels search failed:", searchRes.status, errText);
+      return NextResponse.json(
+        { error: "Gagal mencari gambar. Coba lagi." },
+        { status: 502 },
+      );
     }
-  }
 
-  return NextResponse.json({ error: lastError || "Semua model gagal." }, { status: 502 });
+    const data = await searchRes.json();
+    const photos = data.photos;
+
+    if (!photos || photos.length === 0) {
+      return NextResponse.json(
+        { error: "Tidak ditemukan gambar yang cocok. Coba lagi." },
+        { status: 404 },
+      );
+    }
+
+    const photo = photos[Math.floor(Math.random() * photos.length)];
+    const imageUrl = photo.src.large2x || photo.src.large || photo.src.original;
+
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) {
+      return NextResponse.json(
+        { error: "Gagal mengunduh gambar. Coba lagi." },
+        { status: 502 },
+      );
+    }
+
+    const imgBuf = await imgRes.arrayBuffer();
+    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+
+    return new Response(imgBuf, {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (e) {
+    console.error("[verse-image] Exception:", e);
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Gagal membuat gambar." },
+      { status: 500 },
+    );
+  }
 }

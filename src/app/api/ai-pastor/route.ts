@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 import { getCurrentUser } from "@/lib/auth/session";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit";
 import {
   AI_PASTOR_SYSTEM_PROMPT,
   AI_PASTOR_MODEL,
@@ -10,8 +10,8 @@ import {
   AI_PASTOR_TEMPERATURE,
 } from "@/lib/ai-pastor/guidelines";
 
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? "",
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? "",
 });
 
 export async function POST(req: NextRequest) {
@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const ip = clientIp(req.headers);
   const limited = rateLimit(`ai-pastor:${session.sub}`, 60, 60 * 60 * 1000);
   if (!limited.ok) {
     return new Response(
@@ -29,9 +28,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "OPENAI_API_KEY belum dikonfigurasi." }),
+      JSON.stringify({ error: "GOOGLE_GENERATIVE_AI_API_KEY belum dikonfigurasi." }),
       { status: 503, headers: { "Content-Type": "application/json" } },
     );
   }
@@ -39,7 +38,7 @@ export async function POST(req: NextRequest) {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: openai(AI_PASTOR_MODEL),
+    model: google(AI_PASTOR_MODEL),
     system: AI_PASTOR_SYSTEM_PROMPT,
     messages,
     maxOutputTokens: AI_PASTOR_MAX_TOKENS,
