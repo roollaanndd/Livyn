@@ -1,3 +1,3 @@
 export default function OnboardingLoading() {
-  return <div className="fixed inset-0" style={{ background: "linear-gradient(160deg, #0A1610 0%, #0F1D17 40%, #152820 70%, #0D1512 100%)" }} />;
+  return <div className="fixed inset-0 bg-gradient-to-br from-[#E8F5E9] via-[#F1F8E9] to-[#E0F2F1]" />;
 }
