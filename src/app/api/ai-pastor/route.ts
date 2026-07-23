@@ -35,15 +35,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { messages } = await req.json();
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Format permintaan tidak valid." }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
-  const result = streamText({
-    model: google(AI_PASTOR_MODEL),
-    system: AI_PASTOR_SYSTEM_PROMPT,
-    messages,
-    maxOutputTokens: AI_PASTOR_MAX_TOKENS,
-    temperature: AI_PASTOR_TEMPERATURE,
-  });
+  const { messages } = body;
 
-  return result.toUIMessageStreamResponse();
+  if (!messages || !Array.isArray(messages)) {
+    return new Response(
+      JSON.stringify({ error: "Messages diperlukan." }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  try {
+    const result = streamText({
+      model: google(AI_PASTOR_MODEL),
+      system: AI_PASTOR_SYSTEM_PROMPT,
+      messages,
+      maxOutputTokens: AI_PASTOR_MAX_TOKENS,
+      temperature: AI_PASTOR_TEMPERATURE,
+    });
+
+    return result.toUIMessageStreamResponse();
+  } catch (e) {
+    console.error("[ai-pastor] Error:", e);
+    return new Response(
+      JSON.stringify({ error: "Gagal memproses permintaan. Coba lagi." }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
 }
