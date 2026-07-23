@@ -6,10 +6,10 @@ import { Download, Share2, Image as ImageIcon, Check, Loader2, Palette } from "l
 import { cn } from "@/lib/utils";
 
 const THEMES = [
-  { id: "forest", label: "Hutan", color: "#4CAF7D" },
-  { id: "golden", label: "Emas", color: "#C89B3C" },
-  { id: "dawn", label: "Fajar", color: "#B894D8" },
-  { id: "ocean", label: "Laut", color: "#5CB8D6" },
+  { id: "mountain", label: "Gunung", color: "#e8896b" },
+  { id: "lake", label: "Danau", color: "#7ec8e3" },
+  { id: "forest", label: "Hutan", color: "#8bc28d" },
+  { id: "sunset", label: "Senja", color: "#f1c40f" },
 ];
 
 interface VerseShareCardProps {
@@ -19,7 +19,7 @@ interface VerseShareCardProps {
 
 export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState("forest");
+  const [theme, setTheme] = useState("mountain");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 

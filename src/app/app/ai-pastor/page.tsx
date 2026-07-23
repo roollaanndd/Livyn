@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, BookOpenText, HandHeart, ArrowLeft, RotateCcw, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -74,10 +75,7 @@ export default function AiPastorPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { messages, sendMessage, setMessages, status, error } = useChat({
-    transport: {
-      type: "fetch" as const,
-      url: "/api/ai-pastor",
-    } as never,
+    transport: new DefaultChatTransport({ api: "/api/ai-pastor" }),
   });
 
   const isActive = status === "submitted" || status === "streaming";
