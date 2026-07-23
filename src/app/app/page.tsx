@@ -33,16 +33,18 @@ export default async function HomePage() {
   const session = await getCurrentUser();
   if (!session) redirect("/");
 
+  const safe = <T,>(p: Promise<T>, fallback: NoInfer<T>): Promise<T> => p.catch(() => fallback);
+
   const [user, verse, devotion, sermon, continueWatching, reminders, streak, events, challenge] = await Promise.all([
-    prisma.user.findUnique({ where: { id: session.sub }, select: { name: true, avatarUrl: true, points: true } }),
-    getTodayVerse(),
-    getTodayDevotion(),
-    getLatestSermon(),
-    getContinueWatching(session.sub),
-    getUpcomingReminders(session.sub),
-    getPrayerStreak(session.sub),
+    safe(prisma.user.findUnique({ where: { id: session.sub }, select: { name: true, avatarUrl: true, points: true } }), null),
+    safe(getTodayVerse(), null),
+    safe(getTodayDevotion(), null),
+    safe(getLatestSermon(), null),
+    safe(getContinueWatching(session.sub), [] as Awaited<ReturnType<typeof getContinueWatching>>),
+    safe(getUpcomingReminders(session.sub), [] as Awaited<ReturnType<typeof getUpcomingReminders>>),
+    safe(getPrayerStreak(session.sub), 0),
     Promise.resolve(upcomingChristianEvents(3)),
-    getCurrentChallenge(),
+    safe(getCurrentChallenge(), null),
   ]);
 
   const firstName = (user?.name ?? session.name).split(" ")[0];
