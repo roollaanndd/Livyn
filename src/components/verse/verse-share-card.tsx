@@ -136,12 +136,12 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [composedBlob, setComposedBlob] = useState<Blob | null>(null);
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [downloadDone, setDownloadDone] = useState(false);
 
   const generate = useCallback(async () => {
     setLoading(true);
-    setError(false);
+    setErrorMsg(null);
 
     try {
       const res = await fetch("/api/verse-image/generate", {
@@ -150,7 +150,16 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
         body: JSON.stringify({ text: verseText, ref: verseRef }),
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        let msg = "Gagal membuat gambar.";
+        try {
+          const data = await res.json();
+          if (data.error) msg = data.error;
+        } catch {
+          // not json
+        }
+        throw new Error(msg);
+      }
 
       const bgBlob = await res.blob();
       const composed = await compositeImage(bgBlob, verseText, verseRef);
@@ -160,8 +169,8 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
 
       setComposedBlob(composed);
       setImageUrl(url);
-    } catch {
-      setError(true);
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Gagal membuat gambar.");
     } finally {
       setLoading(false);
     }
@@ -251,13 +260,13 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                         Sekitar 10-15 detik
                       </p>
                     </div>
-                  ) : error ? (
+                  ) : errorMsg ? (
                     <div className="flex flex-col items-center gap-3 px-6 text-center">
                       <p className="text-[13px] text-red-500 font-medium">
                         Gagal membuat gambar
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Pastikan koneksi internet stabil
+                      <p className="text-[11px] text-muted-foreground max-w-[240px]">
+                        {errorMsg}
                       </p>
                       <button
                         onClick={generate}

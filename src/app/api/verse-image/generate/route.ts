@@ -4,10 +4,50 @@ import { rateLimit } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
+async function generateImage(
+  apiKey: string,
+  prompt: string,
+  model: string,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const body: Record<string, unknown> = {
+    model,
+    prompt,
+    n: 1,
+    size: "1024x1024",
+  };
+  if (model === "dall-e-3") {
+    body.quality = "standard";
+  }
+
+  const res = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    let msg = `${model} error (${res.status})`;
+    try {
+      const parsed = JSON.parse(text);
+      msg = parsed?.error?.message ?? msg;
+    } catch {
+      // use default msg
+    }
+    return { ok: false, error: msg };
+  }
+
+  const data = await res.json();
+  return { ok: true, url: data.data[0].url };
+}
+
 export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    return NextResponse.json({ error: "Silakan login terlebih dahulu." }, { status: 401 });
   }
 
   const limited = rateLimit(`verse-img:${session.sub}`, 15, 60 * 60 * 1000);
@@ -20,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY belum dikonfigurasi." },
+      { error: "OPENAI_API_KEY belum dikonfigurasi di server." },
       { status: 503 },
     );
   }
@@ -41,46 +81,38 @@ export async function POST(req: NextRequest) {
     "Ultra high quality, photorealistic, 4K cinematic feel.",
   ].join(" ");
 
-  try {
-    const dalleRes = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-      }),
-    });
+  const apiKey = process.env.OPENAI_API_KEY;
+  const models = ["gpt-image-1", "dall-e-3", "dall-e-2"];
+  let lastError = "";
 
-    if (!dalleRes.ok) {
-      const err = await dalleRes.text();
-      console.error("DALL-E error:", err);
-      return NextResponse.json({ error: "Gagal membuat gambar." }, { status: 502 });
+  for (const model of models) {
+    try {
+      const result = await generateImage(apiKey, prompt, model);
+      if (!result.ok) {
+        console.error(`[verse-image] ${model} failed:`, result.error);
+        lastError = result.error;
+        continue;
+      }
+
+      const imgRes = await fetch(result.url);
+      if (!imgRes.ok) {
+        lastError = "Gagal mengunduh gambar dari OpenAI.";
+        continue;
+      }
+
+      const imgBuf = await imgRes.arrayBuffer();
+      return new Response(imgBuf, {
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "no-store",
+        },
+      });
+    } catch (e) {
+      console.error(`[verse-image] ${model} exception:`, e);
+      lastError = e instanceof Error ? e.message : "Unknown error";
+      continue;
     }
-
-    const dalleData = await dalleRes.json();
-    const imageUrl: string = dalleData.data[0].url;
-
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) {
-      return NextResponse.json({ error: "Gagal mengambil gambar." }, { status: 502 });
-    }
-
-    const imgBuf = await imgRes.arrayBuffer();
-
-    return new Response(imgBuf, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (e) {
-    console.error("Verse image generation error:", e);
-    return NextResponse.json({ error: "Terjadi kesalahan." }, { status: 500 });
   }
+
+  return NextResponse.json({ error: lastError || "Semua model gagal." }, { status: 502 });
 }
