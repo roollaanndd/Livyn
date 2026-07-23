@@ -1,0 +1,16 @@
+export const BOOK_CODE_TO_USFM: Record<string, string> = {
+  kej: "GEN", kel: "EXO", im: "LEV", bil: "NUM", ul: "DEU",
+  yos: "JOS", hak: "JDG", rut: "RUT", "1sam": "1SA", "2sam": "2SA",
+  "1raj": "1KI", "2raj": "2KI", "1taw": "1CH", "2taw": "2CH",
+  ezr: "EZR", neh: "NEH", est: "EST", ayb: "JOB", mzm: "PSA",
+  ams: "PRO", pkh: "ECC", kid: "SNG", yes: "ISA", yer: "JER",
+  rat: "LAM", yeh: "EZK", dan: "DAN", hos: "HOS", yl: "JOL",
+  am: "AMO", ob: "OBA", yun: "JON", mi: "MIC", nah: "NAH",
+  hab: "HAB", zef: "ZEP", hag: "HAG", za: "ZEC", mal: "MAL",
+  mat: "MAT", mrk: "MRK", luk: "LUK", yoh: "JHN", kis: "ACT",
+  rm: "ROM", "1kor": "1CO", "2kor": "2CO", gal: "GAL", ef: "EPH",
+  flp: "PHP", kol: "COL", "1tes": "1TH", "2tes": "2TH",
+  "1tim": "1TI", "2tim": "2TI", tit: "TIT", flm: "PHM",
+  ibr: "HEB", yak: "JAS", "1ptr": "1PE", "2ptr": "2PE",
+  "1yoh": "1JN", "2yoh": "2JN", "3yoh": "3JN", yud: "JUD", why: "REV",
+};
