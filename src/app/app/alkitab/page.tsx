@@ -1,24 +1,29 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { Search } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listBibleBooks, searchBibleVerses } from "@/lib/queries/bible";
 import { TopBar } from "@/components/nav/top-bar";
 import { Card } from "@/components/ui/card";
+import { VersionSelector } from "@/components/bible/version-selector";
 
 export default async function BibleBooksPage({ searchParams }: { searchParams: Promise<{ cari?: string }> }) {
   const session = await getCurrentUser();
   if (!session) redirect("/");
 
+  const cookieStore = await cookies();
+  const currentVersion = cookieStore.get("bible-version")?.value || "TB";
+
   const { cari } = await searchParams;
   const [books, results] = await Promise.all([listBibleBooks(), cari ? searchBibleVerses(cari) : Promise.resolve([])]);
 
-  const oldTestament = books.filter((b) => b.testament === "old");
-  const newTestament = books.filter((b) => b.testament === "new");
+  const oldTestament = books.filter((b: { testament: string }) => b.testament === "old");
+  const newTestament = books.filter((b: { testament: string }) => b.testament === "new");
 
   return (
     <div>
-      <TopBar title="Alkitab" />
+      <TopBar title="Alkitab" actions={<VersionSelector current={currentVersion} />} />
 
       <div className="px-5 pt-4">
         <form action="/app/alkitab" className="relative">
@@ -40,10 +45,10 @@ export default async function BibleBooksPage({ searchParams }: { searchParams: P
           <div className="space-y-2.5 stagger">
             {results.length === 0 && (
               <p className="py-10 text-center text-[13px] text-muted-foreground">
-                Tidak ditemukan. Teks Alkitab yang tersedia masih terbatas pada kutipan pilihan.
+                Tidak ditemukan ayat yang cocok.
               </p>
             )}
-            {results.map((v) => (
+            {results.map((v: { id: string; book: { code: string; name: string }; chapter: number; verse: number; text: string }) => (
               <Link key={v.id} href={`/app/alkitab/${v.book.code}/${v.chapter}#v${v.verse}`}>
                 <Card className="animate-slide-up-fade p-4 active:scale-[0.98] transition-transform">
                   <p className="text-[13px] font-semibold text-primary">
@@ -67,7 +72,7 @@ export default async function BibleBooksPage({ searchParams }: { searchParams: P
   );
 }
 
-function BookGroup({ title, books }: { title: string; books: Awaited<ReturnType<typeof listBibleBooks>> }) {
+function BookGroup({ title, books }: { title: string; books: Array<{ id: string; code: string; name: string }> }) {
   return (
     <div className="mt-6">
       <h2 className="font-display mb-3 text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground">{title}</h2>

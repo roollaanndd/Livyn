@@ -1,10 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   getBibleBookByCode,
-  getChapterVerses,
+  getOrFetchChapterVerses,
   getUserHighlightsForChapter,
   getUserNotesForChapter,
 } from "@/lib/queries/bible";
@@ -25,8 +26,11 @@ export default async function ChapterReaderPage({
   const book = await getBibleBookByCode(bookCode);
   if (!book || !Number.isInteger(chapter) || chapter < 1 || chapter > book.chapterCount) notFound();
 
-  const [verses, highlights, notes] = await Promise.all([
-    getChapterVerses(book.id, chapter),
+  const cookieStore = await cookies();
+  const translation = cookieStore.get("bible-version")?.value || "TB";
+
+  const [{ verses }, highlights, notes] = await Promise.all([
+    getOrFetchChapterVerses(book.id, bookCode, chapter, translation),
     getUserHighlightsForChapter(session.sub, bookCode, chapter),
     getUserNotesForChapter(session.sub, bookCode, chapter),
   ]);
@@ -40,9 +44,13 @@ export default async function ChapterReaderPage({
 
       <div className="px-4 pb-24 pt-3">
         {verses.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            Teks untuk {book.name} pasal {chapter} belum tersedia di build ini. Struktur navigasi kitab sudah
-            lengkap 66 kitab — ayat akan bertambah seiring integrasi sumber teks berlisensi.
+          <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground space-y-2">
+            <p>Teks untuk {book.name} pasal {chapter} ({translation}) belum tersedia.</p>
+            {!process.env.API_BIBLE_KEY && (
+              <p className="text-[11px]">
+                Untuk akses seluruh Alkitab, konfigurasikan API_BIBLE_KEY di server.
+              </p>
+            )}
           </div>
         ) : (
           <VerseList
@@ -50,8 +58,8 @@ export default async function ChapterReaderPage({
             chapter={chapter}
             bookName={book.name}
             verses={verses}
-            initialHighlightedVerses={highlights.map((h) => h.verse)}
-            initialNotes={notes.map((n) => ({ id: n.id, verse: n.verse, text: n.text }))}
+            initialHighlightedVerses={highlights.map((h: { verse: number }) => h.verse)}
+            initialNotes={notes.map((n: { id: string; verse: number; text: string }) => ({ id: n.id, verse: n.verse, text: n.text }))}
           />
         )}
 
