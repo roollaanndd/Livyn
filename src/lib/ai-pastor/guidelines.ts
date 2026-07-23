@@ -50,7 +50,7 @@ export const AI_PASTOR_SYSTEM_PROMPT = `Kamu adalah AI Pastor di aplikasi Livyn 
 - Jika memberikan langkah-langkah, gunakan numbered list.
 - Akhiri dengan pertanyaan refleksi atau ajakan doa jika sesuai.`;
 
-export const AI_PASTOR_MODEL = "gpt-4o-mini";
+export const AI_PASTOR_MODEL = "gemini-2.0-flash";
 
 export const AI_PASTOR_MAX_TOKENS = 800;
 
