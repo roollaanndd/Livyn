@@ -4,11 +4,14 @@ import { streamText } from "ai";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import {
-  AI_PASTOR_SYSTEM_PROMPT,
+  buildSystemPrompt,
   AI_PASTOR_MODEL,
   AI_PASTOR_MAX_TOKENS,
   AI_PASTOR_TEMPERATURE,
 } from "@/lib/ai-pastor/guidelines";
+import { classifyIntent, getIntentContext } from "@/lib/ai-pastor/intent";
+import { getRelevantVerses } from "@/lib/ai-pastor/doctrine";
+import { checkSafety } from "@/lib/ai-pastor/safety";
 
 export const maxDuration = 30;
 
@@ -59,10 +62,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // --- PIPELINE: Intent Engine → Context Injection → LLM → Safety Filter ---
+
+  // 1. Extract last user message for intent classification
+  const lastUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
+  const lastUserText = lastUserMsg?.content
+    ? typeof lastUserMsg.content === "string"
+      ? lastUserMsg.content
+      : Array.isArray(lastUserMsg.content)
+        ? lastUserMsg.content
+            .filter((p: { type: string }) => p.type === "text")
+            .map((p: { text?: string }) => p.text || "")
+            .join(" ")
+        : ""
+    : "";
+
+  // 2. Intent Engine: classify the user's question type
+  const intent = classifyIntent(lastUserText);
+
+  // 3. Bible Knowledge Base + Doctrine Rules: inject relevant context
+  const intentContext = getIntentContext(intent);
+  const verseContext = getRelevantVerses(lastUserText);
+
+  // 4. Build the full system prompt with all context
+  const systemPrompt = buildSystemPrompt(intentContext, verseContext);
+
+  // 5. Input safety check on user message
+  const inputCheck = checkSafety(lastUserText);
+  if (!inputCheck.safe) {
+    console.warn(`[ai-pastor] Input blocked: ${inputCheck.reason}`);
+  }
+
   try {
+    // 6. LLM call with context-enriched system prompt
     const result = streamText({
       model: google(AI_PASTOR_MODEL),
-      system: AI_PASTOR_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages,
       maxOutputTokens: AI_PASTOR_MAX_TOKENS,
       temperature: AI_PASTOR_TEMPERATURE,
