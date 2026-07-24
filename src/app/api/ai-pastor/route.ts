@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, convertToModelMessages } from "ai";
+import { streamText, convertToModelMessages, type ModelMessage } from "ai";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import {
@@ -19,6 +19,44 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY ?? "",
   baseURL: "https://openrouter.ai/api/v1",
 });
+
+// Strip characters > 0x7F (non-ASCII) that some AI SDK / runtime paths can
+// accidentally push into HTTP headers, causing WebIDL ByteString errors.
+// Indonesian text is essentially pure ASCII so meaning is preserved.
+function toAsciiSafe(text: string): string {
+  return text
+    .replace(/—/g, "-")
+    .replace(/–/g, "-")
+    .replace(/→/g, "->")
+    .replace(/←/g, "<-")
+    .replace(/↓/g, "v")
+    .replace(/↑/g, "^")
+    .replace(/“/g, '"')
+    .replace(/”/g, '"')
+    .replace(/‘/g, "'")
+    .replace(/’/g, "'")
+    .replace(/…/g, "...")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu, "")
+    .replace(/[^\x00-\x7F]/g, "");
+}
+
+function sanitizeModelMessages(messages: ModelMessage[]): ModelMessage[] {
+  return messages.map((m) => {
+    if (typeof m.content === "string") {
+      return { ...m, content: toAsciiSafe(m.content) } as ModelMessage;
+    }
+    if (Array.isArray(m.content)) {
+      const cleaned = m.content.map((part) => {
+        if (part.type === "text" && typeof part.text === "string") {
+          return { ...part, text: toAsciiSafe(part.text) };
+        }
+        return part;
+      });
+      return { ...m, content: cleaned } as ModelMessage;
+    }
+    return m;
+  });
+}
 
 export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
@@ -63,10 +101,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- PIPELINE: Intent Engine → Context Injection → LLM → Safety Filter ---
+  // --- PIPELINE: Intent Engine -> Context Injection -> LLM -> Safety Filter ---
 
   const lastUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
-  // UIMessage from client uses `parts` (v7); older ModelMessage uses `content`
   const lastUserText = (() => {
     if (!lastUserMsg) return "";
     if (Array.isArray(lastUserMsg.parts)) {
@@ -88,7 +125,7 @@ export async function POST(req: NextRequest) {
   const intent = classifyIntent(lastUserText);
   const intentContext = getIntentContext(intent);
   const verseContext = getRelevantVerses(lastUserText);
-  const systemPrompt = buildSystemPrompt(intentContext, verseContext);
+  const systemPrompt = toAsciiSafe(buildSystemPrompt(intentContext, verseContext));
 
   const inputCheck = checkSafety(lastUserText);
   if (!inputCheck.safe) {
@@ -96,7 +133,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const modelMessages = await convertToModelMessages(messages);
+    const converted = await convertToModelMessages(messages);
+    const modelMessages = sanitizeModelMessages(converted);
     const result = streamText({
       model: openrouter(AI_PASTOR_MODEL),
       system: systemPrompt,
@@ -113,6 +151,8 @@ export async function POST(req: NextRequest) {
         if (error instanceof Error) {
           const msg = error.message;
           const lower = msg.toLowerCase();
+          console.error("[ai-pastor] Error message:", msg);
+          console.error("[ai-pastor] Error stack:", error.stack);
           if (msg.includes("401") || lower.includes("unauthorized")) {
             return "API key OpenRouter tidak valid. Periksa konfigurasi di Vercel.";
           }
