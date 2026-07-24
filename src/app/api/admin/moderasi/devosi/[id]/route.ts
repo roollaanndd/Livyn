@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     data: { moderatorId: session.sub, targetType: "devotion", targetId: id, action: parsed.data.action, reason: parsed.data.reason },
   });
   await logAudit({ userId: session.sub, action: `moderation.devotion_${parsed.data.action}`, targetType: "devotion", targetId: id });
+
+  revalidateTag("devotions");
+  revalidateTag("today-devotion");
 
   return NextResponse.json({ devotion });
 }

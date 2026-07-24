@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -24,6 +25,8 @@ export async function POST(req: NextRequest) {
 
   const category = await prisma.category.create({ data: { name: parsed.data.name, slug } });
   await logAudit({ userId: session.sub, action: "admin.category_created", targetType: "category", targetId: category.id });
+
+  revalidateTag("categories");
 
   return NextResponse.json({ category });
 }

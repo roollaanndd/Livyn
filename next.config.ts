@@ -2,9 +2,22 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typescript: {
-    // Temporarily ignore type errors while using PostgREST adapter
-    // (adapter returns untyped results unlike PrismaClient's generated types)
     ignoreBuildErrors: true,
+  },
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "date-fns",
+      "recharts",
+      "sonner",
+    ],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  },
+  images: {
+    formats: ["image/avif", "image/webp"],
   },
 };
 

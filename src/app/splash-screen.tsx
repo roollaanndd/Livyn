@@ -30,7 +30,7 @@ const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
 const VERSE = "Akulah terang dunia";
 const VERSE_REF = "Yohanes 8:12";
 
-const MAX_WAIT_MS = 5000;
+const MAX_WAIT_MS = 2500;
 
 const SLIDES = [
   {
@@ -239,7 +239,7 @@ export function SplashScreen() {
   const slide = SLIDES[slideIndex];
 
   useEffect(() => {
-    const timer = setTimeout(() => setSplashReady(true), 2200);
+    const timer = setTimeout(() => setSplashReady(true), 700);
     return () => clearTimeout(timer);
   }, []);
 
