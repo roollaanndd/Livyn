@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart } from "lucide-react";
+import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart, BookMarked } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -147,6 +147,20 @@ export default async function HomePage() {
               <p className="text-[13px] text-muted-foreground truncate">Pendamping rohani pribadimu, kapan saja</p>
             </div>
             <ChevronRight className="h-4.5 w-4.5 text-primary/50 shrink-0" />
+          </Card>
+        </Link>
+
+        {/* Reading Plans */}
+        <Link href="/app/rencana-baca">
+          <Card className="animate-slide-up-fade flex items-center gap-4 p-4 active:scale-[0.98] transition-transform border-emerald-500/15 bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
+            <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-emerald-500/10 shadow-sm">
+              <BookMarked className="h-5.5 w-5.5 text-emerald-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-display font-extrabold text-heading text-[15px]">Rencana Bacaan</p>
+              <p className="text-[13px] text-muted-foreground truncate">Baca Alkitab terstruktur setiap hari</p>
+            </div>
+            <ChevronRight className="h-4.5 w-4.5 text-emerald-500/50 shrink-0" />
           </Card>
         </Link>
 
