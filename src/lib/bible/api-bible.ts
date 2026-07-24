@@ -78,6 +78,34 @@ export interface FetchedVerse {
   text: string;
 }
 
+/* Walk api.bible's structured JSON chapter content and group text by verse.
+ * NOTE: the /chapters/{id}/verses list endpoint returns verse REFERENCES ONLY
+ * (no content field) — that is why fetching from it produced empty verse text.
+ * The chapter content endpoint with content-type=json is the reliable source. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function walkContent(nodes: any[], acc: Map<number, string>, state: { current: number }) {
+  for (const node of nodes ?? []) {
+    if (!node || typeof node !== "object") continue;
+
+    if (node.type === "tag" && node.name === "verse") {
+      const num = parseInt(node.attrs?.number ?? "", 10);
+      if (!isNaN(num)) state.current = num;
+    } else if (node.type === "text" && typeof node.text === "string") {
+      let verseNum = state.current;
+      const vid: string | undefined = node.attrs?.verseId;
+      if (vid) {
+        const parsed = parseInt(vid.split(".").pop() ?? "", 10);
+        if (!isNaN(parsed)) verseNum = parsed;
+      }
+      if (verseNum > 0) {
+        acc.set(verseNum, ((acc.get(verseNum) ?? "") + " " + node.text).trim());
+      }
+    }
+
+    if (Array.isArray(node.items)) walkContent(node.items, acc, state);
+  }
+}
+
 export async function fetchChapterVerses(
   bibleId: string,
   bookCode: string,
@@ -92,7 +120,7 @@ export async function fetchChapterVerses(
 
   try {
     const res = await fetch(
-      `${API_BASE}/bibles/${bibleId}/chapters/${chapterId}/verses?content-type=text`,
+      `${API_BASE}/bibles/${bibleId}/chapters/${chapterId}?content-type=json&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=true&include-verse-spans=false`,
       { headers: headers() },
     );
 
@@ -102,15 +130,19 @@ export async function fetchChapterVerses(
     }
 
     const json = await res.json();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const verses: FetchedVerse[] = (json.data ?? []).map((v: any) => {
-      const parts = (v.id as string).split(".");
-      const verseNum = parseInt(parts[parts.length - 1], 10);
-      return {
-        verse: verseNum,
-        text: cleanVerseText(v.content ?? ""),
-      };
-    }).filter((v: FetchedVerse) => v.text.length > 0 && !isNaN(v.verse));
+    const content = json.data?.content;
+    if (!Array.isArray(content)) {
+      console.error(`[api-bible] Unexpected content shape for ${chapterId}`);
+      return null;
+    }
+
+    const acc = new Map<number, string>();
+    walkContent(content, acc, { current: 0 });
+
+    const verses: FetchedVerse[] = [...acc.entries()]
+      .map(([verse, text]) => ({ verse, text: cleanVerseText(text) }))
+      .filter((v) => v.text.length > 0)
+      .sort((a, b) => a.verse - b.verse);
 
     return verses;
   } catch (e) {

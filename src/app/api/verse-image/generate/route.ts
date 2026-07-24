@@ -49,15 +49,6 @@ function getSearchQuery(verseText: string): string {
   return FALLBACK_QUERIES[Math.floor(Math.random() * FALLBACK_QUERIES.length)];
 }
 
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
 async function fetchFromPexels(query: string, apiKey: string): Promise<Response | null> {
   const page = Math.floor(Math.random() * 5) + 1;
   try {
@@ -147,7 +138,8 @@ export async function POST(req: NextRequest) {
   }
 
   const query = getSearchQuery(text);
-  const seed = hashString(`${ref}:${text.slice(0, 40)}`);
+  // Random seed on every request so each generate produces a fresh background.
+  const seed = Math.floor(Math.random() * 1_000_000_000);
 
   // Try Pexels first if configured
   if (process.env.PEXELS_API_KEY) {
