@@ -359,10 +359,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
           >
             <div className="mt-3 space-y-3">
               {imageUrl ? (
-                <div
-                  className="relative overflow-hidden rounded-xl border border-border-subtle bg-black/5 mx-auto"
-                  style={{ maxWidth: 320 }}
-                >
+                <div className="relative w-full overflow-hidden rounded-xl border border-border-subtle bg-black/5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
@@ -378,8 +375,8 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                 </div>
               ) : (
                 <div
-                  className="flex items-center justify-center rounded-xl border border-border-subtle bg-surface-muted/50 mx-auto"
-                  style={{ maxWidth: 320, aspectRatio: "9 / 16" }}
+                  className="flex w-full items-center justify-center rounded-xl border border-border-subtle bg-surface-muted/50"
+                  style={{ aspectRatio: "9 / 16" }}
                 >
                   {loading ? (
                     <div className="flex flex-col items-center gap-3">

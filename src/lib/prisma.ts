@@ -174,6 +174,10 @@ async function fetchJson(url: string, init?: RequestInit) {
   return reviveDates(data);
 }
 
+// Tables whose Prisma schema declares @updatedAt — a client-side feature with
+// no DB default, so this adapter must supply the value on create/update.
+const UPDATED_AT_TABLES = new Set(["WatchProgress", "Note", "PasswordResetToken", "Setting", "JournalEntry"]);
+
 function createModel(modelName: string) {
   const table = toTableName(modelName);
 
@@ -214,6 +218,9 @@ function createModel(modelName: string) {
       const sel = buildSelect(table, args);
       const url = `${BASE}/${table}?select=${encodeURIComponent(sel)}`;
       const body = prepareData(args.data);
+      // Prisma @default(cuid()) and @updatedAt are client-side — supply them here.
+      if (body.id === undefined) body.id = crypto.randomUUID();
+      if (UPDATED_AT_TABLES.has(table) && body.updatedAt === undefined) body.updatedAt = new Date().toISOString();
       const res = await request(url, {
         method: "POST",
         body: JSON.stringify(body),
@@ -228,6 +235,7 @@ function createModel(modelName: string) {
       const sel = buildSelect(table, args);
       const where = buildWhere(args.where);
       const body = prepareData(args.data);
+      if (UPDATED_AT_TABLES.has(table) && body.updatedAt === undefined) body.updatedAt = new Date().toISOString();
       const url = `${BASE}/${table}?${where}&select=${encodeURIComponent(sel)}`;
       const res = await request(url, {
         method: "PATCH",

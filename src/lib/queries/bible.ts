@@ -24,8 +24,17 @@ export async function getOrFetchChapterVerses(
   translation = "TB",
 ): Promise<{ verses: Awaited<ReturnType<typeof getChapterVerses>>; source: "cache" | "api" | "empty" }> {
   const cached = await getChapterVerses(bookId, chapter, translation);
+  const cachedWithText = cached.filter((v: { text: string }) => v.text && v.text.trim().length > 0);
+  if (cachedWithText.length > 0) {
+    return { verses: cachedWithText, source: "cache" };
+  }
+
+  // Rows exist but all have empty text — poisoned cache from the old verses-list
+  // endpoint (which returns references without content). Purge and refetch.
   if (cached.length > 0) {
-    return { verses: cached, source: "cache" };
+    await prisma.bibleVerse
+      .deleteMany({ where: { bookId, chapter, translation } })
+      .catch(() => null);
   }
 
   if (!process.env.API_BIBLE_KEY) {

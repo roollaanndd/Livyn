@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { LivynMark } from "@/components/brand/logo";
 import { MOOD_META } from "@/lib/journal/mood-meta";
 import { DeleteJournalButton } from "@/components/journal/delete-button";
+import { JournalAiReflection } from "@/components/journal/ai-reflection";
 
 export default async function JournalEntryPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getCurrentUser();
@@ -43,20 +44,23 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ i
           <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{entry.body}</p>
         </Card>
 
+        {/* AI Pastor's humanized response to the journal entry */}
+        <JournalAiReflection entryId={entry.id} />
+
         {entry.suggestedVerse && (
-          <Card className="relative overflow-hidden border-none bg-[#0B0D1A] p-5 text-white">
-            <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[#6C5CE7]/30 blur-2xl" />
+          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary to-primary/85 p-5 text-white">
+            <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
             <div className="relative">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-white/50">Ayat Penguat untukmu</span>
-                <LivynMark className="h-6 w-6 opacity-70" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-white/70">Ayat Penguat untukmu</span>
+                <LivynMark className="h-6 w-6 opacity-80" />
               </div>
               <p className="font-display text-lg leading-relaxed">&ldquo;{entry.suggestedVerse.text}&rdquo;</p>
-              <p className="mt-3 text-sm font-medium text-[#A78BFA]">
+              <p className="mt-3 text-sm font-semibold text-white/90">
                 {entry.suggestedVerse.book.name} {entry.suggestedVerse.chapter}:{entry.suggestedVerse.verse}
               </p>
               {entry.suggestedVerseNote && (
-                <p className="mt-3 border-t border-white/10 pt-3 text-sm leading-relaxed text-white/80">
+                <p className="mt-3 border-t border-white/15 pt-3 text-sm leading-relaxed text-white/85">
                   {entry.suggestedVerseNote}
                 </p>
               )}

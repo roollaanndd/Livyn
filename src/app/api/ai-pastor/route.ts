@@ -15,8 +15,14 @@ import { checkSafety } from "@/lib/ai-pastor/safety";
 
 export const maxDuration = 30;
 
+// The Authorization header is built from this env var. If the pasted key
+// contains any non-printable-ASCII character (invisible unicode, arrows,
+// newlines from copy-paste), fetch throws "Cannot convert argument to a
+// ByteString" — so strip everything outside 0x21-0x7E defensively.
+const OPENROUTER_KEY = (process.env.OPENROUTER_API_KEY ?? "").replace(/[^\x21-\x7E]/g, "");
+
 const openrouter = createOpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY ?? "",
+  apiKey: OPENROUTER_KEY,
   baseURL: "https://openrouter.ai/api/v1",
 });
 
@@ -75,7 +81,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!process.env.OPENROUTER_API_KEY) {
+  if (!OPENROUTER_KEY) {
     return new Response(
       JSON.stringify({ error: "AI Pastor belum tersedia. Admin perlu mengkonfigurasi OPENROUTER_API_KEY di environment variables." }),
       { status: 503, headers: { "Content-Type": "application/json" } },
