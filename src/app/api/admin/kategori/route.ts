@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const category = await prisma.category.create({ data: { name: parsed.data.name, slug } });
   await logAudit({ userId: session.sub, action: "admin.category_created", targetType: "category", targetId: category.id });
 
-  revalidateTag("categories");
+  revalidateTag("categories", "max");
 
   return NextResponse.json({ category });
 }
