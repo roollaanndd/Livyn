@@ -40,8 +40,28 @@ export const AI_PASTOR_BASE_PROMPT = `Kamu adalah AI Pastor di aplikasi Livyn �
 - Akhiri dengan pertanyaan refleksi atau ajakan doa jika sesuai.
 - Untuk kata-kata kunci penting, gunakan **bold**.`;
 
+// Defensive: strip characters > 0xFF (non-Latin-1) that some SDK/runtime paths
+// can accidentally shove into HTTP headers (causing WebIDL ByteString errors).
+// Common substitutes preserved so meaning stays intact for Indonesian text.
+function toAsciiSafe(text: string): string {
+  return text
+    .replace(/—/g, "-")   // — em dash
+    .replace(/–/g, "-")   // – en dash
+    .replace(/→/g, "->")  // → right arrow
+    .replace(/←/g, "<-")  // ← left arrow
+    .replace(/↓/g, "v")   // ↓ down arrow (root cause of ByteString bug)
+    .replace(/↑/g, "^")   // ↑ up arrow
+    .replace(/“/g, '"')   // " left double quote
+    .replace(/”/g, '"')   // " right double quote
+    .replace(/‘/g, "'")   // ' left single quote
+    .replace(/’/g, "'")   // ' right single quote
+    .replace(/…/g, "...") // … ellipsis
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu, "") // strip emoji + variation selector
+    .replace(/[^\x00-\x7F]/g, ""); // final belt-and-suspenders: drop any remaining >127
+}
+
 export function buildSystemPrompt(intentContext: string, verseContext: string): string {
-  return [
+  const raw = [
     AI_PASTOR_BASE_PROMPT,
     CORE_DOCTRINES,
     DENOMINATIONAL_SENSITIVITY,
@@ -52,6 +72,7 @@ export function buildSystemPrompt(intentContext: string, verseContext: string): 
   ]
     .filter(Boolean)
     .join("\n\n");
+  return toAsciiSafe(raw);
 }
 
 export const AI_PASTOR_MODEL = "google/gemini-2.0-flash-001";
