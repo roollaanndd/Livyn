@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart, BookMarked } from "lucide-react";
+import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart, BookMarked, Users, Crown, MessageSquareQuote } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -12,6 +12,8 @@ import {
   getPrayerStreak,
 } from "@/lib/queries/home";
 import { getTodaysDevotion } from "@/lib/devotions/daily-themes";
+import { unreadVersePingCount, listMyCircles } from "@/lib/queries/community";
+import { isLeader } from "@/lib/community/permissions";
 import { getCurrentChallenge, getChallengeProgress } from "@/lib/queries/challenge";
 import { getLevelForPoints, getNextTier } from "@/lib/gamification/levels";
 import { upcomingChristianEvents } from "@/lib/christian-calendar";
@@ -109,6 +111,11 @@ export default async function HomePage() {
             <ChevronRight className="h-4.5 w-4.5 text-primary/50 shrink-0" />
           </Card>
         </Link>
+
+        {/* Community — streams */}
+        <Suspense fallback={<CardSkeleton h="h-20" />}>
+          <CommunitySection userId={session.sub} role={session.role} />
+        </Suspense>
 
         {/* Reading Plans — static */}
         <Link href="/app/rencana-baca">
@@ -386,6 +393,68 @@ async function LatestSermonSection() {
           </div>
         </Card>
       </Link>
+    </div>
+  );
+}
+
+async function CommunitySection({ userId, role }: { userId: string; role: string }) {
+  const [pingCount, circles] = await Promise.all([
+    unreadVersePingCount(userId).catch(() => 0),
+    listMyCircles(userId).catch(() => []),
+  ]);
+  const circleCount = circles.length;
+  const showLeaderCta = !isLeader(role);
+
+  return (
+    <div className="animate-slide-up-fade space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/app/teman">
+          <Card className="relative flex items-center gap-3 p-4 active:scale-[0.98] transition-transform">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600">
+              <MessageSquareQuote className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-heading">Teman</p>
+              <p className="text-[11px] text-muted-foreground">
+                {pingCount > 0 ? `${pingCount} ayat baru` : "Undang & kirim ayat"}
+              </p>
+            </div>
+            {pingCount > 0 && (
+              <span className="absolute right-3 top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10.5px] font-bold text-primary-foreground">
+                {pingCount}
+              </span>
+            )}
+          </Card>
+        </Link>
+        <Link href="/app/circle">
+          <Card className="flex items-center gap-3 p-4 active:scale-[0.98] transition-transform">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
+              <Users className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-heading">Circle</p>
+              <p className="text-[11px] text-muted-foreground">
+                {circleCount > 0 ? `${circleCount} lingkaran` : "Gabung / buat lingkaran"}
+              </p>
+            </div>
+          </Card>
+        </Link>
+      </div>
+
+      {showLeaderCta && (
+        <Link href="/app/pemimpin">
+          <Card className="flex items-center gap-3 border-amber-500/20 bg-gradient-to-r from-amber-50 to-transparent p-3.5 active:scale-[0.98] transition-transform dark:from-amber-950/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600">
+              <Crown className="h-4.5 w-4.5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[12.5px] font-bold text-heading">Pendeta atau pemimpin?</p>
+              <p className="text-[11px] text-muted-foreground">Dapatkan tools pastoral khusus</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-amber-500/50" />
+          </Card>
+        </Link>
+      )}
     </div>
   );
 }

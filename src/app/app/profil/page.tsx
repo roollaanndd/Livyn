@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight, BookHeart, Trophy } from "lucide-react";
+import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight, BookHeart, Trophy, Users, MessageSquareQuote, Crown } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { hasRole } from "@/lib/auth/rbac";
@@ -90,6 +90,9 @@ export default async function ProfilePage() {
       <div className="mt-6">
         <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Menu</p>
         <Card className="divide-y divide-border-subtle overflow-hidden">
+          <ProfileLink href="/app/teman" icon={MessageSquareQuote} label="Teman & Ayat Masuk" />
+          <ProfileLink href="/app/circle" icon={Users} label="Circle" />
+          <ProfileLink href="/app/pemimpin" icon={Crown} label="Pemimpin" />
           <ProfileLink href="/app/jurnal" icon={BookHeart} label="Jurnal Curhatku" />
           <ProfileLink href="/app/tantangan" icon={Trophy} label="Tantangan Bulanan" />
           <ProfileLink href="/app/devosi/tersimpan" icon={BookmarkCheck} label="Renungan Tersimpan" />

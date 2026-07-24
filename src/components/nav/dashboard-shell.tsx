@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Sparkles, Clapperboard, Users, ClipboardCheck, Tags, ScrollText, Trophy, BookOpen } from "lucide-react";
+import { LayoutDashboard, Sparkles, Clapperboard, Users, ClipboardCheck, Tags, ScrollText, Trophy, BookOpen, Crown } from "lucide-react";
 import { LivynMark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 export type DashboardNavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
-const ICONS = { LayoutDashboard, Sparkles, Clapperboard, Users, ClipboardCheck, Tags, ScrollText, Trophy, BookOpen };
+const ICONS = { LayoutDashboard, Sparkles, Clapperboard, Users, ClipboardCheck, Tags, ScrollText, Trophy, BookOpen, Crown };
 
 const NAV_CONFIG: Record<"contributor" | "admin", { homeHref: string; items: Array<{ href: string; label: string; icon: keyof typeof ICONS }> }> = {
   contributor: {
@@ -24,6 +24,7 @@ const NAV_CONFIG: Record<"contributor" | "admin", { homeHref: string; items: Arr
     items: [
       { href: "/admin", label: "Dasbor", icon: "LayoutDashboard" },
       { href: "/admin/moderasi", label: "Moderasi", icon: "ClipboardCheck" },
+      { href: "/admin/pemimpin", label: "Pemimpin", icon: "Crown" },
       { href: "/admin/pengguna", label: "Pengguna", icon: "Users" },
       { href: "/admin/kategori", label: "Kategori", icon: "Tags" },
       { href: "/admin/tantangan", label: "Tantangan", icon: "Trophy" },
