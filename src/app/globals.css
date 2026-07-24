@@ -293,6 +293,12 @@ html[data-font-size="xl"] .devotion-body { font-size: 1.45rem; line-height: 2.35
   border-radius: var(--radius-sm);
 }
 
+/* Devotion body prose */
+.prose-livyn p { margin-bottom: 1.25em; }
+.prose-livyn p:last-child { margin-bottom: 0; }
+.prose-livyn strong { font-weight: 700; color: var(--heading); }
+.prose-livyn em { font-style: italic; }
+
 /* Safe area padding */
 .safe-top { padding-top: max(1.25rem, env(safe-area-inset-top)); }
 .safe-bottom { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
