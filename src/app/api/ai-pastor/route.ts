@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
@@ -15,8 +15,9 @@ import { checkSafety } from "@/lib/ai-pastor/safety";
 
 export const maxDuration = 30;
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? "",
+const openrouter = createOpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY ?? "",
+  baseURL: "https://openrouter.ai/api/v1",
 });
 
 export async function POST(req: NextRequest) {
@@ -36,9 +37,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  if (!process.env.OPENROUTER_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "AI Pastor belum tersedia. Admin perlu mengkonfigurasi GOOGLE_GENERATIVE_AI_API_KEY di environment variables." }),
+      JSON.stringify({ error: "AI Pastor belum tersedia. Admin perlu mengkonfigurasi OPENROUTER_API_KEY di environment variables." }),
       { status: 503, headers: { "Content-Type": "application/json" } },
     );
   }
@@ -94,9 +95,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // 6. LLM call with context-enriched system prompt
+    // 6. LLM call via OpenRouter with context-enriched system prompt
     const result = streamText({
-      model: google(AI_PASTOR_MODEL),
+      model: openrouter(AI_PASTOR_MODEL),
       system: systemPrompt,
       messages,
       maxOutputTokens: AI_PASTOR_MAX_TOKENS,
