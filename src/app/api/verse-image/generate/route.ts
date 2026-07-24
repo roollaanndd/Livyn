@@ -28,26 +28,103 @@ const VERSE_KEYWORDS: Record<string, string[]> = {
   tuhan: ["majestic mountain landscape", "vast sky panorama", "awe inspiring nature"],
 };
 
+const FALLBACK_QUERIES = [
+  "beautiful mountain landscape",
+  "serene nature scenery",
+  "dramatic sunset landscape",
+  "peaceful lake mountains",
+  "majestic waterfall nature",
+  "starry night sky mountains",
+  "misty forest morning",
+  "ocean horizon sunrise",
+];
+
 function getSearchQuery(verseText: string): string {
   const lower = verseText.toLowerCase();
-
   for (const [keyword, queries] of Object.entries(VERSE_KEYWORDS)) {
     if (lower.includes(keyword)) {
       return queries[Math.floor(Math.random() * queries.length)];
     }
   }
+  return FALLBACK_QUERIES[Math.floor(Math.random() * FALLBACK_QUERIES.length)];
+}
 
-  const fallback = [
-    "beautiful mountain landscape",
-    "serene nature scenery",
-    "dramatic sunset landscape",
-    "peaceful lake mountains",
-    "majestic waterfall nature",
-    "starry night sky mountains",
-    "misty forest morning",
-    "ocean horizon sunrise",
-  ];
-  return fallback[Math.floor(Math.random() * fallback.length)];
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+async function fetchFromPexels(query: string, apiKey: string): Promise<Response | null> {
+  const page = Math.floor(Math.random() * 5) + 1;
+  try {
+    const searchRes = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=square&size=large&per_page=15&page=${page}`,
+      { headers: { Authorization: apiKey } },
+    );
+
+    if (!searchRes.ok) {
+      console.error("[verse-image] Pexels search failed:", searchRes.status);
+      return null;
+    }
+
+    const data = await searchRes.json();
+    const photos = data.photos;
+
+    if (!photos || photos.length === 0) return null;
+
+    const photo = photos[Math.floor(Math.random() * photos.length)];
+    const imageUrl = photo.src.large2x || photo.src.large || photo.src.original;
+
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) return null;
+
+    const imgBuf = await imgRes.arrayBuffer();
+    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+    return new Response(imgBuf, {
+      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
+    });
+  } catch (e) {
+    console.error("[verse-image] Pexels exception:", e);
+    return null;
+  }
+}
+
+async function fetchFromLoremFlickr(query: string, seed: number): Promise<Response | null> {
+  try {
+    // LoremFlickr supports tag-based image search, no API key needed.
+    const tags = query.replace(/\s+/g, ",");
+    const url = `https://loremflickr.com/800/800/${encodeURIComponent(tags)}?lock=${seed}`;
+    const imgRes = await fetch(url, { redirect: "follow" });
+    if (!imgRes.ok) return null;
+    const imgBuf = await imgRes.arrayBuffer();
+    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+    return new Response(imgBuf, {
+      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
+    });
+  } catch (e) {
+    console.error("[verse-image] LoremFlickr exception:", e);
+    return null;
+  }
+}
+
+async function fetchFromPicsum(seed: number): Promise<Response | null> {
+  try {
+    const url = `https://picsum.photos/seed/livyn${seed}/800/800`;
+    const imgRes = await fetch(url, { redirect: "follow" });
+    if (!imgRes.ok) return null;
+    const imgBuf = await imgRes.arrayBuffer();
+    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+    return new Response(imgBuf, {
+      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
+    });
+  } catch (e) {
+    console.error("[verse-image] Picsum exception:", e);
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -64,100 +141,31 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!process.env.PEXELS_API_KEY) {
-    return NextResponse.json(
-      { error: "PEXELS_API_KEY belum dikonfigurasi di server." },
-      { status: 503 },
-    );
-  }
-
   const { text, ref } = await req.json();
   if (!text || !ref) {
     return NextResponse.json({ error: "text and ref are required" }, { status: 400 });
   }
 
   const query = getSearchQuery(text);
-  const page = Math.floor(Math.random() * 5) + 1;
+  const seed = hashString(`${ref}:${text.slice(0, 40)}`);
 
-  const apiKey = process.env.PEXELS_API_KEY!.trim();
-
-  try {
-    const searchRes = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=square&size=large&per_page=15&page=${page}`,
-      {
-        headers: { Authorization: apiKey },
-      },
-    );
-
-    if (!searchRes.ok) {
-      const errText = await searchRes.text();
-      console.error("[verse-image] Pexels search failed:", searchRes.status, errText);
-      if (searchRes.status === 401 || searchRes.status === 403) {
-        return NextResponse.json(
-          { error: "API key Pexels tidak valid. Periksa konfigurasi server." },
-          { status: 502 },
-        );
-      }
-      return NextResponse.json(
-        { error: "Gagal mencari gambar. Coba lagi." },
-        { status: 502 },
-      );
-    }
-
-    const data = await searchRes.json();
-    const photos = data.photos;
-
-    if (!photos || photos.length === 0) {
-      const fallbackRes = await fetch(
-        `https://api.pexels.com/v1/search?query=beautiful+nature+landscape&orientation=square&size=large&per_page=15`,
-        { headers: { Authorization: apiKey } },
-      );
-      if (fallbackRes.ok) {
-        const fallbackData = await fallbackRes.json();
-        if (fallbackData.photos?.length > 0) {
-          const photo = fallbackData.photos[Math.floor(Math.random() * fallbackData.photos.length)];
-          const imageUrl = photo.src.large2x || photo.src.large || photo.src.original;
-          const imgRes = await fetch(imageUrl);
-          if (imgRes.ok) {
-            const imgBuf = await imgRes.arrayBuffer();
-            const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-            return new Response(imgBuf, {
-              headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
-            });
-          }
-        }
-      }
-      return NextResponse.json(
-        { error: "Tidak ditemukan gambar yang cocok. Coba lagi." },
-        { status: 404 },
-      );
-    }
-
-    const photo = photos[Math.floor(Math.random() * photos.length)];
-    const imageUrl = photo.src.large2x || photo.src.large || photo.src.original;
-
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) {
-      return NextResponse.json(
-        { error: "Gagal mengunduh gambar. Coba lagi." },
-        { status: 502 },
-      );
-    }
-
-    const imgBuf = await imgRes.arrayBuffer();
-    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-
-    return new Response(imgBuf, {
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (e) {
-    console.error("[verse-image] Exception:", e);
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Gagal membuat gambar." },
-      { status: 500 },
-    );
+  // Try Pexels first if configured
+  if (process.env.PEXELS_API_KEY) {
+    const pexelsRes = await fetchFromPexels(query, process.env.PEXELS_API_KEY.trim());
+    if (pexelsRes) return pexelsRes;
+    console.warn("[verse-image] Pexels failed, falling back to LoremFlickr");
   }
+
+  // Fallback: LoremFlickr (themed, no key needed)
+  const loremRes = await fetchFromLoremFlickr(query, seed);
+  if (loremRes) return loremRes;
+
+  // Last resort: Picsum (random but consistent per verse)
+  const picsumRes = await fetchFromPicsum(seed);
+  if (picsumRes) return picsumRes;
+
+  return NextResponse.json(
+    { error: "Gagal membuat gambar. Semua sumber gambar tidak tersedia." },
+    { status: 502 },
+  );
 }

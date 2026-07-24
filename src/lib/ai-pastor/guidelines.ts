@@ -54,7 +54,7 @@ export function buildSystemPrompt(intentContext: string, verseContext: string): 
     .join("\n\n");
 }
 
-export const AI_PASTOR_MODEL = "google/gemini-2.0-flash-exp:free";
+export const AI_PASTOR_MODEL = "google/gemini-2.0-flash-001";
 
 export const AI_PASTOR_MAX_TOKENS = 1000;
 
