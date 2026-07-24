@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { streamText, convertToModelMessages } from "ai";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import {
@@ -70,16 +70,24 @@ export async function POST(req: NextRequest) {
   // --- PIPELINE: Intent Engine → Context Injection → LLM → Safety Filter ---
 
   const lastUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
-  const lastUserText = lastUserMsg?.content
-    ? typeof lastUserMsg.content === "string"
-      ? lastUserMsg.content
-      : Array.isArray(lastUserMsg.content)
-        ? lastUserMsg.content
-            .filter((p: { type: string }) => p.type === "text")
-            .map((p: { text?: string }) => p.text || "")
-            .join(" ")
-        : ""
-    : "";
+  // UIMessage from client uses `parts` (v7); older ModelMessage uses `content`
+  const lastUserText = (() => {
+    if (!lastUserMsg) return "";
+    if (Array.isArray(lastUserMsg.parts)) {
+      return lastUserMsg.parts
+        .filter((p: { type: string }) => p.type === "text")
+        .map((p: { text?: string }) => p.text || "")
+        .join(" ");
+    }
+    if (typeof lastUserMsg.content === "string") return lastUserMsg.content;
+    if (Array.isArray(lastUserMsg.content)) {
+      return lastUserMsg.content
+        .filter((p: { type: string }) => p.type === "text")
+        .map((p: { text?: string }) => p.text || "")
+        .join(" ");
+    }
+    return "";
+  })();
 
   const intent = classifyIntent(lastUserText);
   const intentContext = getIntentContext(intent);
@@ -92,10 +100,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const modelMessages = await convertToModelMessages(messages);
     const result = streamText({
       model: openrouter(AI_PASTOR_MODEL),
       system: systemPrompt,
-      messages,
+      messages: modelMessages,
       maxOutputTokens: AI_PASTOR_MAX_TOKENS,
       temperature: AI_PASTOR_TEMPERATURE,
     });

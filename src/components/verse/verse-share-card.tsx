@@ -17,6 +17,9 @@ interface VerseShareCardProps {
   verseRef: string;
 }
 
+const CANVAS_W = 1080;
+const CANVAS_H = 1920;
+
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -39,92 +42,213 @@ function wrapText(
   return lines;
 }
 
+function drawLivynMark(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
+  ctx.save();
+  ctx.translate(cx - size / 2, cy - size / 2);
+  const scale = size / 120;
+  ctx.scale(scale, scale);
+
+  const gradient = ctx.createLinearGradient(20, 10, 100, 110);
+  gradient.addColorStop(0, "#6BC994");
+  gradient.addColorStop(0.5, "#4CAF7D");
+  gradient.addColorStop(1, "#2D7D5F");
+  ctx.fillStyle = gradient;
+
+  // Main "L" shape (letter form from logo)
+  ctx.beginPath();
+  ctx.moveTo(40, 12);
+  ctx.bezierCurveTo(40, 9.8, 41.8, 8, 44, 8);
+  ctx.lineTo(56, 8);
+  ctx.bezierCurveTo(58.2, 8, 60, 9.8, 60, 12);
+  ctx.lineTo(60, 78);
+  ctx.bezierCurveTo(60, 88, 68, 96, 78, 96);
+  ctx.bezierCurveTo(80.2, 96, 82, 97.8, 82, 100);
+  ctx.lineTo(82, 108);
+  ctx.bezierCurveTo(82, 110.2, 80.2, 112, 78, 112);
+  ctx.bezierCurveTo(56, 112, 40, 96, 40, 74);
+  ctx.closePath();
+  ctx.fill();
+
+  // Leaf accent
+  const leafGrad = ctx.createLinearGradient(55, 70, 85, 110);
+  leafGrad.addColorStop(0, "#6BC994");
+  leafGrad.addColorStop(1, "#C89B3C");
+  ctx.fillStyle = leafGrad;
+  ctx.globalAlpha = 0.75;
+  ctx.beginPath();
+  ctx.moveTo(60, 88);
+  ctx.bezierCurveTo(64, 96, 71, 103, 80, 107);
+  ctx.bezierCurveTo(82, 108, 82.5, 110.5, 81, 112.2);
+  ctx.bezierCurveTo(79.5, 113.8, 77, 114, 75, 113);
+  ctx.bezierCurveTo(63, 107, 53, 97, 48, 84);
+  ctx.bezierCurveTo(47, 81.5, 48.5, 79, 51, 78.5);
+  ctx.lineTo(58, 77);
+  ctx.bezierCurveTo(60, 76.5, 61.5, 78, 60, 88);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
 async function compositeImage(
   bgBlob: Blob,
   verseText: string,
   verseRef: string,
 ): Promise<Blob> {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1024;
+  canvas.width = CANVAS_W;
+  canvas.height = CANVAS_H;
   const ctx = canvas.getContext("2d")!;
 
+  // Background: cover-fit the source image to 9:16 canvas
   const img = await createImageBitmap(bgBlob);
-  ctx.drawImage(img, 0, 0, 1024, 1024);
+  const srcRatio = img.width / img.height;
+  const dstRatio = CANVAS_W / CANVAS_H;
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if (srcRatio > dstRatio) {
+    // source is wider — crop sides
+    sw = img.height * dstRatio;
+    sx = (img.width - sw) / 2;
+  } else {
+    // source is taller — crop top/bottom
+    sh = img.width / dstRatio;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, CANVAS_W, CANVAS_H);
 
-  const gradient = ctx.createLinearGradient(0, 0, 0, 1024);
-  gradient.addColorStop(0, "rgba(0,0,0,0.3)");
-  gradient.addColorStop(0.4, "rgba(0,0,0,0.45)");
-  gradient.addColorStop(1, "rgba(0,0,0,0.55)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 1024, 1024);
+  // Vertical gradient overlay for text readability
+  const overlay = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+  overlay.addColorStop(0, "rgba(0, 20, 12, 0.75)");
+  overlay.addColorStop(0.35, "rgba(0, 15, 10, 0.45)");
+  overlay.addColorStop(0.65, "rgba(0, 15, 10, 0.55)");
+  overlay.addColorStop(1, "rgba(0, 20, 12, 0.88)");
+  ctx.fillStyle = overlay;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
+  // Center vignette for verse focus
+  const vignette = ctx.createRadialGradient(
+    CANVAS_W / 2, CANVAS_H / 2, 100,
+    CANVAS_W / 2, CANVAS_H / 2, CANVAS_W * 0.85,
+  );
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,0.5)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // === TOP: Livyn brand header ===
+  const topY = 180;
+  drawLivynMark(ctx, CANVAS_W / 2 - 90, topY, 68);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "900 52px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  ctx.shadowColor = "rgba(0,0,0,0.6)";
+  ctx.shadowBlur = 12;
+  ctx.fillText("LIVYN", CANVAS_W / 2 - 42, topY + 18);
+
+  // Tagline under wordmark
+  ctx.shadowBlur = 6;
   ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.font = "600 18px -apple-system, BlinkMacSystemFont, sans-serif";
+  const tagline = "FAITH  ·  EVERY DAY  ·  EVERY STEP";
+  ctx.fillText(tagline, CANVAS_W / 2, topY + 68);
 
-  ctx.fillStyle = "#4CAF7D";
+  // Decorative divider under brand
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(498, 155, 5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255,255,255,0.45)";
-  ctx.font = "bold 16px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("LIVYN", 527, 160);
-
-  ctx.strokeStyle = "rgba(255,255,255,0.25)";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(492, 185);
-  ctx.lineTo(532, 185);
+  ctx.moveTo(CANVAS_W / 2 - 60, topY + 100);
+  ctx.lineTo(CANVAS_W / 2 + 60, topY + 100);
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  ctx.font = "italic 72px Georgia, 'Times New Roman', serif";
-  ctx.fillText("“", 512, 260);
+  // === CENTER: Verse text ===
+  ctx.textAlign = "center";
 
+  // Opening quote mark (large, decorative)
+  ctx.fillStyle = "rgba(107, 201, 148, 0.55)";
+  ctx.font = "italic 220px Georgia, 'Times New Roman', serif";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 20;
+  ctx.fillText("“", CANVAS_W / 2, 620);
+
+  // Verse text — big, bold, high contrast
+  const textMaxWidth = CANVAS_W - 160;
+  const len = verseText.length;
   const fontSize =
-    verseText.length > 200
-      ? 24
-      : verseText.length > 150
-        ? 28
-        : verseText.length > 80
-          ? 32
-          : 38;
+    len > 280 ? 44 :
+    len > 220 ? 50 :
+    len > 160 ? 58 :
+    len > 100 ? 68 : 78;
 
-  ctx.font = `italic ${fontSize}px Georgia, 'Times New Roman', serif`;
-  ctx.fillStyle = "rgba(255,255,255,0.95)";
-  ctx.shadowColor = "rgba(0,0,0,0.6)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 2;
+  ctx.font = `500 ${fontSize}px Georgia, 'Times New Roman', serif`;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.shadowColor = "rgba(0,0,0,0.85)";
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 3;
 
-  const lines = wrapText(ctx, verseText, 780);
-  const lineHeight = fontSize * 1.65;
+  const lines = wrapText(ctx, verseText, textMaxWidth);
+  const lineHeight = fontSize * 1.45;
   const totalTextHeight = lines.length * lineHeight;
-  const startY = 512 - totalTextHeight / 2 + 30;
+  const centerY = CANVAS_H / 2;
+  const startY = centerY - totalTextHeight / 2 + fontSize / 2;
 
   lines.forEach((line, i) => {
-    ctx.fillText(line, 512, startY + i * lineHeight);
+    ctx.fillText(line, CANVAS_W / 2, startY + i * lineHeight);
   });
 
-  ctx.shadowColor = "transparent";
+  // Closing quote mark
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = "rgba(107, 201, 148, 0.55)";
+  ctx.font = "italic 220px Georgia, 'Times New Roman', serif";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 20;
+  ctx.fillText("”", CANVAS_W / 2, startY + totalTextHeight + 100);
+
+  // === Verse reference — prominent, boxed style ===
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  ctx.font = "italic 72px Georgia, 'Times New Roman', serif";
-  ctx.fillText("”", 512, startY + totalTextHeight + 30);
+  const refY = startY + totalTextHeight + 220;
 
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = 6;
-  ctx.fillText(verseRef, 512, startY + totalTextHeight + 85);
+  // Small accent line above reference
+  ctx.strokeStyle = "rgba(107, 201, 148, 0.8)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(CANVAS_W / 2 - 40, refY - 40);
+  ctx.lineTo(CANVAS_W / 2 + 40, refY - 40);
+  ctx.stroke();
 
-  ctx.shadowColor = "transparent";
+  // Reference text — bold, prominent, green tint
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "800 44px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.shadowColor = "rgba(0,0,0,0.6)";
+  ctx.shadowBlur = 10;
+  ctx.fillText(verseRef.toUpperCase(), CANVAS_W / 2, refY);
+
+  // === BOTTOM: Livyn footer branding ===
   ctx.shadowBlur = 0;
 
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("FAITH  ·  EVERY DAY  ·  EVERY STEP", 512, 990);
+  const bottomY = CANVAS_H - 130;
+
+  // Small mark
+  drawLivynMark(ctx, CANVAS_W / 2 - 105, bottomY, 44);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.font = "900 36px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 6;
+  ctx.fillText("LIVYN", CANVAS_W / 2 - 75, bottomY + 12);
+
+  // Domain / URL hint
+  ctx.textAlign = "center";
+  ctx.shadowBlur = 4;
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.font = "500 20px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("livyn.app", CANVAS_W / 2, bottomY + 60);
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob!), "image/png");
@@ -198,13 +322,13 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           title: `${verseRef} — Livyn`,
-          text: `“${verseText}” — ${verseRef}`,
+          text: `"${verseText}" — ${verseRef}`,
           files: [file],
         });
       } else {
         await navigator.share({
           title: `${verseRef} — Livyn`,
-          text: `“${verseText}” — ${verseRef}\n\nLivyn — Faith. Every Day. Every Step.`,
+          text: `"${verseText}" — ${verseRef}\n\nLivyn — Faith. Every Day. Every Step.`,
         });
       }
     } catch {
@@ -235,12 +359,12 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
           >
             <div className="mt-3 space-y-3">
               {imageUrl ? (
-                <div className="relative overflow-hidden rounded-xl border border-border-subtle">
+                <div className="relative overflow-hidden rounded-xl border border-border-subtle bg-black/5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
                     alt="Gambar ayat"
-                    className="w-full aspect-square object-cover"
+                    className="w-full aspect-[9/16] object-cover"
                   />
                   {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -249,7 +373,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center aspect-square rounded-xl border border-border-subtle bg-surface-muted/50">
+                <div className="flex items-center justify-center aspect-[9/16] rounded-xl border border-border-subtle bg-surface-muted/50">
                   {loading ? (
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -276,15 +400,15 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={generate} className="flex flex-col items-center gap-3">
+                    <button onClick={generate} className="flex flex-col items-center gap-3 px-6">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-[var(--shadow-glow)]">
                         <Sparkles className="h-6 w-6 text-white" />
                       </div>
                       <p className="text-[13px] font-semibold text-primary">
-                        Generate Gambar AI
+                        Generate Gambar Ayat
                       </p>
-                      <p className="text-[11px] text-muted-foreground max-w-[200px] text-center leading-relaxed">
-                        AI akan membuat gambar pemandangan unik yang sesuai ayat ini
+                      <p className="text-[11px] text-muted-foreground max-w-[220px] text-center leading-relaxed">
+                        Format 9:16 siap untuk Story Instagram, WhatsApp Status, dan sosmed lainnya
                       </p>
                     </button>
                   )}
