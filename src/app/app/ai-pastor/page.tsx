@@ -107,17 +107,31 @@ export default function AiPastorPage() {
   const { messages, sendMessage, setMessages, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ai-pastor" }),
     onError: (err) => {
+      const raw = err.message || "";
+      // Try JSON error first (non-2xx responses)
       try {
-        const parsed = JSON.parse(err.message);
-        setApiError(parsed.error || "Gagal mengirim pesan.");
-      } catch {
-        if (err.message.includes("503")) {
-          setApiError("AI Pastor belum tersedia. Hubungi admin untuk mengkonfigurasi API key.");
-        } else if (err.message.includes("429")) {
-          setApiError("Terlalu banyak pesan. Tunggu beberapa saat lalu coba lagi.");
-        } else {
-          setApiError("Gagal menghubungi AI Pastor. Periksa koneksi internet.");
+        const parsed = JSON.parse(raw);
+        if (parsed?.error) {
+          setApiError(parsed.error);
+          return;
         }
+      } catch {
+        // not JSON
+      }
+      // If server sent a plain message via toUIMessageStreamResponse onError, display it
+      if (raw && raw.length < 300 && !raw.startsWith("<") && !raw.includes("http")) {
+        setApiError(raw);
+        return;
+      }
+      // Fallback status-based messages
+      if (raw.includes("503")) {
+        setApiError("AI Pastor belum tersedia. Hubungi admin untuk mengkonfigurasi API key.");
+      } else if (raw.includes("429")) {
+        setApiError("Terlalu banyak pesan. Tunggu beberapa saat lalu coba lagi.");
+      } else if (raw.includes("401")) {
+        setApiError("API key tidak valid. Hubungi admin.");
+      } else {
+        setApiError("Gagal menghubungi AI Pastor. Periksa koneksi internet.");
       }
     },
   });

@@ -18,6 +18,10 @@ export const maxDuration = 30;
 const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY ?? "",
   baseURL: "https://openrouter.ai/api/v1",
+  headers: {
+    "HTTP-Referer": "https://livyn.app",
+    "X-Title": "Livyn AI Pastor",
+  },
 });
 
 export async function POST(req: NextRequest) {
@@ -65,7 +69,6 @@ export async function POST(req: NextRequest) {
 
   // --- PIPELINE: Intent Engine → Context Injection → LLM → Safety Filter ---
 
-  // 1. Extract last user message for intent classification
   const lastUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
   const lastUserText = lastUserMsg?.content
     ? typeof lastUserMsg.content === "string"
@@ -78,24 +81,17 @@ export async function POST(req: NextRequest) {
         : ""
     : "";
 
-  // 2. Intent Engine: classify the user's question type
   const intent = classifyIntent(lastUserText);
-
-  // 3. Bible Knowledge Base + Doctrine Rules: inject relevant context
   const intentContext = getIntentContext(intent);
   const verseContext = getRelevantVerses(lastUserText);
-
-  // 4. Build the full system prompt with all context
   const systemPrompt = buildSystemPrompt(intentContext, verseContext);
 
-  // 5. Input safety check on user message
   const inputCheck = checkSafety(lastUserText);
   if (!inputCheck.safe) {
     console.warn(`[ai-pastor] Input blocked: ${inputCheck.reason}`);
   }
 
   try {
-    // 6. LLM call via OpenRouter with context-enriched system prompt
     const result = streamText({
       model: openrouter(AI_PASTOR_MODEL),
       system: systemPrompt,
@@ -104,12 +100,35 @@ export async function POST(req: NextRequest) {
       temperature: AI_PASTOR_TEMPERATURE,
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      onError: (error) => {
+        console.error("[ai-pastor] Stream error:", error);
+        if (error == null) return "AI Pastor mengalami gangguan.";
+        if (typeof error === "string") return error;
+        if (error instanceof Error) {
+          const msg = error.message;
+          if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) {
+            return "API key OpenRouter tidak valid. Periksa konfigurasi di Vercel.";
+          }
+          if (msg.includes("402") || msg.toLowerCase().includes("credits") || msg.toLowerCase().includes("insufficient")) {
+            return "Kredit OpenRouter tidak cukup. Top-up di openrouter.ai atau ganti ke model gratis.";
+          }
+          if (msg.includes("429") || msg.toLowerCase().includes("rate limit")) {
+            return "OpenRouter kena rate limit. Tunggu beberapa saat lalu coba lagi.";
+          }
+          if (msg.includes("404") || msg.toLowerCase().includes("not found") || msg.toLowerCase().includes("no endpoints")) {
+            return "Model AI tidak tersedia di OpenRouter. Coba model lain.";
+          }
+          return `AI Pastor gagal: ${msg}`;
+        }
+        return "AI Pastor mengalami gangguan yang tidak diketahui.";
+      },
+    });
   } catch (e) {
-    console.error("[ai-pastor] Error:", e);
+    console.error("[ai-pastor] Sync error:", e);
     const message = e instanceof Error ? e.message : "Gagal memproses permintaan.";
     return new Response(
-      JSON.stringify({ error: `AI Pastor mengalami gangguan: ${message}` }),
+      JSON.stringify({ error: `AI Pastor gagal: ${message}` }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
