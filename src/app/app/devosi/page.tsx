@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookmarkCheck } from "lucide-react";
+import { BookmarkCheck, Clock, Eye } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listPublishedDevotions, listCategories, getUserBookmarkedDevotionIds } from "@/lib/queries/devotions";
 import { TopBar } from "@/components/nav/top-bar";
@@ -26,7 +26,7 @@ export default async function DevotionListPage({
   return (
     <div>
       <TopBar
-        title="Renungan Harian"
+        title="Renungan"
         actions={
           <Link
             href="/app/devosi/tersimpan"
@@ -76,23 +76,60 @@ export default async function DevotionListPage({
             <p className="text-[13px] text-muted-foreground">Belum ada renungan pada kategori ini.</p>
           </div>
         )}
-        {devotions.map((d) => (
-          <Link key={d.id} href={`/app/devosi/${d.slug}`}>
-            <Card className="animate-slide-up-fade p-5 active:scale-[0.98] transition-transform">
-              <div className="mb-2.5 flex items-center gap-2">
-                {d.category && <Badge variant="muted">{d.category.name}</Badge>}
-                {bookmarked.has(d.id) && (
-                  <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
+        {devotions.map((d, i) => {
+          const isFirst = i === 0;
+          return (
+            <Link key={d.id} href={`/app/devosi/${d.slug}`}>
+              <Card
+                className={cn(
+                  "animate-slide-up-fade overflow-hidden active:scale-[0.98] transition-transform",
+                  isFirst ? "border-primary/15 p-0" : "p-5",
                 )}
-              </div>
-              <h3 className="font-display text-[15px] font-bold leading-snug text-heading">{d.title}</h3>
-              <p className="mt-1.5 line-clamp-2 text-[13px] text-muted-foreground leading-relaxed">{d.excerpt}</p>
-              <p className="mt-3 text-[12px] text-muted-foreground">
-                {d.author.name} · {d.readingTimeMin} menit baca
-              </p>
-            </Card>
-          </Link>
-        ))}
+              >
+                {isFirst ? (
+                  <div className="relative p-5" style={{ background: "linear-gradient(135deg, var(--primary-soft) 0%, transparent 100%)" }}>
+                    <div className="mb-3 flex items-center gap-2">
+                      {d.category && <Badge className="bg-primary/10 text-primary border-0 text-[10px] font-bold uppercase tracking-wider">{d.category.name}</Badge>}
+                      {bookmarked.has(d.id) && <BookmarkCheck className="h-3.5 w-3.5 text-primary" />}
+                    </div>
+                    <h3 className="font-display text-[18px] font-extrabold leading-snug text-heading">{d.title}</h3>
+                    <p className="mt-2 line-clamp-3 text-[13px] text-muted-foreground leading-relaxed italic">{d.excerpt}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+                          <span className="text-[10px] font-bold text-primary">{d.author.name.charAt(0)}</span>
+                        </div>
+                        <span className="text-[12px] font-medium text-muted-foreground">{d.author.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {d.readingTimeMin}m</span>
+                        <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {d.viewCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-2.5 flex items-center gap-2">
+                      {d.category && <Badge variant="muted">{d.category.name}</Badge>}
+                      {bookmarked.has(d.id) && <BookmarkCheck className="h-3.5 w-3.5 text-primary" />}
+                    </div>
+                    <h3 className="font-display text-[15px] font-bold leading-snug text-heading">{d.title}</h3>
+                    <p className="mt-1.5 line-clamp-2 text-[13px] text-muted-foreground leading-relaxed">{d.excerpt}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[12px] text-muted-foreground">
+                        {d.author.name}
+                      </span>
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {d.readingTimeMin}m</span>
+                        <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {d.viewCount}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
