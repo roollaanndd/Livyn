@@ -75,7 +75,7 @@ export function buildSystemPrompt(intentContext: string, verseContext: string): 
   return toAsciiSafe(raw);
 }
 
-export const AI_PASTOR_MODEL = "google/gemini-2.5-flash-preview-05-20";
+export const AI_PASTOR_MODEL = process.env.AI_PASTOR_MODEL || "meta-llama/llama-4-maverick:free";
 
 export const AI_PASTOR_MAX_TOKENS = 1000;
 
