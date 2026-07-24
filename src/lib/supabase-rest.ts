@@ -37,8 +37,11 @@ async function rpc<T>(fnName: string, params: Record<string, unknown>): Promise<
     throw new Error(`supabase-rest rpc/${fnName} ${res.status}: ${text}`);
   }
 
-  const data = await res.json();
-  return data as T;
+  // Void RPCs return an empty body — res.json() would throw "Unexpected end
+  // of JSON input" (this crashed journal saves after the entry was created).
+  const text = await res.text();
+  if (!text) return null as T;
+  return JSON.parse(text) as T;
 }
 
 export interface DbUser {

@@ -11,7 +11,7 @@ const TABS = [
   { href: "/app", label: "Beranda", icon: Home, exact: true },
   { href: "/app/alkitab", label: "Alkitab", icon: BookOpen },
   { href: "/app/ai-pastor", label: "AI Pastor", icon: null, isCenter: true },
-  { href: "/app/devosi", label: "Devosi", icon: BookOpenText },
+  { href: "/app/devosi", label: "Renungan", icon: BookOpenText },
   { href: "/app/doa", label: "Doa", icon: AlarmClock },
 ];
 

@@ -74,7 +74,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const result = await generateText({
-      model: openrouter(AI_PASTOR_MODEL),
+      // .chat() — OpenRouter does not support the SDK's default /responses endpoint
+      model: openrouter.chat(AI_PASTOR_MODEL),
       system: REFLECTION_SYSTEM_PROMPT,
       prompt: userPrompt,
       maxOutputTokens: 600,
