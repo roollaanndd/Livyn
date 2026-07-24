@@ -29,8 +29,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   await logAudit({ userId: session.sub, action: `moderation.devotion_${parsed.data.action}`, targetType: "devotion", targetId: id });
 
-  revalidateTag("devotions");
-  revalidateTag("today-devotion");
+  revalidateTag("devotions", "max");
+  revalidateTag("today-devotion", "max");
 
   return NextResponse.json({ devotion });
 }

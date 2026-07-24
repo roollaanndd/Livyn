@@ -6,12 +6,12 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
   getTodayVerse,
-  getTodayDevotion,
   getLatestSermon,
   getContinueWatching,
   getUpcomingReminders,
   getPrayerStreak,
 } from "@/lib/queries/home";
+import { getTodaysDevotion } from "@/lib/devotions/daily-themes";
 import { getCurrentChallenge, getChallengeProgress } from "@/lib/queries/challenge";
 import { getLevelForPoints, getNextTier } from "@/lib/gamification/levels";
 import { upcomingChristianEvents } from "@/lib/christian-calendar";
@@ -124,10 +124,8 @@ export default async function HomePage() {
           </Card>
         </Link>
 
-        {/* Today's Devotion — streams */}
-        <Suspense fallback={<CardSkeleton h="h-36" />}>
-          <TodayDevotionSection />
-        </Suspense>
+        {/* Today's Devotion — synchronous, from code, no wait */}
+        <TodayDevotionSection />
 
         {/* Level & Challenge — streams */}
         <Suspense fallback={<CardSkeleton h="h-28" />}>
@@ -222,24 +220,27 @@ async function TodayVerseSection() {
   );
 }
 
-async function TodayDevotionSection() {
-  const devotion = await getTodayDevotion().catch(() => null);
-  if (!devotion) return null;
+function TodayDevotionSection() {
+  const devotion = getTodaysDevotion();
   return (
-    <Link href={`/app/devosi/${devotion.slug}`}>
+    <Link href="/app/devosi">
       <Card className="animate-slide-up-fade overflow-hidden p-0 active:scale-[0.98] transition-transform">
         <div className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <Badge>Renungan Hari Ini</Badge>
-            {devotion.category && <Badge variant="muted">{devotion.category.name}</Badge>}
+            <Badge variant="muted">{devotion.theme}</Badge>
           </div>
           <h2 className="font-display text-[17px] font-extrabold leading-snug text-heading">{devotion.title}</h2>
-          <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{devotion.excerpt}</p>
+          <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed italic text-muted-foreground">
+            &ldquo;{devotion.verseText}&rdquo;
+          </p>
           <div className="mt-3.5 flex items-center justify-between">
             <span className="text-[12px] text-muted-foreground font-medium">
-              {devotion.author.name} · {devotion.readingTimeMin} menit baca
+              {devotion.verseRef}
             </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+            <span className="flex items-center gap-1 text-[12px] font-bold text-primary">
+              Baca <ChevronRight className="h-3.5 w-3.5" />
+            </span>
           </div>
         </div>
       </Card>
