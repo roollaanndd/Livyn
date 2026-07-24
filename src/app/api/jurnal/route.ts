@@ -39,24 +39,46 @@ export async function POST(req: NextRequest) {
   }
 
   const { title, body, mood } = parsed.data;
-  const match = matchVerse(body, mood);
-  const suggestedVerse = await prisma.bibleVerse.findFirst({
-    where: { book: { code: match.ref.book }, chapter: match.ref.chapter, verse: match.ref.verse },
-  });
 
-  const entry = await prisma.journalEntry.create({
-    data: {
-      userId: session.sub,
-      title,
-      body,
-      mood,
-      suggestedVerseId: suggestedVerse?.id,
-      suggestedVerseNote: match.note,
-    },
-    include: { suggestedVerse: { include: { book: true } } },
-  });
+  let suggestedVerse: { id: string } | null = null;
+  let suggestedNote: string | null = null;
+  try {
+    const match = matchVerse(body, mood);
+    suggestedNote = match.note;
+    // NOTE: the PostgREST adapter can't express nested relation filters
+    // (book: { code }) — resolve the book id first, then filter flat.
+    const book = await prisma.bibleBook.findUnique({ where: { code: match.ref.book } });
+    if (book) {
+      suggestedVerse = await prisma.bibleVerse.findFirst({
+        where: { bookId: book.id, chapter: match.ref.chapter, verse: match.ref.verse },
+      });
+    }
+  } catch (e) {
+    console.error("[jurnal] verse match failed (non-fatal):", e);
+  }
 
-  await logAudit({ userId: session.sub, action: "journal.create", targetType: "JournalEntry", targetId: entry.id, ipAddress: ip });
+  try {
+    const entry = await prisma.journalEntry.create({
+      data: {
+        userId: session.sub,
+        title,
+        body,
+        mood,
+        suggestedVerseId: suggestedVerse?.id,
+        suggestedVerseNote: suggestedNote,
+      },
+      include: { suggestedVerse: { include: { book: true } } },
+    });
 
-  return NextResponse.json({ entry });
+    await logAudit({ userId: session.sub, action: "journal.create", targetType: "JournalEntry", targetId: entry.id, ipAddress: ip }).catch(() => null);
+
+    return NextResponse.json({ entry });
+  } catch (e) {
+    console.error("[jurnal] create failed:", e);
+    const detail = e instanceof Error ? e.message.slice(0, 180) : "unknown";
+    return NextResponse.json(
+      { error: `Gagal menyimpan catatan. (${detail})` },
+      { status: 500 },
+    );
+  }
 }

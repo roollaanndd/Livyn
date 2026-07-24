@@ -90,6 +90,18 @@ function drawLivynMark(ctx: CanvasRenderingContext2D, cx: number, cy: number, si
   ctx.restore();
 }
 
+/* Rounded pill path drawn manually — ctx.roundRect is missing on older WebViews */
+function drawPillPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const r = h / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+  ctx.lineTo(x + r, y + h);
+  ctx.arc(x + r, y + r, r, Math.PI / 2, (3 * Math.PI) / 2);
+  ctx.closePath();
+}
+
 async function compositeImage(
   bgBlob: Blob,
   verseText: string,
@@ -116,22 +128,25 @@ async function compositeImage(
   }
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, CANVAS_W, CANVAS_H);
 
-  // Vertical gradient overlay for text readability
+  // Light vertical overlay — keep the photo clearly visible edge-to-edge
+  // (a heavy overlay makes the background look like it doesn't fill the page)
   const overlay = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-  overlay.addColorStop(0, "rgba(0, 20, 12, 0.75)");
-  overlay.addColorStop(0.35, "rgba(0, 15, 10, 0.45)");
-  overlay.addColorStop(0.65, "rgba(0, 15, 10, 0.55)");
-  overlay.addColorStop(1, "rgba(0, 20, 12, 0.88)");
+  overlay.addColorStop(0, "rgba(0, 12, 8, 0.35)");
+  overlay.addColorStop(0.3, "rgba(0, 10, 6, 0.15)");
+  overlay.addColorStop(0.55, "rgba(0, 10, 6, 0.22)");
+  overlay.addColorStop(0.82, "rgba(0, 12, 8, 0.4)");
+  overlay.addColorStop(1, "rgba(0, 14, 9, 0.62)");
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  // Center vignette for verse focus
+  // Soft center vignette just behind the verse for readability
   const vignette = ctx.createRadialGradient(
-    CANVAS_W / 2, CANVAS_H / 2, 100,
-    CANVAS_W / 2, CANVAS_H / 2, CANVAS_W * 0.85,
+    CANVAS_W / 2, CANVAS_H / 2, 120,
+    CANVAS_W / 2, CANVAS_H / 2, CANVAS_W * 0.95,
   );
-  vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(0,0,0,0.5)");
+  vignette.addColorStop(0, "rgba(0,0,0,0.28)");
+  vignette.addColorStop(0.55, "rgba(0,0,0,0.08)");
+  vignette.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
@@ -228,27 +243,72 @@ async function compositeImage(
   ctx.shadowBlur = 10;
   ctx.fillText(verseRef.toUpperCase(), CANVAS_W / 2, refY);
 
-  // === BOTTOM: Livyn footer branding ===
+  // Today's date under the reference
+  const dateStr = new Date().toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.font = "500 26px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.shadowBlur = 8;
+  ctx.fillText(dateStr, CANVAS_W / 2, refY + 52);
+
+  // === BOTTOM: Livyn campaign footer ===
+  // Frosted pill badge: [logo] Dibuat dengan aplikasi LIVYN
   ctx.shadowBlur = 0;
+  ctx.textAlign = "center";
 
-  const bottomY = CANVAS_H - 130;
+  const pillText = "Dibuat dengan aplikasi";
+  const brandText = "LIVYN";
+  ctx.font = "500 26px -apple-system, BlinkMacSystemFont, sans-serif";
+  const pillTextW = ctx.measureText(pillText).width;
+  ctx.font = "900 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  const brandTextW = ctx.measureText(brandText).width;
 
-  // Small mark
-  drawLivynMark(ctx, CANVAS_W / 2 - 105, bottomY, 44);
+  const logoSize = 42;
+  const gap = 12;
+  const padX = 30;
+  const pillW = padX + logoSize + gap + pillTextW + 10 + brandTextW + padX;
+  const pillH = 74;
+  const pillX = (CANVAS_W - pillW) / 2;
+  const pillY = CANVAS_H - 215;
+
+  ctx.fillStyle = "rgba(10, 22, 16, 0.55)";
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 1.5;
+  drawPillPath(ctx, pillX, pillY, pillW, pillH);
+  ctx.fill();
+  ctx.stroke();
+
+  let cursorX = pillX + padX;
+  drawLivynMark(ctx, cursorX + logoSize / 2, pillY + pillH / 2, logoSize);
+  cursorX += logoSize + gap;
 
   ctx.textAlign = "left";
-  ctx.fillStyle = "rgba(255,255,255,0.95)";
-  ctx.font = "900 36px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
-  ctx.shadowBlur = 6;
-  ctx.fillText("LIVYN", CANVAS_W / 2 - 75, bottomY + 12);
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = "500 26px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(pillText, cursorX, pillY + pillH / 2 + 1);
+  cursorX += pillTextW + 10;
 
-  // Domain / URL hint
+  ctx.fillStyle = "#6BC994";
+  ctx.font = "900 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(brandText, cursorX, pillY + pillH / 2 + 1);
+  ctx.textBaseline = "alphabetic";
+
+  // Campaign line + domain
   ctx.textAlign = "center";
-  ctx.shadowBlur = 4;
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  ctx.font = "500 20px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("livyn.app", CANVAS_W / 2, bottomY + 60);
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.font = "600 24px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("Firman, doa & renungan setiap hari", CANVAS_W / 2, pillY + pillH + 48);
+
+  ctx.fillStyle = "rgba(107, 201, 148, 0.95)";
+  ctx.font = "700 25px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("livyn.app", CANVAS_W / 2, pillY + pillH + 88);
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob!), "image/png");
