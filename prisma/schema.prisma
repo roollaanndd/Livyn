@@ -14,7 +14,7 @@ datasource db {
 
 // ---------- Identity & Access ----------
 
-/// role: "user" | "contributor" | "moderator" | "admin" | "super_admin"
+/// role: "user" | "contributor" | "moderator" | "admin" | "super_admin" | "leader"
 model User {
   id                String   @id @default(cuid())
   email             String   @unique
@@ -36,6 +36,7 @@ model User {
   updatedAt         DateTime @updatedAt
 
   contributorProfile ContributorProfile?
+  leaderProfile      LeaderProfile?
   sessions           Session[]
   refreshTokens      RefreshToken[]
   loginHistory       LoginEvent[]
@@ -56,6 +57,19 @@ model User {
   challengeProgress  ChallengeProgress[]
   readingPlanEnrollments ReadingPlanEnrollment[]
   points             Int      @default(0)
+
+  friendshipsRequested   Friendship[] @relation("FriendshipRequester")
+  friendshipsReceived    Friendship[] @relation("FriendshipAddressee")
+  friendInviteCodes      FriendInviteCode[]
+  circlesOwned           Circle[]     @relation("CircleOwner")
+  circleMemberships      CircleMember[]
+  prayerRequests         PrayerRequest[]
+  prayerIntercessions    PrayerIntercession[]
+  versePingsSent         VersePing[]  @relation("VersePingFrom")
+  versePingsReceived     VersePing[]  @relation("VersePingTo")
+  missionsCreated        WeeklyMission[] @relation("MissionCreator")
+  missionCheckIns        MissionCheckIn[]
+  broadcastsAuthored     CircleBroadcast[] @relation("BroadcastAuthor")
 
   @@index([role])
 }
@@ -462,4 +476,182 @@ model ReadingPlanEnrollment {
 
   @@unique([userId, planId])
   @@index([userId])
+}
+
+// ---------- Community: Friends, Circles, Prayer, Leaders ----------
+
+/// status: "accepted" | "blocked"
+model Friendship {
+  id           String   @id @default(cuid())
+  requesterId  String
+  requester    User     @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId  String
+  addressee    User     @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status       String   @default("accepted")
+  createdAt    DateTime @default(now())
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
+}
+
+/// Short shareable code that lets someone become your friend without email lookup.
+model FriendInviteCode {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime?
+  usedById     String?
+  usedAt       DateTime?
+}
+
+/// Verified pastor/leader profile. role="leader" on User is granted by admin
+/// after review of the LeaderProfile.
+model LeaderProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  churchName    String
+  position      String
+  denomination  String?
+  city          String?
+  phone         String?
+  bio           String?
+  verified      Boolean  @default(false)
+  verifiedAt    DateTime?
+  verifiedById  String?
+  rejectReason  String?
+  submittedAt   DateTime @default(now())
+}
+
+/// type: "friend" | "pastoral"
+model Circle {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  type         String   @default("friend")
+  ownerId      String
+  owner        User     @relation("CircleOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  joinCode     String   @unique
+  memberLimit  Int      @default(15)
+  emoji        String   @default("🌿")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members      CircleMember[]
+  prayers      PrayerRequest[]
+  missions     WeeklyMission[]
+  broadcasts   CircleBroadcast[]
+
+  @@index([ownerId])
+}
+
+/// role: "member" | "co-leader" | "leader"
+model CircleMember {
+  id           String   @id @default(cuid())
+  circleId     String
+  circle       Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         String   @default("member")
+  joinedAt     DateTime @default(now())
+
+  @@unique([circleId, userId])
+  @@index([userId])
+}
+
+/// status: "open" | "answered" | "closed"
+model PrayerRequest {
+  id           String   @id @default(cuid())
+  circleId     String
+  circle       Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  body         String?
+  isAnonymous  Boolean  @default(false)
+  status       String   @default("open")
+  answeredNote String?
+  createdAt    DateTime @default(now())
+  answeredAt   DateTime?
+
+  intercessions PrayerIntercession[]
+
+  @@index([circleId, status])
+}
+
+model PrayerIntercession {
+  id                String        @id @default(cuid())
+  prayerRequestId   String
+  prayerRequest     PrayerRequest @relation(fields: [prayerRequestId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prayedAt          DateTime      @default(now())
+
+  @@unique([prayerRequestId, userId])
+}
+
+/// A verse sent from one friend to another with an optional personal note.
+model VersePing {
+  id           String   @id @default(cuid())
+  fromUserId   String
+  fromUser     User     @relation("VersePingFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId     String
+  toUser       User     @relation("VersePingTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  verseRef     String
+  verseText    String
+  note         String?
+  readAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([toUserId, readAt])
+}
+
+/// category: "reading" | "prayer" | "fasting" | "evangelism" | "service" | "custom"
+model WeeklyMission {
+  id           String   @id @default(cuid())
+  circleId     String
+  circle       Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    User     @relation("MissionCreator", fields: [createdById], references: [id])
+  title        String
+  description  String
+  category     String   @default("reading")
+  startDate    DateTime @default(now())
+  endDate      DateTime
+  createdAt    DateTime @default(now())
+
+  checkIns     MissionCheckIn[]
+
+  @@index([circleId, endDate])
+}
+
+model MissionCheckIn {
+  id           String        @id @default(cuid())
+  missionId    String
+  mission      WeeklyMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note         String?
+  completedAt  DateTime      @default(now())
+
+  @@unique([missionId, userId])
+}
+
+/// type: "announcement" | "sermon_note" | "prayer_focus"
+model CircleBroadcast {
+  id           String   @id @default(cuid())
+  circleId     String
+  circle       Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    User     @relation("BroadcastAuthor", fields: [createdById], references: [id])
+  type         String   @default("announcement")
+  title        String
+  body         String
+  bibleRefs    String?
+  sundayDate   DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([circleId, createdAt])
 }

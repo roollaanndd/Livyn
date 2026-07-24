@@ -39,11 +39,30 @@ const FK_MAP: Record<string, Record<string, { fkCol: string; table: string }>> =
   Session: { user: { fkCol: "userId", table: "User" } },
   PushSubscription: { user: { fkCol: "userId", table: "User" } },
   ReadingPlanEnrollment: { plan: { fkCol: "planId", table: "ReadingPlan" }, user: { fkCol: "userId", table: "User" } },
+  Friendship: { requester: { fkCol: "requesterId", table: "User" }, addressee: { fkCol: "addresseeId", table: "User" } },
+  FriendInviteCode: { user: { fkCol: "userId", table: "User" } },
+  LeaderProfile: { user: { fkCol: "userId", table: "User" } },
+  Circle: { owner: { fkCol: "ownerId", table: "User" } },
+  CircleMember: { circle: { fkCol: "circleId", table: "Circle" }, user: { fkCol: "userId", table: "User" } },
+  PrayerRequest: { circle: { fkCol: "circleId", table: "Circle" }, user: { fkCol: "userId", table: "User" } },
+  PrayerIntercession: { prayerRequest: { fkCol: "prayerRequestId", table: "PrayerRequest" }, user: { fkCol: "userId", table: "User" } },
+  VersePing: { fromUser: { fkCol: "fromUserId", table: "User" }, toUser: { fkCol: "toUserId", table: "User" } },
+  WeeklyMission: { circle: { fkCol: "circleId", table: "Circle" }, createdBy: { fkCol: "createdById", table: "User" } },
+  MissionCheckIn: { mission: { fkCol: "missionId", table: "WeeklyMission" }, user: { fkCol: "userId", table: "User" } },
+  CircleBroadcast: { circle: { fkCol: "circleId", table: "Circle" }, createdBy: { fkCol: "createdById", table: "User" } },
 };
 
 const REVERSE_FK_MAP: Record<string, Record<string, { table: string; fkCol: string }>> = {
   ReadingPlan: { enrollments: { table: "ReadingPlanEnrollment", fkCol: "planId" } },
   ReadingChallenge: { progress: { table: "ChallengeProgress", fkCol: "challengeId" } },
+  Circle: {
+    members: { table: "CircleMember", fkCol: "circleId" },
+    prayers: { table: "PrayerRequest", fkCol: "circleId" },
+    missions: { table: "WeeklyMission", fkCol: "circleId" },
+    broadcasts: { table: "CircleBroadcast", fkCol: "circleId" },
+  },
+  PrayerRequest: { intercessions: { table: "PrayerIntercession", fkCol: "prayerRequestId" } },
+  WeeklyMission: { checkIns: { table: "MissionCheckIn", fkCol: "missionId" } },
 };
 
 function toTableName(model: string): string {
