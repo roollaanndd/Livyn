@@ -54,6 +54,7 @@ model User {
   journalEntries     JournalEntry[]
   pushSubscriptions  PushSubscription[]
   challengeProgress  ChallengeProgress[]
+  readingPlanEnrollments ReadingPlanEnrollment[]
   points             Int      @default(0)
 
   @@index([role])
@@ -425,4 +426,40 @@ model ChallengeProgress {
   createdAt     DateTime  @default(now())
 
   @@unique([userId, challengeId])
+}
+
+// ---------- Bible Reading Plans ----------
+
+model ReadingPlan {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  coverEmoji  String   @default("📖")
+  totalDays   Int
+  category    String   @default("general") // general, gospel, wisdom, epistles, ot-history
+  difficulty  String   @default("beginner") // beginner, intermediate, advanced
+  schedule    String   // JSON: array of { day, bookCode, chapter, title? }
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  enrollments ReadingPlanEnrollment[]
+}
+
+model ReadingPlanEnrollment {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId         String
+  plan           ReadingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  completedDays  String    @default("") // comma-separated day numbers
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastReadAt     DateTime?
+  pointsEarned   Int       @default(0)
+
+  @@unique([userId, planId])
+  @@index([userId])
 }
