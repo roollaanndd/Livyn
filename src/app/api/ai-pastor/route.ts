@@ -156,7 +156,9 @@ export async function POST(req: NextRequest) {
     const converted = await convertToModelMessages(messages);
     const modelMessages = sanitizeModelMessages(converted);
     const result = streamText({
-      model: openrouter(AI_PASTOR_MODEL),
+      // .chat() forces the /chat/completions endpoint — the SDK's default
+      // Responses API (/responses) is not supported by OpenRouter for this model
+      model: openrouter.chat(AI_PASTOR_MODEL),
       system: systemPrompt,
       messages: modelMessages,
       maxOutputTokens: AI_PASTOR_MAX_TOKENS,

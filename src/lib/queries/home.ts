@@ -1,16 +1,17 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
-function dayOfYear(date = new Date()) {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+/* Days since epoch in Asia/Jakarta (UTC+7, no DST). Using the user's local
+ * calendar day means "today's" content rotates at midnight WIB — with the old
+ * UTC day-of-year it only changed at 07:00 WIB, which read as "not changing". */
+function jakartaDayKey(): number {
+  return Math.floor((Date.now() + 7 * 60 * 60 * 1000) / 86_400_000);
 }
 
 export async function getTodayVerse() {
   const count = await prisma.bibleVerse.count();
   if (count === 0) return null;
-  const skip = dayOfYear() % count;
+  const skip = jakartaDayKey() % count;
   const [verse] = await prisma.bibleVerse.findMany({
     take: 1,
     skip,
@@ -23,11 +24,13 @@ export async function getTodayVerse() {
 export async function getTodayDevotion() {
   const published = await prisma.devotion.findMany({
     where: { status: "published" },
-    orderBy: { publishDate: "desc" },
+    // id tiebreak keeps the order stable when publishDates are equal,
+    // so the daily rotation is deterministic
+    orderBy: [{ publishDate: "desc" }, { id: "asc" }],
     include: { author: true, category: true },
   });
   if (published.length === 0) return null;
-  return published[dayOfYear() % published.length];
+  return published[jakartaDayKey() % published.length];
 }
 
 export async function getLatestSermon() {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles } from "lucide-react";
+import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -66,10 +66,13 @@ export default async function HomePage() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 safe-top pb-5">
+      <header className="flex items-center gap-3 px-5 safe-top pb-4">
         <div className="flex-1">
           <p className="text-[13px] text-muted-foreground font-medium">{greeting()} {greetingEmoji()}</p>
           <h1 className="font-display text-[24px] font-extrabold text-heading tracking-tight leading-tight">{firstName}</h1>
+          <p className="mt-0.5 text-[11.5px] text-muted-foreground/70 font-medium">
+            {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
         </div>
         <IconLink href="/app/cari" label="Cari">
           <Search className="h-[18px] w-[18px]" />
@@ -86,6 +89,23 @@ export default async function HomePage() {
       </header>
 
       <div className="stagger space-y-5 px-5 pb-8">
+        {/* Quick actions */}
+        <div className="animate-slide-up-fade grid grid-cols-4 gap-3">
+          {[
+            { href: "/app/alkitab", label: "Alkitab", icon: BookOpenText, bg: "bg-primary-soft", fg: "text-primary" },
+            { href: "/app/devosi", label: "Renungan", icon: BookHeart, bg: "bg-rose-500/10", fg: "text-rose-600" },
+            { href: "/app/doa", label: "Doa", icon: HandHeart, bg: "bg-amber-500/10", fg: "text-amber-600" },
+            { href: "/app/jurnal", label: "Jurnal", icon: PenLine, bg: "bg-sky-500/10", fg: "text-sky-600" },
+          ].map((a) => (
+            <Link key={a.href} href={a.href} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+              <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl ${a.bg} shadow-[var(--shadow-sm)]`}>
+                <a.icon className={`h-[22px] w-[22px] ${a.fg}`} />
+              </div>
+              <span className="text-[11px] font-semibold text-heading">{a.label}</span>
+            </Link>
+          ))}
+        </div>
+
         {/* Today's Verse */}
         {verse && (
           <HeroCard className="animate-slide-up-fade">
