@@ -10,8 +10,20 @@ const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Livyn — Faith. Every Day. Every Step.",
-  description: "Livyn menemani perjalanan imanmu setiap hari: renungan, Alkitab, AI Pastor, pengingat doa, dan khotbah — tanpa gangguan media sosial.",
-  manifest: "/manifest.webmanifest",
+  description:
+    "Livyn menemani perjalanan imanmu setiap hari: renungan, Alkitab, AI Pastor, pengingat doa, dan khotbah — tanpa gangguan media sosial.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Livyn",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
