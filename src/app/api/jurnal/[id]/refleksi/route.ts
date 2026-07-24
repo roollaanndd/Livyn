@@ -9,7 +9,9 @@ import { MOOD_META } from "@/lib/journal/mood-meta";
 
 export const maxDuration = 30;
 
-const OPENROUTER_KEY = (process.env.OPENROUTER_API_KEY ?? "").replace(/[^\x21-\x7E]/g, "");
+const RAW_KEY = process.env.OPENROUTER_API_KEY ?? "";
+const OPENROUTER_KEY = RAW_KEY.replace(/[^\x21-\x7E]/g, "");
+const KEY_IS_CORRUPTED = RAW_KEY.trim() !== "" && OPENROUTER_KEY !== RAW_KEY.trim();
 
 const openrouter = createOpenAI({
   apiKey: OPENROUTER_KEY,
@@ -44,6 +46,13 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   if (!OPENROUTER_KEY) {
     return NextResponse.json(
       { error: "Refleksi AI belum tersedia. Admin perlu mengkonfigurasi OPENROUTER_API_KEY." },
+      { status: 503 },
+    );
+  }
+
+  if (KEY_IS_CORRUPTED) {
+    return NextResponse.json(
+      { error: "API key OpenRouter rusak (karakter tak terlihat dari copy-paste). Paste ulang di Vercel lalu redeploy." },
       { status: 503 },
     );
   }

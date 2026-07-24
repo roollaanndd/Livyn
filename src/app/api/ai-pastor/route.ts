@@ -19,7 +19,11 @@ export const maxDuration = 30;
 // contains any non-printable-ASCII character (invisible unicode, arrows,
 // newlines from copy-paste), fetch throws "Cannot convert argument to a
 // ByteString" — so strip everything outside 0x21-0x7E defensively.
-const OPENROUTER_KEY = (process.env.OPENROUTER_API_KEY ?? "").replace(/[^\x21-\x7E]/g, "");
+const RAW_KEY = process.env.OPENROUTER_API_KEY ?? "";
+const OPENROUTER_KEY = RAW_KEY.replace(/[^\x21-\x7E]/g, "");
+// If stripping changed the key, the stored value is corrupted — after
+// stripping it is a DIFFERENT string than the real key, so auth WILL fail.
+const KEY_IS_CORRUPTED = RAW_KEY.trim() !== "" && OPENROUTER_KEY !== RAW_KEY.trim();
 
 const openrouter = createOpenAI({
   apiKey: OPENROUTER_KEY,
@@ -84,6 +88,16 @@ export async function POST(req: NextRequest) {
   if (!OPENROUTER_KEY) {
     return new Response(
       JSON.stringify({ error: "AI Pastor belum tersedia. Admin perlu mengkonfigurasi OPENROUTER_API_KEY di environment variables." }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  if (KEY_IS_CORRUPTED) {
+    return new Response(
+      JSON.stringify({
+        error:
+          "API key OpenRouter di Vercel mengandung karakter tak terlihat (rusak saat copy-paste). Hapus OPENROUTER_API_KEY di Vercel, salin ulang key dengan tombol Copy di openrouter.ai/keys, tambahkan lagi, lalu redeploy.",
+      }),
       { status: 503, headers: { "Content-Type": "application/json" } },
     );
   }
@@ -159,8 +173,8 @@ export async function POST(req: NextRequest) {
           const lower = msg.toLowerCase();
           console.error("[ai-pastor] Error message:", msg);
           console.error("[ai-pastor] Error stack:", error.stack);
-          if (msg.includes("401") || lower.includes("unauthorized")) {
-            return "API key OpenRouter tidak valid. Periksa konfigurasi di Vercel.";
+          if (msg.includes("401") || lower.includes("unauthorized") || lower.includes("auth")) {
+            return "API key OpenRouter tidak valid atau ditolak. Hapus OPENROUTER_API_KEY di Vercel, salin ulang dengan tombol Copy di openrouter.ai/keys, lalu redeploy.";
           }
           if (msg.includes("402") || lower.includes("credits") || lower.includes("insufficient")) {
             return "Kredit OpenRouter tidak cukup. Top-up di openrouter.ai atau ganti ke model gratis.";

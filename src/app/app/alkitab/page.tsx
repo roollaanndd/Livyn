@@ -7,6 +7,7 @@ import { listBibleBooks, searchBibleVerses } from "@/lib/queries/bible";
 import { TopBar } from "@/components/nav/top-bar";
 import { Card } from "@/components/ui/card";
 import { VersionSelector } from "@/components/bible/version-selector";
+import { DownloadBibleCard } from "@/components/bible/download-bible";
 
 export default async function BibleBooksPage({ searchParams }: { searchParams: Promise<{ cari?: string }> }) {
   const session = await getCurrentUser();
@@ -24,6 +25,8 @@ export default async function BibleBooksPage({ searchParams }: { searchParams: P
   return (
     <div>
       <TopBar title="Alkitab" actions={<VersionSelector current={currentVersion} />} />
+
+      <DownloadBibleCard />
 
       <div className="px-5 pt-4">
         <form action="/app/alkitab" className="relative">

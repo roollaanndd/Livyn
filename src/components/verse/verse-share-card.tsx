@@ -288,17 +288,23 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
       const bgBlob = await res.blob();
       const composed = await compositeImage(bgBlob, verseText, verseRef);
 
-      if (imageUrl) URL.revokeObjectURL(imageUrl);
-      const url = URL.createObjectURL(composed);
+      // Preview via data URL — blob object URLs fail to render inside some
+      // mobile WebViews even though the same blob downloads fine.
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(composed);
+      });
 
       setComposedBlob(composed);
-      setImageUrl(url);
+      setImageUrl(dataUrl);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Gagal membuat gambar.");
     } finally {
       setLoading(false);
     }
-  }, [verseText, verseRef, imageUrl]);
+  }, [verseText, verseRef]);
 
   function download() {
     if (!composedBlob) return;
@@ -341,11 +347,23 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
   return (
     <div className="mt-4">
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-[12px] font-semibold text-primary/70 hover:text-primary transition-colors"
+        onClick={() => {
+          const next = !open;
+          setOpen(next);
+          if (next && !imageUrl && !loading) generate();
+        }}
+        className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-primary to-primary/85 px-4 py-3.5 text-left shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
       >
-        <ImageIcon className="h-3.5 w-3.5" />
-        <span>Buat Gambar Ayat</span>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20">
+          <ImageIcon className="h-4.5 w-4.5 text-white" />
+        </div>
+        <div className="flex-1">
+          <span className="block text-[14px] font-bold text-white">Buat Gambar Ayat</span>
+          <span className="block text-[11.5px] text-white/80">
+            Untuk dibagikan ke Story IG / Status WA
+          </span>
+        </div>
+        <Sparkles className="h-4.5 w-4.5 text-white/80" />
       </button>
 
       <AnimatePresence>
