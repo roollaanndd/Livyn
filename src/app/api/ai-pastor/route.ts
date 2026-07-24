@@ -18,10 +18,6 @@ export const maxDuration = 30;
 const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY ?? "",
   baseURL: "https://openrouter.ai/api/v1",
-  headers: {
-    "HTTP-Referer": "https://livyn.app",
-    "X-Title": "Livyn AI Pastor",
-  },
 });
 
 export async function POST(req: NextRequest) {
@@ -116,19 +112,26 @@ export async function POST(req: NextRequest) {
         if (typeof error === "string") return error;
         if (error instanceof Error) {
           const msg = error.message;
-          if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) {
+          const lower = msg.toLowerCase();
+          if (msg.includes("401") || lower.includes("unauthorized")) {
             return "API key OpenRouter tidak valid. Periksa konfigurasi di Vercel.";
           }
-          if (msg.includes("402") || msg.toLowerCase().includes("credits") || msg.toLowerCase().includes("insufficient")) {
+          if (msg.includes("402") || lower.includes("credits") || lower.includes("insufficient")) {
             return "Kredit OpenRouter tidak cukup. Top-up di openrouter.ai atau ganti ke model gratis.";
           }
-          if (msg.includes("429") || msg.toLowerCase().includes("rate limit")) {
+          if (msg.includes("429") || lower.includes("rate limit")) {
             return "OpenRouter kena rate limit. Tunggu beberapa saat lalu coba lagi.";
           }
-          if (msg.includes("404") || msg.toLowerCase().includes("not found") || msg.toLowerCase().includes("no endpoints")) {
+          if (msg.includes("404") || lower.includes("not found") || lower.includes("no endpoints")) {
             return "Model AI tidak tersedia di OpenRouter. Coba model lain.";
           }
-          return `AI Pastor gagal: ${msg}`;
+          if (lower.includes("bytestring") || lower.includes("bytes")) {
+            return "Terjadi konflik encoding pada permintaan. Silakan coba lagi.";
+          }
+          if (lower.includes("timeout") || lower.includes("timed out")) {
+            return "AI Pastor terlalu lama merespons. Coba lagi.";
+          }
+          return `AI Pastor gagal: ${msg.slice(0, 200)}`;
         }
         return "AI Pastor mengalami gangguan yang tidak diketahui.";
       },
