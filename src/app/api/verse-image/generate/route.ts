@@ -62,7 +62,7 @@ async function fetchFromPexels(query: string, apiKey: string): Promise<Response 
   const page = Math.floor(Math.random() * 5) + 1;
   try {
     const searchRes = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=square&size=large&per_page=15&page=${page}`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=portrait&size=large&per_page=15&page=${page}`,
       { headers: { Authorization: apiKey } },
     );
 
@@ -97,7 +97,7 @@ async function fetchFromLoremFlickr(query: string, seed: number): Promise<Respon
   try {
     // LoremFlickr supports tag-based image search, no API key needed.
     const tags = query.replace(/\s+/g, ",");
-    const url = `https://loremflickr.com/800/800/${encodeURIComponent(tags)}?lock=${seed}`;
+    const url = `https://loremflickr.com/1080/1920/${encodeURIComponent(tags)}?lock=${seed}`;
     const imgRes = await fetch(url, { redirect: "follow" });
     if (!imgRes.ok) return null;
     const imgBuf = await imgRes.arrayBuffer();
@@ -113,7 +113,7 @@ async function fetchFromLoremFlickr(query: string, seed: number): Promise<Respon
 
 async function fetchFromPicsum(seed: number): Promise<Response | null> {
   try {
-    const url = `https://picsum.photos/seed/livyn${seed}/800/800`;
+    const url = `https://picsum.photos/seed/livyn${seed}/1080/1920`;
     const imgRes = await fetch(url, { redirect: "follow" });
     if (!imgRes.ok) return null;
     const imgBuf = await imgRes.arrayBuffer();
