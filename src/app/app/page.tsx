@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart, BookMarked, Users, Crown, MessageSquareQuote } from "lucide-react";
+import { Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, PenLine, Trophy, Sparkles, BookOpenText, HandHeart, BookHeart, BookMarked, Users, Crown, MessageSquareQuote, CircleDot } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -52,14 +52,11 @@ export default async function HomePage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Header — renders immediately, no DB */}
-      <header className="flex items-center gap-3 px-5 safe-top pb-4">
+      {/* Header */}
+      <header className="flex items-center gap-3 px-5 safe-top pb-2">
         <div className="flex-1">
           <p className="text-[13px] text-muted-foreground font-medium">{greeting()} {greetingEmoji()}</p>
-          <h1 className="font-display text-[24px] font-extrabold text-heading tracking-tight leading-tight">{firstName}</h1>
-          <p className="mt-0.5 text-[11.5px] text-muted-foreground/70 font-medium">
-            {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-          </p>
+          <h1 className="font-display text-[22px] font-extrabold text-heading tracking-tight leading-tight">{firstName}</h1>
         </div>
         <IconLink href="/app/cari" label="Cari">
           <Search className="h-[18px] w-[18px]" />
@@ -69,85 +66,88 @@ export default async function HomePage() {
         </IconLink>
         <Link
           href="/app/profil"
-          className="ml-0.5 flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-sm"
+          className="ml-0.5 flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-sm"
         >
           <span className="font-display text-sm font-bold text-white">{firstName.charAt(0).toUpperCase()}</span>
         </Link>
       </header>
 
-      <div className="stagger space-y-5 px-5 pb-8">
-        {/* Quick actions — static, renders immediately */}
-        <div className="animate-slide-up-fade grid grid-cols-4 gap-3">
-          {[
-            { href: "/app/alkitab", label: "Alkitab", icon: BookOpenText, bg: "bg-primary-soft", fg: "text-primary" },
-            { href: "/app/devosi", label: "Renungan", icon: BookHeart, bg: "bg-rose-500/10", fg: "text-rose-600" },
-            { href: "/app/doa", label: "Doa", icon: HandHeart, bg: "bg-amber-500/10", fg: "text-amber-600" },
-            { href: "/app/jurnal", label: "Jurnal", icon: PenLine, bg: "bg-sky-500/10", fg: "text-sky-600" },
-          ].map((a) => (
-            <Link key={a.href} href={a.href} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
-              <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl ${a.bg} shadow-[var(--shadow-sm)]`}>
-                <a.icon className={`h-[22px] w-[22px] ${a.fg}`} />
-              </div>
-              <span className="text-[11px] font-semibold text-heading">{a.label}</span>
-            </Link>
-          ))}
+      <div className="space-y-5 px-5 pb-8">
+        {/* Quick actions — 2 rows of icons */}
+        <div className="animate-slide-up-fade space-y-4">
+          <div className="grid grid-cols-4 gap-3">
+            {([
+              { href: "/app/alkitab", label: "Alkitab", icon: BookOpenText, bg: "bg-primary-soft", fg: "text-primary" },
+              { href: "/app/devosi", label: "Renungan", icon: BookHeart, bg: "bg-rose-500/10", fg: "text-rose-600" },
+              { href: "/app/doa", label: "Doa", icon: HandHeart, bg: "bg-amber-500/10", fg: "text-amber-600" },
+              { href: "/app/jurnal", label: "Jurnal", icon: PenLine, bg: "bg-sky-500/10", fg: "text-sky-600" },
+            ] as const).map((a) => (
+              <Link key={a.href} href={a.href} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+                <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl ${a.bg} shadow-[var(--shadow-sm)]`}>
+                  <a.icon className={`h-[22px] w-[22px] ${a.fg}`} />
+                </div>
+                <span className="text-[11px] font-semibold text-heading">{a.label}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {([
+              { href: "/app/teman", label: "Teman", icon: MessageSquareQuote, bg: "bg-pink-500/10", fg: "text-pink-600" },
+              { href: "/app/circle", label: "Circle", icon: Users, bg: "bg-violet-500/10", fg: "text-violet-600" },
+              { href: "/app/rencana-baca", label: "Bacaan", icon: BookMarked, bg: "bg-emerald-500/10", fg: "text-emerald-600" },
+              { href: "/app/tantangan", label: "Tantangan", icon: Trophy, bg: "bg-orange-500/10", fg: "text-orange-600" },
+            ] as const).map((a) => (
+              <Link key={a.href} href={a.href} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+                <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl ${a.bg} shadow-[var(--shadow-sm)]`}>
+                  <a.icon className={`h-[22px] w-[22px] ${a.fg}`} />
+                </div>
+                <span className="text-[11px] font-semibold text-heading">{a.label}</span>
+              </Link>
+            ))}
+          </div>
         </div>
 
-        {/* Today's Verse — streams */}
+        {/* Today's Verse */}
         <Suspense fallback={<CardSkeleton h="h-48" />}>
           <TodayVerseSection />
         </Suspense>
 
-        {/* AI Pastor Quick Access — static */}
+        {/* AI Pastor Quick Access */}
         <Link href="/app/ai-pastor">
           <Card className="animate-slide-up-fade flex items-center gap-4 p-4 active:scale-[0.98] transition-transform border-primary/15 bg-gradient-to-r from-primary-soft to-transparent">
-            <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/15">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/15">
               <Sparkles className="h-5.5 w-5.5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-display font-extrabold text-heading text-[15px]">Tanya AI Pastor</p>
-              <p className="text-[13px] text-muted-foreground truncate">Pendamping rohani pribadimu, kapan saja</p>
+              <p className="text-[12px] text-muted-foreground truncate">Pendamping rohani pribadimu, kapan saja</p>
             </div>
             <ChevronRight className="h-4.5 w-4.5 text-primary/50 shrink-0" />
           </Card>
         </Link>
 
-        {/* Community — streams */}
-        <Suspense fallback={<CardSkeleton h="h-20" />}>
+        {/* Today's Devotion — synchronous, from code */}
+        <TodayDevotionSection />
+
+        {/* Community summary — streams */}
+        <Suspense fallback={<CardSkeleton h="h-16" />}>
           <CommunitySection userId={session.sub} role={session.role} />
         </Suspense>
-
-        {/* Reading Plans — static */}
-        <Link href="/app/rencana-baca">
-          <Card className="animate-slide-up-fade flex items-center gap-4 p-4 active:scale-[0.98] transition-transform border-emerald-500/15 bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
-            <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-emerald-500/10 shadow-sm">
-              <BookMarked className="h-5.5 w-5.5 text-emerald-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display font-extrabold text-heading text-[15px]">Rencana Bacaan</p>
-              <p className="text-[13px] text-muted-foreground truncate">Baca Alkitab terstruktur setiap hari</p>
-            </div>
-            <ChevronRight className="h-4.5 w-4.5 text-emerald-500/50 shrink-0" />
-          </Card>
-        </Link>
-
-        {/* Today's Devotion — synchronous, from code, no wait */}
-        <TodayDevotionSection />
 
         {/* Level & Challenge — streams */}
         <Suspense fallback={<CardSkeleton h="h-28" />}>
           <LevelChallengeSection userId={session.sub} />
         </Suspense>
 
-        {/* Journal CTA — static */}
+        {/* Journal CTA */}
         <Link href="/app/jurnal/baru">
           <Card className="animate-slide-up-fade flex items-center gap-4 p-4 active:scale-[0.98] transition-transform">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
-              <PenLine className="h-5.5 w-5.5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+              <PenLine className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-display font-extrabold text-heading text-[15px]">Curhat kepada Tuhan</p>
-              <p className="text-[13px] text-muted-foreground">Tulis catatan harianmu, dapatkan ayat penguat</p>
+              <p className="text-[12px] text-muted-foreground">Tulis catatan harianmu, dapatkan ayat penguat</p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
           </Card>
@@ -168,15 +168,15 @@ export default async function HomePage() {
           <LatestSermonSection />
         </Suspense>
 
-        {/* Christian events — static, no DB */}
+        {/* Christian events — static */}
         <div className="animate-slide-up-fade">
           <h3 className="font-display mb-3 text-[15px] font-extrabold text-heading">Peristiwa Kristiani</h3>
           <Card>
             <ul className="divide-y divide-border-subtle">
               {upcomingChristianEvents(3).map((e) => (
                 <li key={e.name} className="flex items-center gap-3.5 p-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                    <CalendarHeart className="h-5 w-5" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                    <CalendarHeart className="h-4.5 w-4.5" />
                   </div>
                   <div className="flex-1">
                     <p className="text-[13px] font-bold text-heading">{e.name}</p>
@@ -282,7 +282,7 @@ async function LevelChallengeSection({ userId }: { userId: string }) {
               <p className="font-display text-xl font-extrabold text-white">{points} Poin</p>
               {challenge ? (
                 <p className="mt-1.5 text-[13px] text-white/65 font-medium">
-                  {chaptersReadCount}/{totalChapters} pasal · {challenge.title}
+                  {chaptersReadCount}/{totalChapters} pasal &middot; {challenge.title}
                 </p>
               ) : (
                 <p className="mt-1.5 text-[13px] text-white/65">Nantikan tantangan berikutnya</p>
@@ -324,7 +324,7 @@ async function PrayerRemindersSection({ userId }: { userId: string }) {
           </p>
         ) : (
           reminders.slice(0, 3).map((r) => (
-            <div key={r.id} className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3.5">
+            <div key={r.id} className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
               <span className="text-[13px] font-semibold text-heading">{r.label}</span>
               <span className="text-[13px] text-muted-foreground font-medium">{r.time}</span>
             </div>
@@ -388,7 +388,7 @@ async function LatestSermonSection() {
           <div className="p-4">
             <p className="font-bold leading-snug text-heading">{sermon.title}</p>
             <p className="mt-1.5 text-[12px] text-muted-foreground font-medium">
-              {sermon.pastor} · {sermon.church}
+              {sermon.pastor} &middot; {sermon.church}
             </p>
           </div>
         </Card>
@@ -405,41 +405,40 @@ async function CommunitySection({ userId, role }: { userId: string; role: string
   const circleCount = circles.length;
   const showLeaderCta = !isLeader(role);
 
+  if (!showLeaderCta && pingCount === 0 && circleCount === 0) return null;
+
   return (
     <div className="animate-slide-up-fade space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/app/teman">
-          <Card className="relative flex items-center gap-3 p-4 active:scale-[0.98] transition-transform">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600">
-              <MessageSquareQuote className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[13px] font-bold text-heading">Teman</p>
-              <p className="text-[11px] text-muted-foreground">
-                {pingCount > 0 ? `${pingCount} ayat baru` : "Undang & kirim ayat"}
-              </p>
-            </div>
-            {pingCount > 0 && (
-              <span className="absolute right-3 top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10.5px] font-bold text-primary-foreground">
-                {pingCount}
-              </span>
-            )}
-          </Card>
-        </Link>
-        <Link href="/app/circle">
-          <Card className="flex items-center gap-3 p-4 active:scale-[0.98] transition-transform">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
-              <Users className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[13px] font-bold text-heading">Circle</p>
-              <p className="text-[11px] text-muted-foreground">
-                {circleCount > 0 ? `${circleCount} lingkaran` : "Gabung / buat lingkaran"}
-              </p>
-            </div>
-          </Card>
-        </Link>
-      </div>
+      {(pingCount > 0 || circleCount > 0) && (
+        <div className="grid grid-cols-2 gap-3">
+          {pingCount > 0 && (
+            <Link href="/app/teman">
+              <Card className="relative flex items-center gap-3 p-3.5 active:scale-[0.98] transition-transform">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-600">
+                  <MessageSquareQuote className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold text-heading">{pingCount} Ayat Baru</p>
+                  <p className="text-[11px] text-muted-foreground">Dari teman</p>
+                </div>
+              </Card>
+            </Link>
+          )}
+          {circleCount > 0 && (
+            <Link href="/app/circle">
+              <Card className="flex items-center gap-3 p-3.5 active:scale-[0.98] transition-transform">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600">
+                  <Users className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold text-heading">{circleCount} Circle</p>
+                  <p className="text-[11px] text-muted-foreground">Lingkaran aktif</p>
+                </div>
+              </Card>
+            </Link>
+          )}
+        </div>
+      )}
 
       {showLeaderCta && (
         <Link href="/app/pemimpin">

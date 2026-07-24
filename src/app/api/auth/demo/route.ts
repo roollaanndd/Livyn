@@ -5,7 +5,7 @@ import { issueRefreshToken } from "@/lib/auth/tokens";
 import { setSessionCookies } from "@/lib/auth/session";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
-const DEMO_EMAIL = "warga@livyn.app";
+const DEMO_EMAIL = "anaktuhan@livyn.app";
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
