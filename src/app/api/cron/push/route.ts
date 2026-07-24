@@ -22,9 +22,11 @@ export async function GET(req: NextRequest) {
   }
 
   const windowMinutes = Number(req.nextUrl.searchParams.get("windowMinutes") ?? 15);
-  const now = new Date();
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const dow = now.getDay();
+  // Reminder times are Indonesian local times; the server runs in UTC.
+  // Shift to Asia/Jakarta (UTC+7, no DST) before comparing.
+  const jkt = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const nowMinutes = jkt.getUTCHours() * 60 + jkt.getUTCMinutes();
+  const dow = jkt.getUTCDay();
 
   const reminders = await prisma.prayerReminder.findMany({ where: { active: true } });
   let prayerSent = 0;
@@ -42,9 +44,11 @@ export async function GET(req: NextRequest) {
   }
 
   let verseSent = 0;
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = jkt.toISOString().slice(0, 10); // Jakarta calendar day
   const lastVerseSetting = await prisma.setting.findUnique({ where: { key: "push:lastDailyVerseDate" } });
-  if (lastVerseSetting?.value !== todayStr) {
+  // Send the daily verse once per Jakarta day, and only from 06:00 WIB onward
+  // so subscribers get it in the morning rather than at midnight.
+  if (nowMinutes >= 6 * 60 && lastVerseSetting?.value !== todayStr) {
     const verse = await getTodayVerse();
     if (verse) {
       const subscribedUserIds = await prisma.pushSubscription.findMany({
