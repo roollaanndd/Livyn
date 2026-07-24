@@ -75,7 +75,7 @@ export function buildSystemPrompt(intentContext: string, verseContext: string): 
   return toAsciiSafe(raw);
 }
 
-export const AI_PASTOR_MODEL = "google/gemini-2.0-flash-001";
+export const AI_PASTOR_MODEL = "google/gemini-2.5-flash-preview-05-20";
 
 export const AI_PASTOR_MAX_TOKENS = 1000;
 

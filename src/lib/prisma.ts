@@ -38,6 +38,12 @@ const FK_MAP: Record<string, Record<string, { fkCol: string; table: string }>> =
   ContributorProfile: { user: { fkCol: "userId", table: "User" } },
   Session: { user: { fkCol: "userId", table: "User" } },
   PushSubscription: { user: { fkCol: "userId", table: "User" } },
+  ReadingPlanEnrollment: { plan: { fkCol: "planId", table: "ReadingPlan" }, user: { fkCol: "userId", table: "User" } },
+};
+
+const REVERSE_FK_MAP: Record<string, Record<string, { table: string; fkCol: string }>> = {
+  ReadingPlan: { enrollments: { table: "ReadingPlanEnrollment", fkCol: "planId" } },
+  ReadingChallenge: { progress: { table: "ChallengeProgress", fkCol: "challengeId" } },
 };
 
 function toTableName(model: string): string {
@@ -55,13 +61,54 @@ function buildSelect(table: string, opts: { select?: Record<string, boolean> | n
     const rels = FK_MAP[table] ?? {};
     for (const [rel, val] of Object.entries(opts.include)) {
       if (!val) continue;
+      if (rel === "_count" && typeof val === "object" && val !== null) {
+        const countSpec = (val as { select?: Record<string, boolean> }).select;
+        if (countSpec) {
+          const revRels = REVERSE_FK_MAP[table] ?? {};
+          for (const countRel of Object.keys(countSpec)) {
+            const revInfo = revRels[countRel];
+            if (revInfo) {
+              parts.push(`_count_${countRel}:${revInfo.table}!${revInfo.fkCol}(id)`);
+            }
+          }
+        }
+        continue;
+      }
       const info = rels[rel];
       if (info) {
-        parts.push(`${rel}:${info.table}!${info.fkCol}(*)`);
+        const nestedSelect = buildNestedSelect(info.table, val);
+        parts.push(`${rel}:${info.table}!${info.fkCol}(${nestedSelect})`);
       }
     }
   }
   return parts.join(",");
+}
+
+function buildNestedSelect(table: string, val: boolean | object): string {
+  if (val === true) return "*";
+  if (typeof val === "object" && val !== null) {
+    const nested = val as { select?: Record<string, boolean>; include?: Record<string, boolean | object> };
+    const parts: string[] = [];
+    if (nested.select) {
+      parts.push(...Object.keys(nested.select).filter((k) => nested.select![k]));
+    } else {
+      parts.push("*");
+    }
+    if (nested.include) {
+      const rels = FK_MAP[table] ?? {};
+      for (const [rel, relVal] of Object.entries(nested.include)) {
+        if (!relVal) continue;
+        if (rel === "_count") continue;
+        const info = rels[rel];
+        if (info) {
+          const deepSelect = buildNestedSelect(info.table, relVal);
+          parts.push(`${rel}:${info.table}!${info.fkCol}(${deepSelect})`);
+        }
+      }
+    }
+    return parts.join(",");
+  }
+  return "*";
 }
 
 function buildWhere(where: Record<string, unknown> | undefined | null): string {
@@ -167,11 +214,29 @@ async function request(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, headers });
 }
 
+function postProcessCounts(row: Record<string, unknown>): Record<string, unknown> {
+  const counts: Record<string, number> = {};
+  const keysToDelete: string[] = [];
+  for (const key of Object.keys(row)) {
+    if (key.startsWith("_count_")) {
+      const rel = key.slice(7);
+      counts[rel] = Array.isArray(row[key]) ? (row[key] as unknown[]).length : 0;
+      keysToDelete.push(key);
+    }
+  }
+  for (const k of keysToDelete) delete row[k];
+  if (Object.keys(counts).length > 0) row._count = counts;
+  return row;
+}
+
 async function fetchJson(url: string, init?: RequestInit) {
   const res = await request(url, init);
   if (!res.ok) return null;
   const data = await res.json();
-  return reviveDates(data);
+  const revived = reviveDates(data);
+  if (Array.isArray(revived)) return revived.map((r) => postProcessCounts(r as Record<string, unknown>));
+  if (revived && typeof revived === "object") return postProcessCounts(revived as Record<string, unknown>);
+  return revived;
 }
 
 // Tables whose Prisma schema declares @updatedAt — a client-side feature with
