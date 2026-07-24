@@ -1,0 +1,23 @@
+name: Prayer reminder push
+
+# Vercel Hobby cron only fires once per day, so this workflow is the real
+# scheduler: every 15 minutes it pings the push endpoint, which sends any
+# prayer reminders due in the trailing window plus the once-daily verse.
+#
+# Requires the repository Actions secret CRON_SECRET to match the
+# CRON_SECRET environment variable configured in Vercel.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger push endpoint
+        run: |
+          curl -sS --fail-with-body --max-time 60 \
+            "https://livyn-six.vercel.app/api/cron/push?windowMinutes=20" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
