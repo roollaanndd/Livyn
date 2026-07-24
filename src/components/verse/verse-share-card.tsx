@@ -359,12 +359,16 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
           >
             <div className="mt-3 space-y-3">
               {imageUrl ? (
-                <div className="relative overflow-hidden rounded-xl border border-border-subtle bg-black/5">
+                <div
+                  className="relative overflow-hidden rounded-xl border border-border-subtle bg-black/5 mx-auto"
+                  style={{ maxWidth: 320 }}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
                     alt="Gambar ayat"
-                    className="w-full aspect-[9/16] object-cover"
+                    className="block w-full h-auto"
+                    style={{ aspectRatio: "9 / 16", objectFit: "cover" }}
                   />
                   {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -373,7 +377,10 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center aspect-[9/16] rounded-xl border border-border-subtle bg-surface-muted/50">
+                <div
+                  className="flex items-center justify-center rounded-xl border border-border-subtle bg-surface-muted/50 mx-auto"
+                  style={{ maxWidth: 320, aspectRatio: "9 / 16" }}
+                >
                   {loading ? (
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
