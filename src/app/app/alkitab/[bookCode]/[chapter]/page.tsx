@@ -12,6 +12,7 @@ import {
 import { TopBar } from "@/components/nav/top-bar";
 import { FontSizeControl } from "@/components/devotion/font-size-control";
 import { VerseList } from "@/components/bible/verse-list";
+import { OfflineChapter } from "@/components/bible/offline-chapter";
 
 export default async function ChapterReaderPage({
   params,
@@ -44,14 +45,13 @@ export default async function ChapterReaderPage({
 
       <div className="px-4 pb-24 pt-3">
         {verses.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground space-y-2">
-            <p>Teks untuk {book.name} pasal {chapter} ({translation}) belum tersedia.</p>
-            {!process.env.API_BIBLE_KEY && (
-              <p className="text-[11px]">
-                Untuk akses seluruh Alkitab, konfigurasikan API_BIBLE_KEY di server.
-              </p>
-            )}
-          </div>
+          <OfflineChapter
+            bookCode={bookCode}
+            chapter={chapter}
+            bookName={book.name}
+            initialHighlightedVerses={highlights.map((h: { verse: number }) => h.verse)}
+            initialNotes={notes.map((n: { id: string; verse: number; text: string }) => ({ id: n.id, verse: n.verse, text: n.text }))}
+          />
         ) : (
           <VerseList
             bookCode={bookCode}

@@ -259,7 +259,8 @@ export function SplashScreen() {
       return;
     }
 
-    const onboarded = typeof window !== "undefined" && localStorage.getItem("livyn_onboarded");
+    // v2: key bumped so the redesigned onboarding shows once more for everyone
+    const onboarded = typeof window !== "undefined" && localStorage.getItem("livyn_onboarded_v2");
     if (onboarded) {
       setPhase("navigating");
       router.replace("/masuk");
@@ -271,7 +272,7 @@ export function SplashScreen() {
   const finishOnboarding = useCallback(() => {
     if (entering) return;
     setEntering(true);
-    localStorage.setItem("livyn_onboarded", "1");
+    localStorage.setItem("livyn_onboarded_v2", "1");
     router.replace("/masuk");
   }, [entering, router]);
 
