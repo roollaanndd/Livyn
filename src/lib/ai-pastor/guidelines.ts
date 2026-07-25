@@ -75,7 +75,9 @@ export function buildSystemPrompt(intentContext: string, verseContext: string): 
   return toAsciiSafe(raw);
 }
 
-export const AI_PASTOR_MODEL = process.env.AI_PASTOR_MODEL || "meta-llama/llama-4-maverick:free";
+// Model selection lives in ./model.ts — it is resolved against OpenRouter's
+// live catalogue instead of being pinned to one slug that can be retired.
+export { AI_PASTOR_MODEL } from "./model";
 
 export const AI_PASTOR_MAX_TOKENS = 1000;
 

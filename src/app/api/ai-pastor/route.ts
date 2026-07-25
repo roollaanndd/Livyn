@@ -1,34 +1,24 @@
 import { NextRequest } from "next/server";
-import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, convertToModelMessages, type ModelMessage } from "ai";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import {
   buildSystemPrompt,
-  AI_PASTOR_MODEL,
   AI_PASTOR_MAX_TOKENS,
   AI_PASTOR_TEMPERATURE,
 } from "@/lib/ai-pastor/guidelines";
+import {
+  HAS_OPENROUTER_KEY,
+  KEY_IS_CORRUPTED,
+  describeOpenRouterError,
+  openrouterChat,
+  resolveModelChain,
+} from "@/lib/ai-pastor/model";
 import { classifyIntent, getIntentContext } from "@/lib/ai-pastor/intent";
 import { getRelevantVerses } from "@/lib/ai-pastor/doctrine";
 import { checkSafety } from "@/lib/ai-pastor/safety";
 
 export const maxDuration = 30;
-
-// The Authorization header is built from this env var. If the pasted key
-// contains any non-printable-ASCII character (invisible unicode, arrows,
-// newlines from copy-paste), fetch throws "Cannot convert argument to a
-// ByteString" — so strip everything outside 0x21-0x7E defensively.
-const RAW_KEY = process.env.OPENROUTER_API_KEY ?? "";
-const OPENROUTER_KEY = RAW_KEY.replace(/[^\x21-\x7E]/g, "");
-// If stripping changed the key, the stored value is corrupted — after
-// stripping it is a DIFFERENT string than the real key, so auth WILL fail.
-const KEY_IS_CORRUPTED = RAW_KEY.trim() !== "" && OPENROUTER_KEY !== RAW_KEY.trim();
-
-const openrouter = createOpenAI({
-  apiKey: OPENROUTER_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
 
 // Strip characters > 0x7F (non-ASCII) that some AI SDK / runtime paths can
 // accidentally push into HTTP headers, causing WebIDL ByteString errors.
@@ -85,7 +75,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!OPENROUTER_KEY) {
+  if (!HAS_OPENROUTER_KEY) {
     return new Response(
       JSON.stringify({ error: "AI Pastor belum tersedia. Admin perlu mengkonfigurasi OPENROUTER_API_KEY di environment variables." }),
       { status: 503, headers: { "Content-Type": "application/json" } },
@@ -155,10 +145,11 @@ export async function POST(req: NextRequest) {
   try {
     const converted = await convertToModelMessages(messages);
     const modelMessages = sanitizeModelMessages(converted);
+    // Verified against OpenRouter's live catalogue; the rest of the chain is
+    // handed to OpenRouter as fallbacks so a retired slug can't take chat down.
+    const modelChain = await resolveModelChain();
     const result = streamText({
-      // .chat() forces the /chat/completions endpoint — the SDK's default
-      // Responses API (/responses) is not supported by OpenRouter for this model
-      model: openrouter.chat(AI_PASTOR_MODEL),
+      model: openrouterChat(modelChain),
       system: systemPrompt,
       messages: modelMessages,
       maxOutputTokens: AI_PASTOR_MAX_TOKENS,
@@ -171,29 +162,9 @@ export async function POST(req: NextRequest) {
         if (error == null) return "AI Pastor mengalami gangguan.";
         if (typeof error === "string") return error;
         if (error instanceof Error) {
-          const msg = error.message;
-          const lower = msg.toLowerCase();
-          console.error("[ai-pastor] Error message:", msg);
+          console.error("[ai-pastor] Error message:", error.message);
           console.error("[ai-pastor] Error stack:", error.stack);
-          if (msg.includes("401") || lower.includes("unauthorized") || lower.includes("auth")) {
-            return "API key OpenRouter tidak valid atau ditolak. Hapus OPENROUTER_API_KEY di Vercel, salin ulang dengan tombol Copy di openrouter.ai/keys, lalu redeploy.";
-          }
-          if (msg.includes("402") || lower.includes("credits") || lower.includes("insufficient")) {
-            return "Kredit OpenRouter tidak cukup. Top-up di openrouter.ai atau ganti ke model gratis.";
-          }
-          if (msg.includes("429") || lower.includes("rate limit")) {
-            return "OpenRouter kena rate limit. Tunggu beberapa saat lalu coba lagi.";
-          }
-          if (msg.includes("404") || lower.includes("not found") || lower.includes("no endpoints")) {
-            return "Model AI tidak tersedia di OpenRouter. Coba model lain.";
-          }
-          if (lower.includes("bytestring") || lower.includes("bytes")) {
-            return "Terjadi konflik encoding pada permintaan. Silakan coba lagi.";
-          }
-          if (lower.includes("timeout") || lower.includes("timed out")) {
-            return "AI Pastor terlalu lama merespons. Coba lagi.";
-          }
-          return `AI Pastor gagal: ${msg.slice(0, 200)}`;
+          return describeOpenRouterError(error.message);
         }
         return "AI Pastor mengalami gangguan yang tidak diketahui.";
       },
@@ -202,7 +173,7 @@ export async function POST(req: NextRequest) {
     console.error("[ai-pastor] Sync error:", e);
     const message = e instanceof Error ? e.message : "Gagal memproses permintaan.";
     return new Response(
-      JSON.stringify({ error: `AI Pastor gagal: ${message}` }),
+      JSON.stringify({ error: describeOpenRouterError(message) }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }

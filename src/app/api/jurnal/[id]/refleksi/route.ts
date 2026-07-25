@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { AI_PASTOR_MODEL } from "@/lib/ai-pastor/guidelines";
+import {
+  HAS_OPENROUTER_KEY,
+  KEY_IS_CORRUPTED,
+  describeOpenRouterError,
+  openrouterChat,
+  resolveModelChain,
+} from "@/lib/ai-pastor/model";
 import { MOOD_META } from "@/lib/journal/mood-meta";
 
 export const maxDuration = 30;
-
-const RAW_KEY = process.env.OPENROUTER_API_KEY ?? "";
-const OPENROUTER_KEY = RAW_KEY.replace(/[^\x21-\x7E]/g, "");
-const KEY_IS_CORRUPTED = RAW_KEY.trim() !== "" && OPENROUTER_KEY !== RAW_KEY.trim();
-
-const openrouter = createOpenAI({
-  apiKey: OPENROUTER_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
 
 const REFLECTION_SYSTEM_PROMPT = `Kamu adalah AI Pastor dari aplikasi Livyn - pendamping rohani Kristen yang hangat dan penuh kasih.
 
@@ -43,7 +39,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi nanti." }, { status: 429 });
   }
 
-  if (!OPENROUTER_KEY) {
+  if (!HAS_OPENROUTER_KEY) {
     return NextResponse.json(
       { error: "Refleksi AI belum tersedia. Admin perlu mengkonfigurasi OPENROUTER_API_KEY." },
       { status: 503 },
@@ -72,10 +68,13 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     .filter(Boolean)
     .join("\n\n");
 
+  // Verified against OpenRouter's live catalogue; the rest of the chain is
+  // handed to OpenRouter as fallbacks so a retired slug can't break reflection.
+  const modelChain = await resolveModelChain();
+
   try {
     const result = await generateText({
-      // .chat() — OpenRouter does not support the SDK's default /responses endpoint
-      model: openrouter.chat(AI_PASTOR_MODEL),
+      model: openrouterChat(modelChain),
       system: REFLECTION_SYSTEM_PROMPT,
       prompt: userPrompt,
       maxOutputTokens: 600,
@@ -90,16 +89,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ reflection });
   } catch (e) {
     console.error("[jurnal-refleksi] Error:", e);
-    const msg = e instanceof Error ? e.message : "";
-    if (msg.includes("401")) {
-      return NextResponse.json({ error: "API key OpenRouter tidak valid." }, { status: 502 });
-    }
-    if (msg.includes("402") || msg.toLowerCase().includes("credit")) {
-      return NextResponse.json({ error: "Kredit OpenRouter tidak cukup." }, { status: 502 });
-    }
-    if (msg.includes("429")) {
-      return NextResponse.json({ error: "Layanan AI sedang sibuk. Coba lagi sebentar." }, { status: 502 });
-    }
-    return NextResponse.json({ error: "Gagal membuat refleksi. Coba lagi." }, { status: 502 });
+    const msg = e instanceof Error ? e.message : "Gagal membuat refleksi.";
+    return NextResponse.json({ error: describeOpenRouterError(msg) }, { status: 502 });
   }
 }
