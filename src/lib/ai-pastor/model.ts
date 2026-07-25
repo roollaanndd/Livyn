@@ -89,11 +89,23 @@ interface CatalogueModel {
   };
 }
 
-/** Models that exist but are useless as a pastoral chat backend. */
-const UNSUITABLE_ID = /embed|rerank|whisper|tts|moderation|guard|vision-only/i;
+/**
+ * Models that exist and are free but are useless as a pastoral chat backend:
+ * music/speech/image generation, embeddings, rerankers, safety classifiers and
+ * code-completion models. OpenRouter's free tier is full of these and several
+ * advertise enormous context windows, so they out-rank real chat models unless
+ * they are excluded by name as well as by modality.
+ */
+const UNSUITABLE_ID =
+  /embed|rerank|whisper|tts|speech|audio|music|lyria|imagen|image|video|veo|moderation|content-safety|guard|-code|coder|laguna/i;
 
 const MIN_CONTEXT_LENGTH = 8000;
-const MAX_CHAIN_LENGTH = 5;
+
+/**
+ * OpenRouter rejects a `models` fallback array longer than three entries
+ * ("'models' array must have 3 items or fewer."), so the chain is capped here.
+ */
+const MAX_CHAIN_LENGTH = 3;
 
 const SUCCESS_TTL_MS = 10 * 60 * 1000;
 const FAILURE_TTL_MS = 60 * 1000;
@@ -113,19 +125,31 @@ function isFree(model: CatalogueModel): boolean {
   );
 }
 
-function emitsText(model: CatalogueModel): boolean {
+/** Accepts a text prompt and answers with text — i.e. usable for chat. */
+function isTextToText(model: CatalogueModel): boolean {
   const outputs = model.architecture?.output_modalities;
-  if (Array.isArray(outputs) && outputs.length > 0) return outputs.includes("text");
-  const modality = model.architecture?.modality;
+  const inputs = model.architecture?.input_modalities;
+
+  if (Array.isArray(outputs) && outputs.length > 0 && !outputs.includes("text")) {
+    return false;
+  }
+  if (Array.isArray(inputs) && inputs.length > 0 && !inputs.includes("text")) {
+    return false;
+  }
+
   // Legacy field looks like "text+image->text".
-  if (typeof modality === "string") return modality.endsWith("text");
+  const modality = model.architecture?.modality;
+  if (typeof modality === "string" && modality.includes("->")) {
+    const [input, output] = modality.split("->");
+    return input.includes("text") && output.includes("text");
+  }
   return true;
 }
 
 function isUsable(model: CatalogueModel): boolean {
   return (
     !UNSUITABLE_ID.test(model.id) &&
-    emitsText(model) &&
+    isTextToText(model) &&
     (model.context_length ?? MIN_CONTEXT_LENGTH) >= MIN_CONTEXT_LENGTH
   );
 }

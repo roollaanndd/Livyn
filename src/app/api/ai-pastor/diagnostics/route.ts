@@ -11,14 +11,14 @@ import {
   resolveModelChain,
 } from "@/lib/ai-pastor/model";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const probe = new URL(req.url).searchParams.get("probe");
   const out: Record<string, unknown> = {
     hasKey: HAS_OPENROUTER_KEY,
     keyCorrupted: KEY_IS_CORRUPTED,
-    envModel: process.env.AI_PASTOR_MODEL ?? null,
     candidates: candidateModels(),
   };
 
@@ -27,35 +27,41 @@ export async function GET() {
       signal: AbortSignal.timeout(8000),
       cache: "no-store",
     });
-    const json = (await res.json()) as {
-      data?: Array<{ id: string; context_length?: number; pricing?: { prompt?: string; completion?: string } }>;
-    };
+    const json = (await res.json()) as { data?: Array<Record<string, unknown>> };
     const all = json.data ?? [];
-    const free = all.filter(
-      (m) => Number(m.pricing?.prompt ?? "1") === 0 && Number(m.pricing?.completion ?? "1") === 0,
-    );
-    out.catalogueStatus = res.status;
-    out.totalModels = all.length;
-    out.freeModels = free
-      .sort((a, b) => (b.context_length ?? 0) - (a.context_length ?? 0))
-      .map((m) => `${m.id} (ctx ${m.context_length ?? "?"})`);
-    out.candidatesAlive = candidateModels().filter((id) => free.some((m) => m.id === id));
+    const free = all.filter((m) => {
+      const p = m.pricing as { prompt?: string; completion?: string } | undefined;
+      return Number(p?.prompt ?? "1") === 0 && Number(p?.completion ?? "1") === 0;
+    });
+    out.freeModelDetail = free.map((m) => ({
+      id: m.id,
+      ctx: m.context_length,
+      arch: m.architecture,
+      supported: (m.supported_parameters as string[] | undefined)?.slice(0, 40),
+    }));
   } catch (e) {
     out.catalogueError = e instanceof Error ? e.message : String(e);
   }
 
-  try {
-    const chain = await resolveModelChain();
-    out.resolvedChain = chain;
+  out.resolvedChain = await resolveModelChain();
 
-    const result = await generateText({
-      model: openrouterChat(chain),
-      prompt: "Balas dengan satu kata: Damai",
-      maxOutputTokens: 16,
-    });
-    out.liveCall = { ok: true, text: result.text.trim() };
-  } catch (e) {
-    out.liveCall = { ok: false, error: e instanceof Error ? e.message : String(e) };
+  // Probe specific models one at a time: ?probe=a,b,c
+  if (probe) {
+    const results: Record<string, unknown> = {};
+    for (const id of probe.split(",").map((s) => s.trim()).filter(Boolean)) {
+      try {
+        const r = await generateText({
+          model: openrouterChat([id]),
+          system: "Kamu pendamping rohani Kristen berbahasa Indonesia.",
+          prompt: "Sebutkan satu ayat Alkitab tentang damai sejahtera, lalu satu kalimat penguatan.",
+          maxOutputTokens: 120,
+        });
+        results[id] = { ok: true, text: r.text.trim().slice(0, 300) };
+      } catch (e) {
+        results[id] = { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 300) };
+      }
+    }
+    out.probe = results;
   }
 
   return NextResponse.json(out, { status: 200 });
