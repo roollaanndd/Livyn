@@ -14,8 +14,16 @@ import {
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
-  const probe = new URL(req.url).searchParams.get("probe");
+const PROBE = [
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "openai/gpt-oss-20b:free",
+  "openrouter/free",
+  "inclusionai/ling-3.0-flash:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+];
+
+export async function GET() {
   const out: Record<string, unknown> = {
     hasKey: HAS_OPENROUTER_KEY,
     keyCorrupted: KEY_IS_CORRUPTED,
@@ -45,10 +53,9 @@ export async function GET(req: Request) {
 
   out.resolvedChain = await resolveModelChain();
 
-  // Probe specific models one at a time: ?probe=a,b,c
-  if (probe) {
+  {
     const results: Record<string, unknown> = {};
-    for (const id of probe.split(",").map((s) => s.trim()).filter(Boolean)) {
+    for (const id of PROBE) {
       try {
         const r = await generateText({
           model: openrouterChat([id]),
