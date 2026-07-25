@@ -46,14 +46,16 @@ const CATALOGUE_URL = `${OPENROUTER_BASE_URL}/models`;
  * Override with the `AI_PASTOR_MODEL` env var (comma-separated for several).
  */
 export const AI_PASTOR_MODEL_CANDIDATES = [
-  "deepseek/deepseek-chat-v3-0324:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "google/gemini-2.0-flash-exp:free",
-  "qwen/qwen3-235b-a22b:free",
-  "mistralai/mistral-small-3.2-24b-instruct:free",
-  "google/gemma-3-27b-it:free",
-  "deepseek/deepseek-r1:free",
-  "meta-llama/llama-4-maverick:free",
+  // Instruction-tuned and strong in Indonesian — best fit for the pastoral tone.
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "openai/gpt-oss-20b:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "inclusionai/ling-3.0-flash:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  // OpenRouter's own auto-router across whatever is free right now — the
+  // safety net if every named slug above is eventually retired too.
+  "openrouter/free",
 ];
 
 const ENV_MODELS = (process.env.AI_PASTOR_MODEL ?? "")
