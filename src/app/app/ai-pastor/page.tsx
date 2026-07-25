@@ -4,9 +4,10 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, BookOpenText, HandHeart, ArrowLeft, RotateCcw, AlertCircle, RefreshCw, MessageCircle, Heart } from "lucide-react";
+import { Send, Sparkles, BookOpenText, HandHeart, ArrowLeft, RotateCcw, AlertCircle, RefreshCw, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { sanitizeReply } from "@/lib/ai-pastor/voice";
 import { LivynAiIcon } from "@/components/brand/logo";
 
 const SUGGESTED_PROMPTS = [
@@ -33,10 +34,15 @@ function TypingIndicator() {
 
 function getMessageText(msg: { parts?: Array<{ type: string; text?: string }> }): string {
   if (!msg.parts) return "";
-  return msg.parts
+  // Only "text" parts are rendered — reasoning parts produced by the model are
+  // dropped here. sanitizeReply is the final guard for models that inline their
+  // scratchpad as plain text instead of marking it as reasoning. It runs on the
+  // whole accumulated string, so it stays correct mid-stream.
+  const text = msg.parts
     .filter((p): p is { type: "text"; text: string } => p.type === "text" && typeof p.text === "string")
     .map((p) => p.text)
     .join("");
+  return sanitizeReply(text);
 }
 
 function formatAiText(text: string) {

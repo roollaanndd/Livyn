@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
   const intent = classifyIntent(lastUserText);
   const intentContext = getIntentContext(intent);
   const verseContext = getRelevantVerses(lastUserText);
-  const systemPrompt = toAsciiSafe(buildSystemPrompt(intentContext, verseContext));
+  const systemPrompt = buildSystemPrompt(intent, intentContext, verseContext);
 
   const inputCheck = checkSafety(lastUserText);
   if (!inputCheck.safe) {
