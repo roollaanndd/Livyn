@@ -1,3 +1,5 @@
 export default function OnboardingLoading() {
-  return <div className="fixed inset-0 bg-gradient-to-br from-[#E8F5E9] via-[#F1F8E9] to-[#E0F2F1]" />;
+  // Matches the flow's own background so a dark-theme user never sees a flash
+  // of the old hard-coded light gradient.
+  return <div className="fixed inset-0 bg-background" />;
 }

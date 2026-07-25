@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight, BookHeart, Trophy, Users, MessageSquareQuote, Crown } from "lucide-react";
+import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight, BookHeart, Trophy, Users, MessageSquareQuote, Crown, Compass } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { hasRole } from "@/lib/auth/rbac";
@@ -98,6 +98,7 @@ export default async function ProfilePage() {
           <ProfileLink href="/app/devosi/tersimpan" icon={BookmarkCheck} label="Renungan Tersimpan" />
           <ProfileLink href="/app/profil/keamanan" icon={ShieldCheck} label="Keamanan & Sesi Login" />
           <ProfileLink href="/app/profil/perangkat" icon={Smartphone} label="Perangkat Terhubung" />
+          <ProfileLink href="/onboarding" icon={Compass} label="Lihat Panduan Livyn" />
           {hasRole(user.role, "contributor") && (
             <ProfileLink href="/contributor" icon={ClipboardList} label="Dasbor Kontributor" />
           )}

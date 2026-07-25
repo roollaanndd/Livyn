@@ -185,13 +185,12 @@ export default function RegisterPage() {
         </motion.form>
 
         {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-3 text-muted-foreground/60 tracking-wider text-[11px]">atau</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-border-subtle" />
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+            atau
+          </span>
+          <span className="h-px flex-1 bg-border-subtle" />
         </div>
 
         <TryDemoButton className="w-full" />

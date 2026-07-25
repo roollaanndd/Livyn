@@ -12,6 +12,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { LivynMark, LivynWordmark } from "@/components/brand/logo";
 import { TryDemoButton } from "@/components/auth/try-demo-button";
 import { AuthLayout } from "@/components/auth/auth-layout";
+import { staggerChild, TAP } from "@/lib/motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,73 +51,60 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <div className="space-y-7">
+      <div className="space-y-6">
         {/* Brand header */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col items-center gap-4"
-        >
+        <motion.div variants={staggerChild} className="flex flex-col items-center gap-3.5">
           <div className="relative">
-            <div className="absolute inset-0 scale-[1.8] blur-3xl">
-              <div className="h-full w-full rounded-full bg-primary/12" />
-            </div>
-            <LivynMark className="relative h-20 w-20" gradientId="login-mark" />
+            <motion.div
+              className="absolute inset-0 scale-[1.9] rounded-full bg-primary/15 blur-3xl"
+              animate={{ opacity: [0.6, 1, 0.6], scale: [1.8, 2, 1.8] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <LivynMark className="relative h-[68px] w-[68px]" gradientId="login-mark" />
           </div>
           <div className="text-center">
-            <LivynWordmark className="text-2xl text-heading" />
-            <p className="mt-1.5 text-sm text-muted-foreground">Masuk ke akunmu</p>
+            <LivynWordmark className="text-[26px] text-heading" />
+            <p className="mt-1 text-[13.5px] text-muted-foreground">
+              Selamat datang kembali
+            </p>
           </div>
         </motion.div>
 
-        {/* Demo access banner — prominent, top position */}
+        {/* Demo access — the fastest way in, so it leads */}
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.4 }}
-          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-accent/[0.05] p-4"
+          variants={staggerChild}
+          className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.10] via-primary/[0.05] to-accent/[0.06] p-3.5"
         >
-          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-          <div className="relative flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-              <Sparkles className="h-5 w-5" />
+          <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/15 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <Sparkles className="h-[18px] w-[18px]" />
             </div>
-            <div className="flex-1">
-              <p className="font-display text-[14px] font-extrabold text-heading">
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[13.5px] font-extrabold leading-tight text-heading">
                 Baru pertama kali di Livyn?
               </p>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                Jelajahi semua fitur tanpa daftar. Cukup satu tap — pakai akun demo.
+              <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+                Coba semua fitur tanpa daftar.
               </p>
-              <div className="mt-3">
-                <TryDemoButton
-                  variant="primary"
-                  className="h-11 w-full text-[14px] font-bold shadow-sm"
-                />
-              </div>
             </div>
           </div>
+          <TryDemoButton variant="primary" className="mt-3 h-11 w-full text-[14px] font-bold shadow-sm" />
         </motion.div>
 
         {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-4 text-muted-foreground/60 tracking-wider text-[11px] font-semibold">
-              atau masuk dengan akun
-            </span>
-          </div>
-        </div>
+        <motion.div variants={staggerChild} className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-border-subtle" />
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+            atau masuk
+          </span>
+          <span className="h-px flex-1 bg-border-subtle" />
+        </motion.div>
 
         {/* Login form */}
         <motion.form
           onSubmit={handleSubmit}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.4 }}
+          variants={staggerChild}
           className="space-y-4"
         >
           <div className="space-y-2">
@@ -165,18 +153,20 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-[52px] text-[15px] font-bold" size="lg" disabled={loading}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Masuk"}
-          </Button>
+          <motion.div whileTap={loading ? undefined : TAP}>
+            <Button type="submit" className="h-[52px] w-full text-[15px] font-bold" size="lg" disabled={loading}>
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Masuk"}
+            </Button>
+          </motion.div>
         </motion.form>
 
         {/* Sign up link */}
-        <p className="text-center text-sm text-muted-foreground">
+        <motion.p variants={staggerChild} className="text-center text-[13.5px] text-muted-foreground">
           Belum punya akun?{" "}
-          <Link href="/daftar" className="font-bold text-primary hover:text-primary-hover transition-colors">
+          <Link href="/daftar" className="font-bold text-primary transition-colors hover:text-primary-hover">
             Daftar
           </Link>
-        </p>
+        </motion.p>
       </div>
     </AuthLayout>
   );
