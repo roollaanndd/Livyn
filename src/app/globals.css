@@ -302,3 +302,36 @@ html[data-font-size="xl"] .devotion-body { font-size: 1.45rem; line-height: 2.35
 /* Safe area padding */
 .safe-top { padding-top: max(1.25rem, env(safe-area-inset-top)); }
 .safe-bottom { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+
+/* Reduced motion — honour the OS setting.
+   Framer Motion is handled separately via <MotionConfig reducedMotion="user">
+   in the theme provider; this covers the CSS animations above. Transforms are
+   reset so nothing is left translated or scaled mid-animation, and the few
+   ambient loops are stopped rather than sped up. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-fade-up,
+  .animate-slide-up-fade,
+  .animate-scale-in,
+  .animate-fade-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  .animate-breathe,
+  .animate-float,
+  .animate-gentle-pulse,
+  .animate-leaf-sway,
+  .animate-shimmer,
+  .skeleton {
+    animation: none !important;
+  }
+}

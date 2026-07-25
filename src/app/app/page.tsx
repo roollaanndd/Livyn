@@ -21,6 +21,7 @@ import { Card, HeroCard } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LivynMark } from "@/components/brand/logo";
 import { IconLink } from "@/components/nav/top-bar";
+import { ThemeSwitch } from "@/components/nav/theme-switch";
 import { formatDurationShort } from "@/lib/format";
 import { VerseShareCard } from "@/components/verse/verse-share-card";
 
@@ -53,23 +54,26 @@ export default async function HomePage() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 safe-top pb-2">
-        <div className="flex-1">
+      <header className="flex items-center gap-2 px-5 safe-top pb-2">
+        <div className="min-w-0 flex-1">
           <p className="text-[13px] text-muted-foreground font-medium">{greeting()} {greetingEmoji()}</p>
-          <h1 className="font-display text-[22px] font-extrabold text-heading tracking-tight leading-tight">{firstName}</h1>
+          <h1 className="truncate font-display text-[22px] font-extrabold text-heading tracking-tight leading-tight">{firstName}</h1>
         </div>
-        <IconLink href="/app/cari" label="Cari">
-          <Search className="h-[18px] w-[18px]" />
-        </IconLink>
-        <IconLink href="/app/notifikasi" label="Notifikasi">
-          <Bell className="h-[18px] w-[18px]" />
-        </IconLink>
-        <Link
-          href="/app/profil"
-          className="ml-0.5 flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-sm"
-        >
-          <span className="font-display text-sm font-bold text-white">{firstName.charAt(0).toUpperCase()}</span>
-        </Link>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <ThemeSwitch />
+          <IconLink href="/app/cari" label="Cari">
+            <Search className="h-[18px] w-[18px]" />
+          </IconLink>
+          <IconLink href="/app/notifikasi" label="Notifikasi">
+            <Bell className="h-[18px] w-[18px]" />
+          </IconLink>
+          <Link
+            href="/app/profil"
+            className="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-sm"
+          >
+            <span className="font-display text-sm font-bold text-white">{firstName.charAt(0).toUpperCase()}</span>
+          </Link>
+        </div>
       </header>
 
       <div className="space-y-5 px-5 pb-8">
