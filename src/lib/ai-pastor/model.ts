@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { extractReasoningMiddleware, wrapLanguageModel } from "ai";
 
 /**
  * Shared OpenRouter wiring for every AI Pastor feature (chat + journal
@@ -101,6 +102,13 @@ interface CatalogueModel {
 const UNSUITABLE_ID =
   /embed|rerank|whisper|tts|speech|audio|music|lyria|imagen|image|video|veo|moderation|content-safety|guard|-code|coder|laguna/i;
 
+/**
+ * Reasoning-first models. They are capable, but they spend their output budget
+ * thinking and are the ones most likely to leak a scratchpad into a pastoral
+ * reply. A warm two-paragraph answer does not need them.
+ */
+const REASONING_ID = /reasoning|thinking|deepseek-r1|\br1\b|-o[1-4]\b|qwq/i;
+
 const MIN_CONTEXT_LENGTH = 8000;
 
 /**
@@ -151,6 +159,7 @@ function isTextToText(model: CatalogueModel): boolean {
 function isUsable(model: CatalogueModel): boolean {
   return (
     !UNSUITABLE_ID.test(model.id) &&
+    !REASONING_ID.test(model.id) &&
     isTextToText(model) &&
     (model.context_length ?? MIN_CONTEXT_LENGTH) >= MIN_CONTEXT_LENGTH
   );
@@ -246,13 +255,17 @@ export function invalidateModelChain(): void {
  * when a model errors. Injecting it via a wrapped `fetch` gives us server-side
  * fallback for streaming requests too, which the AI SDK cannot retry itself.
  */
-function fetchWithModelFallback(chain: string[]): typeof fetch {
+function fetchWithOpenRouterOptions(chain: string[]): typeof fetch {
   return async (input, init) => {
-    if (init?.method === "POST" && typeof init.body === "string" && chain.length > 1) {
+    if (init?.method === "POST" && typeof init.body === "string") {
       try {
         const body = JSON.parse(init.body);
         if (body && typeof body === "object" && "model" in body) {
-          body.models = chain;
+          if (chain.length > 1) body.models = chain;
+          // Ask OpenRouter to leave reasoning tokens out of the response.
+          // Without this, thinking-capable models stream their scratchpad
+          // straight into the reply the user sees.
+          body.reasoning = { exclude: true };
           init = { ...init, body: JSON.stringify(body) };
         }
       } catch {
@@ -278,11 +291,20 @@ export function openrouterChat(chain: string[]) {
       "HTTP-Referer": "https://livyn-six.vercel.app",
       "X-Title": "Livyn",
     },
-    fetch: fetchWithModelFallback(models),
+    fetch: fetchWithOpenRouterOptions(models),
   });
+
   // .chat() forces the /chat/completions endpoint — the SDK's default
   // Responses API (/responses) is not supported by OpenRouter.
-  return provider.chat(models[0]);
+  //
+  // The middleware pulls <think>...</think> out of the text stream and into
+  // reasoning parts, which the UI does not render. Belt and braces with
+  // reasoning.exclude above: that covers models whose reasoning OpenRouter
+  // knows how to strip, this covers models that just inline the tags.
+  return wrapLanguageModel({
+    model: provider.chat(models[0]),
+    middleware: extractReasoningMiddleware({ tagName: "think" }),
+  });
 }
 
 // --- Error reporting --------------------------------------------------------

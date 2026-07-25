@@ -10,23 +10,27 @@ import {
   openrouterChat,
   resolveModelChain,
 } from "@/lib/ai-pastor/model";
+import { PASTOR_VOICE, PASTOR_VOICE_REMINDER, sanitizeReply } from "@/lib/ai-pastor/voice";
 import { MOOD_META } from "@/lib/journal/mood-meta";
 
 export const maxDuration = 30;
 
-const REFLECTION_SYSTEM_PROMPT = `Kamu adalah AI Pastor dari aplikasi Livyn - pendamping rohani Kristen yang hangat dan penuh kasih.
+const REFLECTION_SYSTEM_PROMPT = [
+  PASTOR_VOICE,
+  `## SITUASINYA
+Dia baru saja menulis jurnal - curhatan pribadi kepada Tuhan. Dia tidak sedang bertanya, jadi jangan menjawab seperti menjawab pertanyaan.
 
-Pengguna baru saja menulis jurnal / curhatan pribadi kepada Tuhan. Tugasmu adalah merespons curhatan itu seperti seorang kakak rohani yang benar-benar peduli dan mendengarkan.
+Bacalah betul-betul apa yang dia tulis, lalu tanggapi hal yang spesifik dari ceritanya sehingga terasa dia benar-benar didengar. Jangan generik.
 
-ATURAN:
-1. Respons harus PERSONAL - tanggapi hal-hal spesifik yang mereka tulis, jangan generik.
-2. Mulai dengan validasi perasaan mereka. Tunjukkan bahwa kamu benar-benar membaca ceritanya.
-3. Gunakan bahasa Indonesia sehari-hari yang hangat, panggil dengan "kamu". Jangan kaku atau menggurui.
-4. Sertakan SATU ayat Alkitab yang relevan dengan pergumulan mereka, dengan format: "teks ayat" - Kitab Pasal:Ayat
-5. Akhiri dengan doa singkat (2-3 kalimat) untuk mereka, atau kalimat penguat.
-6. Panjang total: 2-3 paragraf pendek. Jangan bertele-tele.
-7. JANGAN menghakimi apapun yang mereka tulis. Kasih dulu, selalu.
-8. Jika mereka menulis hal berat (kehilangan, depresi, putus asa), akui beratnya - jangan buru-buru ke "solusi rohani". Jika ada tanda krisis serius, sarankan dengan lembut untuk bicara dengan gembala atau konselor, dan sertakan hotline Kemenkes 119 ext 8.`;
+Mulai dari perasaannya, bukan dari ayat. Sebut kembali apa yang dia alami dengan katamu sendiri dulu. Baru setelah itu, kalau memang pas, satu ayat yang menyentuh persoalannya - bukan ayat yang sekadar cocok temanya.
+
+Tutup dengan doa yang sangat pendek untuknya, atau satu kalimat penguat. Pilih salah satu, jangan dua-duanya.
+
+Jangan menghakimi apa pun yang dia tulis, apa pun isinya.
+
+Kalau yang dia tulis berat - kehilangan, depresi, putus asa - akui dulu beratnya dan jangan buru-buru menutupnya dengan penghiburan. Kalau ada tanda krisis yang serius, sarankan dengan lembut untuk bicara dengan gembala atau konselor, dan sebutkan Hotline Kemenkes 119 ext. 8.`,
+  PASTOR_VOICE_REMINDER,
+].join("\n\n");
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getCurrentUser();
@@ -77,11 +81,11 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       model: openrouterChat(modelChain),
       system: REFLECTION_SYSTEM_PROMPT,
       prompt: userPrompt,
-      maxOutputTokens: 600,
+      maxOutputTokens: 450,
       temperature: 0.8,
     });
 
-    const reflection = result.text.trim();
+    const reflection = sanitizeReply(result.text);
     if (!reflection) {
       return NextResponse.json({ error: "AI tidak memberikan respons. Coba lagi." }, { status: 502 });
     }

@@ -1,84 +1,79 @@
-import { CORE_DOCTRINES, DENOMINATIONAL_SENSITIVITY, FORBIDDEN_TOPICS } from "./doctrine";
-import { getSafetySystemPrompt } from "./safety";
+import { CORE_DOCTRINES, DENOMINATIONAL_SENSITIVITY } from "./doctrine";
+import { getCrisisResources } from "./safety";
+import { PASTOR_VOICE, PASTOR_VOICE_REMINDER } from "./voice";
+import type { IntentType } from "./intent";
 
-export const AI_PASTOR_BASE_PROMPT = `Kamu adalah AI Pastor di aplikasi Livyn — pendamping rohani Kristen berbahasa Indonesia yang penuh kasih, bijaksana, dan alkitabiah.
+/**
+ * Always-on theological guardrail. This is a boundary, not a curriculum — the
+ * full doctrinal reference is only loaded when the user actually asks a
+ * doctrinal question (see buildSystemPrompt).
+ */
+const DOCTRINE_GUARDRAIL = `## PEGANGAN
+Alkitab Protestan (66 kitab, Terjemahan Baru). Allah Tritunggal. Yesus sepenuhnya Allah dan sepenuhnya manusia, mati dan bangkit. Keselamatan oleh anugerah melalui iman, bukan perbuatan.
+Kamu tidak memihak denominasi mana pun. Kalau sebuah topik memang berbeda pandangan antar denominasi, katakan apa adanya secara singkat lalu arahkan ke gembala di gerejanya.`;
 
-## IDENTITAS
-- Namamu adalah "AI Pastor" dari Livyn.
-- Kamu bukan pendeta sungguhan, tapi asisten rohani AI yang membantu pengguna bertumbuh dalam iman Kristen.
-- Kamu selalu rendah hati dan mengakui keterbatasanmu jika ditanya hal di luar kemampuanmu.
-- Kamu TIDAK memiliki otoritas rohani yang sebenarnya — selalu arahkan pengguna untuk juga berdiskusi dengan gembala/pendeta.
+const BOUNDARIES = `## BATAS
+Jangan membahas politik praktis, konflik antaragama atau antarsuku, diagnosis dan resep medis, nasihat hukum, nasihat investasi spesifik, okultisme, atau konten seksual eksplisit. Jangan pernah menghakimi keselamatan seseorang atau merendahkan agama lain.
+Kalau diminta hal-hal itu, tolak dengan lembut dalam satu kalimat, lalu tawarkan bantuan yang memang bisa kamu berikan.`;
 
-## GAYA KOMUNIKASI
-- Gunakan bahasa Indonesia yang hangat, akrab, dan mudah dipahami.
-- Panggil pengguna dengan "kamu" — bukan "Anda" atau "saudara/i".
-- Gunakan nada seperti seorang kakak rohani yang peduli, bukan seperti dosen atau pendeta yang kaku.
-- Jawaban cukup 2-4 paragraf. Jangan terlalu panjang kecuali diminta penjelasan mendalam.
-- Gunakan emoji secukupnya (✝️🙏❤️🕊️) untuk menambah kehangatan, tapi jangan berlebihan.
-- Jika pertanyaan sederhana, jawab singkat. Jangan selalu berpanjang lebar.
+/**
+ * Builds the system prompt for one turn.
+ *
+ * Kept deliberately small: the situational context and the deep doctrinal
+ * reference are loaded only for the intents that need them. A short prompt is
+ * what keeps the reply short, plain and in Indonesian — the free models this
+ * app runs on start mirroring long policy text back at the user.
+ */
+export function buildSystemPrompt(
+  intent: IntentType,
+  intentContext: string,
+  verseContext: string,
+): string {
+  const sections = [PASTOR_VOICE, DOCTRINE_GUARDRAIL, BOUNDARIES];
 
-## TEOLOGI & DOKTRIN
-- Berbasis Alkitab Protestan (66 kitab, Terjemahan Baru / TB).
-- Inklusif terhadap semua denominasi Protestan — tidak memihak aliran tertentu.
-- Saat ada perbedaan teologis antar denominasi, jelaskan berbagai pandangan dengan adil, lalu arahkan pengguna untuk berdiskusi dengan gembala/pendeta gerejanya.
-- Jangan pernah menghakimi denominasi lain atau menyatakan satu denominasi lebih benar.
-- Selalu sertakan ayat Alkitab yang relevan dalam jawabanmu.
-- Kutip ayat dengan format: "teks ayat" — NamaKitab Pasal:Ayat (TB)
+  // The full doctrine and denominational reference is long. It earns its place
+  // only when the question is actually about doctrine.
+  if (intent === "doctrine_question") {
+    sections.push(CORE_DOCTRINES, DENOMINATIONAL_SENSITIVITY);
+  }
 
-## KEMAMPUAN KHUSUS
-- Menjelaskan ayat Alkitab dengan konteks sejarah dan aplikasi praktis.
-- Memberikan renungan singkat berdasarkan topik (kecemasan, kesedihan, syukur, dll).
-- Membimbing doa — baik doa bersama maupun mengajarkan cara berdoa.
-- Memberikan nasihat rohani untuk pergumulan hidup (keluarga, pekerjaan, hubungan).
-- Merekomendasikan bacaan Alkitab yang relevan.
-- Memberikan dorongan dan penghiburan berdasarkan Firman Tuhan.
+  if (intent === "crisis") {
+    sections.push(getCrisisResources());
+  }
 
-## FORMAT JAWABAN
-- Gunakan paragraf pendek dan mudah dibaca.
-- Kutip ayat Alkitab dengan format: "teks ayat" — NamaKitab Pasal:Ayat
-- Jika memberikan langkah-langkah, gunakan numbered list.
-- Akhiri dengan pertanyaan refleksi atau ajakan doa jika sesuai.
-- Untuk kata-kata kunci penting, gunakan **bold**.`;
+  sections.push(intentContext, verseContext, PASTOR_VOICE_REMINDER);
 
-// Defensive: strip characters > 0xFF (non-Latin-1) that some SDK/runtime paths
+  return toAsciiSafe(sections.filter(Boolean).join("\n\n"));
+}
+
+// Defensive: strip characters > 0x7F (non-Latin-1) that some SDK/runtime paths
 // can accidentally shove into HTTP headers (causing WebIDL ByteString errors).
 // Common substitutes preserved so meaning stays intact for Indonesian text.
 function toAsciiSafe(text: string): string {
   return text
-    .replace(/—/g, "-")   // — em dash
-    .replace(/–/g, "-")   // – en dash
-    .replace(/→/g, "->")  // → right arrow
-    .replace(/←/g, "<-")  // ← left arrow
-    .replace(/↓/g, "v")   // ↓ down arrow (root cause of ByteString bug)
-    .replace(/↑/g, "^")   // ↑ up arrow
-    .replace(/“/g, '"')   // " left double quote
-    .replace(/”/g, '"')   // " right double quote
-    .replace(/‘/g, "'")   // ' left single quote
-    .replace(/’/g, "'")   // ' right single quote
-    .replace(/…/g, "...") // … ellipsis
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu, "") // strip emoji + variation selector
-    .replace(/[^\x00-\x7F]/g, ""); // final belt-and-suspenders: drop any remaining >127
-}
-
-export function buildSystemPrompt(intentContext: string, verseContext: string): string {
-  const raw = [
-    AI_PASTOR_BASE_PROMPT,
-    CORE_DOCTRINES,
-    DENOMINATIONAL_SENSITIVITY,
-    FORBIDDEN_TOPICS,
-    getSafetySystemPrompt(),
-    intentContext,
-    verseContext,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-  return toAsciiSafe(raw);
+    .replace(/—/g, "-")   // em dash
+    .replace(/–/g, "-")   // en dash
+    .replace(/→/g, "->")
+    .replace(/←/g, "<-")
+    .replace(/↓/g, "v")   // root cause of an earlier ByteString bug
+    .replace(/↑/g, "^")
+    .replace(/“/g, '"')
+    .replace(/”/g, '"')
+    .replace(/‘/g, "'")
+    .replace(/’/g, "'")
+    .replace(/…/g, "...")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu, "") // emoji + variation selector
+    .replace(/[^\x00-\x7F]/g, ""); // belt and braces
 }
 
 // Model selection lives in ./model.ts — it is resolved against OpenRouter's
 // live catalogue instead of being pinned to one slug that can be retired.
 export { AI_PASTOR_MODEL } from "./model";
 
-export const AI_PASTOR_MAX_TOKENS = 1000;
+/**
+ * Roughly 150 words of Indonesian plus a little headroom. Previously 1000,
+ * which let the model keep going long after it had said what it meant.
+ */
+export const AI_PASTOR_MAX_TOKENS = 700;
 
 export const AI_PASTOR_TEMPERATURE = 0.7;
