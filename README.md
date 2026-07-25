@@ -22,7 +22,7 @@ Buka http://localhost:3000.
 | Admin | `admin@livyn.app` |
 | Moderator | `moderator@livyn.app` |
 | Kontributor | `kontributor@livyn.app`, `kontributor2@livyn.app` |
-| Jemaat (user) | `warga@livyn.app` |
+| Anak Tuhan (user) | `anaktuhan@livyn.app` |
 
 ## Arsitektur
 

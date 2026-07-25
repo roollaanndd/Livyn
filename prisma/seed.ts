@@ -292,9 +292,9 @@ async function main() {
     },
   });
   const demoUser = await prisma.user.upsert({
-    where: { email: "warga@livyn.app" },
+    where: { email: "anaktuhan@livyn.app" },
     update: {},
-    create: { name: "Warga Livyn", email: "warga@livyn.app", passwordHash: commonPassword, role: "user", emailVerified: true },
+    create: { name: "Anak Tuhan", email: "anaktuhan@livyn.app", passwordHash: commonPassword, role: "user", emailVerified: true },
   });
 
   console.log("Seeding Bible books...");
@@ -447,7 +447,7 @@ async function main() {
   console.log("Done. Demo accounts (password: Livyn123!):");
   console.log("  superadmin@livyn.app / admin@livyn.app / moderator@livyn.app");
   console.log("  kontributor@livyn.app / kontributor2@livyn.app");
-  console.log("  warga@livyn.app");
+  console.log("  anaktuhan@livyn.app");
   void superAdmin;
   void admin;
 }

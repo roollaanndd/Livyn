@@ -2,25 +2,19 @@ import "server-only";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getDailyVerseRef } from "@/lib/verses/curated-daily";
 
-/* Days since epoch in Asia/Jakarta (UTC+7, no DST). Using the user's local
- * calendar day means "today's" content rotates at midnight WIB — with the old
- * UTC day-of-year it only changed at 07:00 WIB, which read as "not changing". */
 function jakartaDayKey(): number {
   return Math.floor((Date.now() + 7 * 60 * 60 * 1000) / 86_400_000);
 }
 
-// Daily verse: same for all users on a given day. Cache across requests
-// keyed by the Jakarta day so the DB is hit once per day at most.
 const getVerseByDayKey = unstable_cache(
   async (dayKey: number) => {
-    const count = await prisma.bibleVerse.count();
-    if (count === 0) return null;
-    const skip = dayKey % count;
-    const [verse] = await prisma.bibleVerse.findMany({
-      take: 1,
-      skip,
-      orderBy: [{ bookId: "asc" }, { chapter: "asc" }, { verse: "asc" }],
+    const ref = getDailyVerseRef(dayKey);
+    const book = await prisma.bibleBook.findFirst({ where: { code: ref.book } });
+    if (!book) return null;
+    const verse = await prisma.bibleVerse.findFirst({
+      where: { bookId: book.id, chapter: ref.chapter, verse: ref.verse },
       include: { book: true },
     });
     return verse ?? null;
