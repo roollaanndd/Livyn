@@ -48,31 +48,37 @@ export function LivynLogo({ className, size = "md" }: { className?: string; size
   );
 }
 
+/**
+ * AI Pastor mark: a cross whose foot flows into the Livyn leaf.
+ *
+ * The previous icon was a generic AI sparkle inside its own green circle —
+ * nothing Christian about it, and since every place it appears already sits
+ * inside a green gradient tile, it painted a green badge on a green badge.
+ *
+ * This draws the glyph alone in `currentColor` so the tile behind it shows
+ * through. The silhouette is deliberately heavy: it has to stay legible at
+ * 18px in the journal card and 28px in the nav, where thin strokes and
+ * radiating detail turn to mush.
+ */
 export function LivynAiIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn(className)}>
-      <defs>
-        <linearGradient id="ai-icon-grad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#4CAF7D" />
-          <stop offset="100%" stopColor="#2D7D5F" />
-        </linearGradient>
-        <filter id="ai-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-          <feFlood floodColor="#2D7D5F" floodOpacity="0.35" result="color" />
-          <feComposite in="color" in2="blur" operator="in" result="glow" />
-          <feMerge>
-            <feMergeNode in="glow" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <circle cx="24" cy="24" r="22" fill="url(#ai-icon-grad)" filter="url(#ai-glow)" />
+    <svg
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("text-white", className)}
+      aria-hidden="true"
+    >
       <path
-        d="M24 12L26.5 19.5L34 17L28.5 23L34 29L26.5 26.5L24 34L21.5 26.5L14 29L19.5 23L14 17L21.5 19.5L24 12Z"
-        fill="white"
-        fillOpacity="0.95"
+        d="M20.3 9.5a3.7 3.7 0 0 1 7.4 0v7.2h6.9a3.5 3.5 0 0 1 0 7h-6.9v9.7c0 3 2.3 5.4 5.4 5.7a2.2 2.2 0 0 1-.3 4.4C25.5 43.3 20.3 38 20.3 31.4V23.7h-6.9a3.5 3.5 0 0 1 0-7h6.9z"
+        fill="currentColor"
       />
-      <circle cx="24" cy="23" r="2.5" fill="white" fillOpacity="0.9" />
+      {/* The leaf curl carried over from the Livyn mark. */}
+      <path
+        d="M26.6 31.4c1.6 3.6 4.5 6.6 8.4 8.3 1.2.5 1.3 2.2.2 2.9-1 .6-2.3.5-3.3-.1-4.8-3-8.3-7.3-10-12.1-.4-1.1.3-2.3 1.5-2.4l3-.4c1-.1 1.4.5 1.2 3.8z"
+        fill="currentColor"
+        opacity="0.55"
+      />
     </svg>
   );
 }

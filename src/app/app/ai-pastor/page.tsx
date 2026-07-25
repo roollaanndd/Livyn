@@ -227,7 +227,7 @@ export default function AiPastorPage() {
                     <div className="h-full w-full rounded-full bg-primary/15" />
                   </div>
                   <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-                    <Sparkles className="h-10 w-10 text-white" />
+                    <LivynAiIcon className="h-11 w-11" />
                   </div>
                 </div>
               </motion.div>
