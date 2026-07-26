@@ -68,20 +68,34 @@ async function fetchFromPexels(query: string, apiKey: string): Promise<Response 
     if (!photos || photos.length === 0) return null;
 
     const photo = photos[Math.floor(Math.random() * photos.length)];
-    const imageUrl = photo.src.large2x || photo.src.large || photo.src.original;
+    // large2x keeps enough resolution to fill 1080x1920 without upscaling;
+    // src.portrait is only 800x1200 and would come out soft.
+    const imageUrl = photo.src.large2x || photo.src.original || photo.src.large;
 
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) return null;
-
-    const imgBuf = await imgRes.arrayBuffer();
-    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-    return new Response(imgBuf, {
-      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
-    });
+    return await passThroughImage(await fetch(imageUrl));
   } catch (e) {
     console.error("[verse-image] Pexels exception:", e);
     return null;
   }
+}
+
+/**
+ * An error page or rate-limit notice served with a 200 would reach the client
+ * and blow up in `createImageBitmap` as an opaque failure. Only pass through
+ * responses that really are images, so a bad source falls to the next one.
+ */
+async function passThroughImage(imgRes: Response): Promise<Response | null> {
+  if (!imgRes.ok) return null;
+
+  const contentType = imgRes.headers.get("content-type") || "";
+  if (!contentType.startsWith("image/")) return null;
+
+  const imgBuf = await imgRes.arrayBuffer();
+  if (imgBuf.byteLength < 1024) return null; // placeholder / empty payload
+
+  return new Response(imgBuf, {
+    headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
+  });
 }
 
 async function fetchFromLoremFlickr(query: string, seed: number): Promise<Response | null> {
@@ -89,13 +103,7 @@ async function fetchFromLoremFlickr(query: string, seed: number): Promise<Respon
     // LoremFlickr supports tag-based image search, no API key needed.
     const tags = query.replace(/\s+/g, ",");
     const url = `https://loremflickr.com/1080/1920/${encodeURIComponent(tags)}?lock=${seed}`;
-    const imgRes = await fetch(url, { redirect: "follow" });
-    if (!imgRes.ok) return null;
-    const imgBuf = await imgRes.arrayBuffer();
-    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-    return new Response(imgBuf, {
-      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
-    });
+    return await passThroughImage(await fetch(url, { redirect: "follow" }));
   } catch (e) {
     console.error("[verse-image] LoremFlickr exception:", e);
     return null;
@@ -105,13 +113,7 @@ async function fetchFromLoremFlickr(query: string, seed: number): Promise<Respon
 async function fetchFromPicsum(seed: number): Promise<Response | null> {
   try {
     const url = `https://picsum.photos/seed/livyn${seed}/1080/1920`;
-    const imgRes = await fetch(url, { redirect: "follow" });
-    if (!imgRes.ok) return null;
-    const imgBuf = await imgRes.arrayBuffer();
-    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-    return new Response(imgBuf, {
-      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
-    });
+    return await passThroughImage(await fetch(url, { redirect: "follow" }));
   } catch (e) {
     console.error("[verse-image] Picsum exception:", e);
     return null;
