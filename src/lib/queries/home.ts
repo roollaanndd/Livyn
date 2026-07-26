@@ -12,12 +12,25 @@ const getVerseByDayKey = unstable_cache(
   async (dayKey: number) => {
     const ref = getDailyVerseRef(dayKey);
     const book = await prisma.bibleBook.findFirst({ where: { code: ref.book } });
-    if (!book) return null;
-    const verse = await prisma.bibleVerse.findFirst({
-      where: { bookId: book.id, chapter: ref.chapter, verse: ref.verse },
+    if (book) {
+      const verse = await prisma.bibleVerse.findFirst({
+        where: { bookId: book.id, chapter: ref.chapter, verse: ref.verse },
+        include: { book: true },
+      });
+      if (verse) return verse;
+    }
+
+    // Fallback: pick a deterministic verse from whatever exists in the DB
+    const total = await prisma.bibleVerse.count();
+    if (total === 0) return null;
+    const skip = dayKey % total;
+    const [fallback] = await prisma.bibleVerse.findMany({
+      take: 1,
+      skip,
+      orderBy: [{ bookId: "asc" }, { chapter: "asc" }, { verse: "asc" }],
       include: { book: true },
     });
-    return verse ?? null;
+    return fallback ?? null;
   },
   ["today-verse"],
   { revalidate: 3600, tags: ["today-verse"] },
