@@ -156,7 +156,10 @@ export function getRelevantVerses(message: string): string {
   if (relevantCategories.length === 0) return "";
 
   const verses = relevantCategories.flatMap((cat) => BIBLE_REFERENCE_CATEGORIES[cat] || []);
-  const unique = [...new Set(verses)].slice(0, 5);
+  const unique = [...new Set(verses)].slice(0, 4);
 
-  return `\n## AYAT REFERENSI RELEVAN\nGunakan ayat-ayat ini dalam jawabanmu:\n${unique.map((v) => `- ${v}`).join("\n")}`;
+  // Offered as a menu, not an instruction. Telling the model to "use these
+  // verses" while the voice prompt allows at most one verse per reply pushed it
+  // to satisfy both — padding short answers with a string of quotations.
+  return `\n## AYAT YANG MUNGKIN COCOK\nIni bahan, bukan daftar yang harus dipakai. Kalau jawabanmu memang butuh ayat, pilih SATU yang paling pas. Kalau tidak butuh, abaikan saja daftar ini.\n${unique.map((v) => `- ${v}`).join("\n")}`;
 }

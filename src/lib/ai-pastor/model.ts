@@ -47,13 +47,16 @@ const CATALOGUE_URL = `${OPENROUTER_BASE_URL}/models`;
  * Override with the `AI_PASTOR_MODEL` env var (comma-separated for several).
  */
 export const AI_PASTOR_MODEL_CANDIDATES = [
-  // Instruction-tuned and strong in Indonesian — best fit for the pastoral tone.
+  // Plain instruction-tuned models first. Reasoning-first models narrate their
+  // planning, and even with reasoning.exclude set that scratchpad can arrive as
+  // ordinary prose — which reads as the pastor talking to itself. Ordered so
+  // the chattier ones are only reached if the calm ones are unavailable.
   "google/gemma-4-31b-it:free",
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "openai/gpt-oss-20b:free",
   "google/gemma-4-26b-a4b-it:free",
   "inclusionai/ling-3.0-flash:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
   "nvidia/nemotron-3-nano-30b-a3b:free",
+  "openai/gpt-oss-20b:free",
   // OpenRouter's own auto-router across whatever is free right now — the
   // safety net if every named slug above is eventually retired too.
   "openrouter/free",

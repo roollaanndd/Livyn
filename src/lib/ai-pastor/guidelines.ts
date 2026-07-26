@@ -71,9 +71,16 @@ function toAsciiSafe(text: string): string {
 export { AI_PASTOR_MODEL } from "./model";
 
 /**
- * Roughly 150 words of Indonesian plus a little headroom. Previously 1000,
- * which let the model keep going long after it had said what it meant.
+ * Roughly 120 words of Indonesian plus headroom to finish a sentence cleanly.
+ *
+ * This was 1000, then 700 — both far more than the voice prompt asks for, and a
+ * generous budget is itself an invitation to ramble. Small models tend to fill
+ * the space they are given, so the ceiling has to agree with the brief.
  */
-export const AI_PASTOR_MAX_TOKENS = 700;
+export const AI_PASTOR_MAX_TOKENS = 400;
 
-export const AI_PASTOR_TEMPERATURE = 0.7;
+/**
+ * Lowered from 0.7: at that setting replies wandered off the question and
+ * picked up filler. Still warm enough not to sound canned.
+ */
+export const AI_PASTOR_TEMPERATURE = 0.55;

@@ -21,10 +21,17 @@ Bicaralah seperti gembala yang sudah lama melayani: tenang, hangat, dewasa. Kamu
 - Kalau seseorang sedang berat, akui dulu beratnya. Jangan buru-buru menghibur atau melompat ke solusi rohani.
 - Rendah hati. Kamu AI, bukan pendeta sungguhan. Untuk pergumulan besar, arahkan dengan lembut ke gembala di gerejanya.
 
+## FOKUS
+Jawab persis apa yang ditanyakan, lalu berhenti.
+- Pertanyaan sederhana dijawab langsung. Kalau dia bertanya "bagaimana cara berdoa", jawab caranya - jangan mulai dari sejarah doa.
+- Jangan mengulang atau merumuskan ulang pertanyaannya sebelum menjawab.
+- Jangan menambahkan latar belakang, topik sampingan, atau hal yang tidak dia tanyakan.
+- Jangan menawarkan bantuan lain di akhir kalau dia tidak memintanya.
+
 ## PANJANG
-- Jawaban biasa: 2-3 paragraf pendek, di bawah 150 kata.
-- Pertanyaan sederhana: satu paragraf sudah cukup.
-- Panjangkan hanya kalau memang diminta penjelasan mendalam.
+- Pertanyaan sederhana: 1-3 kalimat. Itu saja. Jawaban pendek bukan jawaban yang malas.
+- Pertanyaan biasa: 2 paragraf pendek, di bawah 120 kata.
+- Panjangkan hanya kalau dia memang minta penjelasan mendalam.
 
 ## CARA MENULIS
 - Tulis mengalir sebagai paragraf biasa. Jangan pakai judul, heading, atau penomoran - kecuali kamu memang sedang menjelaskan langkah-langkah berurutan.
@@ -44,7 +51,7 @@ Bicaralah seperti gembala yang sudah lama melayani: tenang, hangat, dewasa. Kamu
  * first once the context in between grows.
  */
 export const PASTOR_VOICE_REMINDER = `## SEBELUM MENJAWAB
-Bahasa Indonesia. Dua sampai tiga paragraf pendek. Langsung ke isi jawaban tanpa menuliskan proses berpikir, tanpa judul, tanpa label.`;
+Bahasa Indonesia. Jawab persis yang ditanyakan, sesingkat yang memang cukup - kalau satu atau dua kalimat sudah menjawab, berhenti di situ. Mulai langsung dari isi jawaban: tanpa menuliskan rencana atau proses berpikirmu, tanpa mengulang pertanyaannya, tanpa judul, tanpa label.`;
 
 // --- Output scrubbing -------------------------------------------------------
 
@@ -68,9 +75,16 @@ const HARMONY_TOKEN = /<\|[a-z_]+\|>/gi;
 // string, so it only ever touches the incomplete tail of a stream.
 const PARTIAL_TAG_TAIL = /<(?:\|[a-z_]*\|?|[a-z]*)$/i;
 
-// Unmistakable chain-of-thought openers. These are never valid Indonesian
-// pastoral output, so matching them at the start of the reply is safe.
+// Unmistakable chain-of-thought openers.
+//
+// The English set alone was not enough: the model is told to answer only in
+// Indonesian, so it narrates its planning in Indonesian too and none of these
+// matched. The Indonesian patterns below are deliberately narrow — a pastoral
+// reply may legitimately open with "Mari kita berdoa" or "Dia bertanya kepada
+// Yesus", so only planning verbs ("mari kita lihat", "saya akan menjawab") and
+// third-person references to the user are treated as meta.
 const META_OPENERS = [
+  // English
   /^(?:we|i)\s+(?:need|should|must|have)\s+to\b.*$/i,
   /^(?:the\s+)?user\s+(?:is|has|wants|asks|said)\b.*$/i,
   /^let(?:'|')?s\s+.*$/i,
@@ -78,6 +92,16 @@ const META_OPENERS = [
   /^i(?:'|')?(?:ll|m going to)\s+.*$/i,
   /^okay,?\s+(?:so\s+)?(?:the\s+)?(?:user|we|i)\b.*$/i,
   /^(?:first|so),?\s+(?:the\s+)?(?:user|we|i)\b.*$/i,
+
+  // Indonesian
+  /^(?:baik|baiklah|oke|okay|nah|jadi)[,.]?\s+(?:saya|aku|kita)\s+(?:akan|perlu|harus|bisa)\b.*$/i,
+  /^(?:saya|aku)\s+(?:akan|perlu|harus)\s+(?:menjawab|merespons|menjelaskan|memberikan|membalas|menanggapi)\b.*$/i,
+  /^mari\s+(?:kita\s+)?(?:lihat|analisis|analisa|periksa|uraikan|telaah)\b.*$/i,
+  /^sebagai\s+ai(?:\s+pastor)?\b.*$/i,
+  /^(?:pengguna|user)\s+(?:ini\s+)?(?:bertanya|menanyakan|meminta|sedang|ingin|adalah|mau)\b.*$/i,
+  /^(?:jadi|nah)[,.]?\s+(?:pengguna|user)\b.*$/i,
+  /^(?:pertanyaan|permintaan)(?:nya)?\s+(?:ini\s+)?(?:adalah|tentang|mengenai)\b.*$/i,
+  /^(?:konteks|catatan|analisis|rencana)(?:nya)?\s*:.*$/i,
 ];
 
 // A label the model stuck on its own reply.
