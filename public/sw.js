@@ -1,116 +1,130 @@
-// Livyn service worker — push notifications + offline caching.
+// Livyn service worker — push notifications + offline support.
+//
+// Caching rules of thumb used here:
+//
+//  - HTML navigations are NEVER written to the cache. They are personalised
+//    (the signed-in user's name, streaks, circles) and they embed hashed asset
+//    URLs, so caching them served a stale app after every deploy and could
+//    surface one account's pages to the next person on a shared device. The
+//    network answers navigations; the precached /offline page is the fallback.
+//  - Only genuinely immutable, non-personalised things get cached: the
+//    content-hashed /_next/static/ bundles, images, fonts, and the /bible/
+//    JSON that powers offline reading.
+//
+// Bumping CACHE_NAME purges every older cache in `activate`, which is how
+// existing installs shed the stale entries written by earlier versions.
 
-const CACHE_NAME = "livyn-v1";
+const CACHE_NAME = "livyn-v2";
 const OFFLINE_URL = "/offline";
 
-const PRECACHE_URLS = [
-  "/offline",
-  "/icon-192.png",
-  "/icon-512.png",
-];
-
-const CACHE_FIRST_ORIGINS = [
-  "fonts.googleapis.com",
-  "fonts.gstatic.com",
-];
+const PRECACHE_URLS = [OFFLINE_URL, "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      // Individual puts: one bad URL must not fail the whole installation,
+      // which would leave the old service worker in control indefinitely.
+      await Promise.all(
+        PRECACHE_URLS.map(async (url) => {
+          try {
+            const response = await fetch(url, { cache: "reload" });
+            if (response.ok) await cache.put(url, response);
+          } catch {
+            /* offline at install time — fetched again on demand */
+          }
+        })
+      );
+      await self.skipWaiting();
+    })()
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((k) => k !== CACHE_NAME)
-            .map((k) => caches.delete(k))
-        )
-      )
-      .then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      );
+      await self.clients.claim();
+    })()
   );
 });
 
+// A React Server Component payload is versioned against the running build and
+// is often personalised — caching it causes hydration mismatches after deploy.
+function isRscRequest(request, url) {
+  return (
+    request.headers.get("RSC") === "1" ||
+    request.headers.get("Next-Router-Prefetch") === "1" ||
+    url.searchParams.has("_rsc")
+  );
+}
+
+function isImmutableAsset(url) {
+  return (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/bible/") ||
+    /\.(png|jpg|jpeg|webp|avif|gif|svg|ico|woff2?)$/.test(url.pathname)
+  );
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
   if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+
+  // Never intercept other origins or the API — auth cookies, streaming AI
+  // responses and push endpoints must always hit the network untouched.
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
-
-  if (CACHE_FIRST_ORIGINS.some((o) => url.hostname.includes(o))) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  if (
-    request.destination === "image" ||
-    url.pathname.match(/\.(png|jpg|jpeg|webp|svg|ico|woff2?)$/)
-  ) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  if (url.pathname.startsWith("/bible/")) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
+  if (isRscRequest(request, url)) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirstNav(request));
+    event.respondWith(navigateOrOffline(request));
     return;
   }
 
-  event.respondWith(staleWhileRevalidate(request));
+  if (isImmutableAsset(url)) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Anything else (RSC-adjacent JSON, unknown routes) goes straight to the
+  // network rather than risking a stale or personalised cache entry.
 });
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
+
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && response.type !== "opaque") {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   } catch {
-    return new Response("", { status: 408 });
+    return Response.error();
   }
 }
 
-async function networkFirstNav(request) {
+async function navigateOrOffline(request) {
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
+    return await fetch(request);
   } catch {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return caches.match(OFFLINE_URL) || new Response("Offline", { status: 503 });
+    // Genuinely offline — show the shell instead of the browser error page.
+    const offline = await caches.match(OFFLINE_URL);
+    if (offline) return offline;
+    return new Response(
+      "<!doctype html><meta charset=utf-8><title>Offline</title><p>Kamu sedang offline.",
+      { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    );
   }
-}
-
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (response.ok) cache.put(request, response.clone());
-      return response;
-    })
-    .catch(() => cached);
-  return cached || fetchPromise;
 }
 
 // --- Push notifications ---
@@ -139,16 +153,31 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/app";
+  const target = event.notification.data?.url || "/app";
+  const targetUrl = new URL(target, self.location.origin);
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clients) => {
-        for (const client of clients) {
-          if (client.url.includes(url) && "focus" in client) return client.focus();
+    (async () => {
+      const clientList = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      for (const client of clientList) {
+        if (new URL(client.url).pathname === targetUrl.pathname && "focus" in client) {
+          return client.focus();
         }
-        if (self.clients.openWindow) return self.clients.openWindow(url);
-      })
+      }
+
+      // Nothing already on that page — focus an existing window and navigate
+      // it, falling back to opening a new one.
+      const existing = clientList[0];
+      if (existing && "navigate" in existing) {
+        const focused = await existing.focus();
+        return focused.navigate(targetUrl.href).catch(() => focused);
+      }
+
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl.href);
+    })()
   );
 });

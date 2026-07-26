@@ -149,7 +149,7 @@ export function PlanDetailView({
         <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft text-4xl">
           {plan.coverEmoji}
         </div>
-        <h1 className="font-heading text-lg font-bold">{plan.title}</h1>
+        <h1 className="font-display text-lg font-bold">{plan.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
       </div>
 

@@ -96,7 +96,7 @@ export function InstallPrompt() {
               <Download className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 pr-4">
-              <p className="font-heading text-sm font-bold text-foreground">
+              <p className="font-display text-sm font-bold text-foreground">
                 Pasang Livyn
               </p>
               {showIos ? (

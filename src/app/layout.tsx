@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import { Toaster } from "sonner";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             {children}
+            <ServiceWorkerRegister />
             <Toaster
               richColors
               position="top-center"
