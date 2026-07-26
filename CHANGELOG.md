@@ -2,11 +2,26 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.7.0] - 2026-07-26
+
+### Perbaikan PWA
+
+- **Aplikasi tidak lagi basi setelah deploy**: service worker berhenti menyimpan halaman HTML ke cache. Sebelumnya setiap navigasi ikut di-cache, sehingga pengguna terus melihat versi lama aplikasi walau sudah ada rilis baru.
+- **Kebocoran halaman antar akun ditutup**: halaman yang sudah login tidak lagi tersimpan di CacheStorage, jadi akun lain di perangkat bersama tidak bisa melihatnya.
+- **Cache dinaikkan ke `livyn-v2`**: instalasi lama otomatis membuang cache basi saat service worker baru aktif.
+- **Halaman offline benar-benar muncul**: memperbaiki `caches.match(...) || ...` yang tidak pernah jalan karena Promise selalu truthy — sebelumnya kondisi offline bisa berujung layar error, bukan halaman offline.
+- **Instalasi service worker lebih tahan gagal**: satu URL precache yang gagal tidak lagi membatalkan seluruh instalasi.
+- **Request RSC dan lintas-origin dilewati**: mencegah hydration mismatch setelah deploy.
+- **Notifikasi**: klik notifikasi kini mengarahkan ulang window yang sudah terbuka, bukan menumpuk window baru.
+- **Manifest dilengkapi**: `id`, `scope`, `lang`, `dir`, `display_override`, dan `launch_handler`. `id` disetel ke `/app` agar instalasi lama tidak dianggap aplikasi baru.
+- **Service worker didaftarkan di root layout**: kini aktif juga di splash, onboarding, dan halaman login — bukan hanya setelah masuk `/app`.
+- **Perbaikan font**: kelas `font-heading` tidak pernah didefinisikan di `globals.css`; diganti `font-display` di halaman offline, prompt instalasi, dan kartu rencana baca.
+
 ## [0.6.0] - 2026-07-25
 
 ### Ayat Harian Random & Polish UI
 
-- **Ayat harian kurasi**: 160+ ayat pilihan dari seluruh Alkitab (Mazmur, Yohanes, Roma, Yesaya, Amsal, Filipi, dll.) dengan rotasi acak harian — tidak lagi berurutan dari Kejadian 1:1
+- **Ayat harian kurasi**: ayat pilihan bernilai renungan kuat (Mazmur, Yohanes, Roma, Yesaya, Amsal, Filipi, dll.) dengan rotasi acak harian — tidak lagi berurutan dari Kejadian 1:1. Daftar dibatasi pada ayat yang benar-benar ada di database, dengan fallback deterministik supaya kartu ayat dan image generator tidak pernah hilang dari home.
 - **Icon komunitas di home grid**: Grid quick-action diperluas jadi 2 baris — baris atas: Alkitab, Renungan, Doa, Jurnal; baris bawah: Teman, Circle, Bacaan, Tantangan
 - **Rename "warga" menjadi "anak Tuhan"**: Akun demo diganti dari `warga@livyn.app` ke `anaktuhan@livyn.app`
 - **Polish halaman home**: Spacing header dirapikan, card Reading Plan yang redundan dihapus (sudah di grid), section komunitas hanya muncul saat ada aktivitas

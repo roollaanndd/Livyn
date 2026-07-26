@@ -39,7 +39,7 @@ export function PlanCard({ plan, enrollment }: { plan: Plan; enrollment: Enrollm
             {plan.coverEmoji}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-heading text-sm font-bold text-foreground line-clamp-1">
+            <h3 className="font-display text-sm font-bold text-foreground line-clamp-1">
               {plan.title}
             </h3>
             <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">

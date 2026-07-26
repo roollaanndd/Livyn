@@ -38,12 +38,12 @@ Buka http://localhost:3000.
 
 - `/`, `/onboarding` — splash screen animasi + onboarding carousel (Bahasa Indonesia)
 - `/masuk`, `/daftar`, `/lupa-sandi` — autentikasi
-- `/app` — dashboard: ayat hari ini (160+ ayat kurasi random harian), renungan tematik, pengingat doa, khotbah terbaru, peristiwa Kristiani (dihitung otomatis termasuk Paskah dll.)
+- `/app` — dashboard: ayat hari ini (ayat kurasi dengan rotasi acak harian), renungan tematik, pengingat doa, khotbah terbaru, peristiwa Kristiani (dihitung otomatis termasuk Paskah dll.)
 - `/app/devosi` — renungan harian tematik dengan alur khotbah singkat (pembuka, merenungkan firman, aplikasi, refleksi, doa penutup), berbeda setiap hari, tombol bagikan
 - `/app/alkitab` — 66 kitab lengkap (struktur navigasi penuh), sorot ayat, catatan pribadi, pencarian
 - `/app/doa` — pengingat doa custom (pagi/siang/malam/tengah malam), streak, notifikasi push
 - `/app/khotbah` — streaming video, lanjutkan menonton, mode audio saja, transkrip
-- `/app/ai-pastor` — pendamping rohani AI: tanya tentang Alkitab, doa, curhat, topik rohani (OpenRouter LLM, model `meta-llama/llama-4-maverick:free` default, konfigurasikan lewat `AI_PASTOR_MODEL`)
+- `/app/ai-pastor` — pendamping rohani AI: tanya tentang Alkitab, doa, curhat, topik rohani (OpenRouter LLM dengan pemilihan model gratis yang self-healing, konfigurasikan lewat `AI_PASTOR_MODEL`)
 - `/app/jurnal` — jurnal "Curhat kepada Tuhan": tulis catatan harian dengan mood, dapatkan ayat penguat otomatis
 - `/app/tantangan` — tantangan baca Alkitab bulanan: tandai pasal selesai, poin + streak, level rohani
 - `/app/rencana-baca` — rencana bacaan Alkitab terstruktur harian
@@ -70,7 +70,7 @@ Master prompt aslinya meminta stack yang jauh lebih besar (aplikasi native Flutt
 - **Teks Alkitab**: struktur 66 kitab/pasal lengkap sudah ada, tapi isi ayat baru tersedia untuk kumpulan pasal pilihan (lihat `prisma/bible-verses.ts`) yang ditulis ulang secara orisinal — bukan salinan verbatim dari terjemahan berhak cipta (mis. Terjemahan Baru LAI). Untuk teks lengkap 66 kitab, sambungkan ke sumber berlisensi resmi (API.Bible, YouVersion, atau data resmi LAI).
 - **Aplikasi mobile native** (Flutter/Android/iOS) belum dibangun — aplikasi web ini responsif dan terasa seperti aplikasi native di browser mobile, tapi bukan build native/App Store.
 - **Alarm background native**: pengingat doa di tab yang terbuka memakai Web Notification API secara lokal. Pengiriman notifikasi sungguhan saat aplikasi tertutup memakai Web Push (VAPID) sungguhan — lihat bagian "Push notification" di bawah untuk keterbatasan penjadwalan di paket Vercel Hobby.
-- **AI Pastor**: menggunakan LLM sungguhan lewat OpenRouter (default: `meta-llama/llama-4-maverick:free`). Dilengkapi intent engine, safety filter, dan doctrine rules untuk menjaga konteks rohani. Memerlukan `OPENROUTER_API_KEY` di environment.
+- **AI Pastor**: menggunakan LLM sungguhan lewat OpenRouter. Slug model gratis sering dipensiunkan, jadi `src/lib/ai-pastor/model.ts` memakai daftar kandidat dan menyaringnya terhadap katalog OpenRouter saat runtime — model yang sudah tidak ada otomatis dilewati. Dilengkapi intent engine, safety filter, dan doctrine rules untuk menjaga konteks rohani. Memerlukan `OPENROUTER_API_KEY` di environment.
 - **Ayat penguat jurnal**: ayat penguat yang muncul setelah menulis jurnal dipilih lewat pencocokan kata kunci deterministik terhadap ~130 ayat kurasi (`src/lib/journal/verse-matcher.ts`). Cukup akurat untuk tema-tema umum (takut, sedih, cemas, syukur, dll.) tapi tidak memahami konteks bebas seperti LLM.
 - **Google/Apple Login**: tombolnya ada di UI tapi memerlukan kredensial OAuth produksi untuk diaktifkan.
 - **Upload & transcoding video/gambar**: kontributor menempelkan URL video yang sudah dihosting (belum ada pipeline upload + transcoding + virus scan).
@@ -84,7 +84,7 @@ Database Postgres (Supabase, proyek `livyn`, region `ap-southeast-1`) sudah disi
 
 1. Set `DATABASE_URL` di Vercel ke connection string Supabase (Project Settings → Database → Connection string; gunakan mode "Transaction" / connection pooling untuk fungsi serverless).
 2. Set `JWT_ACCESS_SECRET` dan `JWT_REFRESH_SECRET` yang kuat (`openssl rand -base64 48`) sebagai environment variable di Vercel — jangan pakai nilai dev.
-3. Untuk AI Pastor, set `OPENROUTER_API_KEY` (dapatkan di https://openrouter.ai/keys). Opsional: set `AI_PASTOR_MODEL` untuk mengganti model (default: `meta-llama/llama-4-maverick:free`).
+3. Untuk AI Pastor, set `OPENROUTER_API_KEY` (dapatkan di https://openrouter.ai/keys). Opsional: set `AI_PASTOR_MODEL` (comma-separated, terbaik dulu) untuk mengarahkan pilihan model; defaultnya memakai daftar kandidat gratis di `src/lib/ai-pastor/model.ts`.
 4. Untuk notifikasi push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (generate dengan `npx web-push generate-vapid-keys`), `VAPID_SUBJECT` (`mailto:...`), dan `CRON_SECRET` (string acak apa saja — Vercel Cron otomatis mengirimkannya sebagai header `Authorization: Bearer $CRON_SECRET` ke endpoint cron bila env var ini bernama persis `CRON_SECRET`).
 5. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.
 

@@ -15,7 +15,7 @@ export default function OfflinePage() {
         <WifiOff className="h-10 w-10 text-primary" />
       </motion.div>
 
-      <h1 className="mb-2 font-heading text-xl font-bold text-foreground">
+      <h1 className="mb-2 font-display text-xl font-bold text-foreground">
         Kamu Sedang Offline
       </h1>
       <p className="mb-8 max-w-xs text-sm text-muted-foreground">
