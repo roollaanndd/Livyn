@@ -19,27 +19,158 @@ interface VerseShareCardProps {
 
 const CANVAS_W = 1080;
 const CANVAS_H = 1920;
+const SIDE_MARGIN = 96;
+
+/* Vertical rhythm of the centre block. Everything is stacked from these, so a
+   verse of any length stays balanced instead of drifting into the footer. */
+const QUOTE_FONT = 116;
+const QUOTE_H = 64;
+const GAP_QUOTE_TEXT = 30;
+const GAP_TEXT_QUOTE = 14;
+const GAP_QUOTE_REF = 74;
+const ACCENT_GAP = 34;
+const REF_H = 46;
+const GAP_REF_DATE = 42;
+const DATE_H = 28;
 
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
 ): string[] {
-  const words = text.split(" ");
   const lines: string[] = [];
-  let current = words[0] ?? "";
+  let current = "";
 
-  for (let i = 1; i < words.length; i++) {
-    const test = current + " " + words[i];
-    if (ctx.measureText(test).width > maxWidth) {
-      lines.push(current);
-      current = words[i];
-    } else {
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const test = current ? `${current} ${word}` : word;
+    if (ctx.measureText(test).width <= maxWidth) {
       current = test;
+      continue;
     }
+
+    if (current) {
+      lines.push(current);
+      current = "";
+    }
+
+    // A single word can still be wider than the line (long reference or an
+    // unbroken string) — hard-break it rather than letting it bleed off-canvas.
+    if (ctx.measureText(word).width <= maxWidth) {
+      current = word;
+      continue;
+    }
+
+    let chunk = "";
+    for (const ch of word) {
+      if (chunk && ctx.measureText(chunk + ch).width > maxWidth) {
+        lines.push(chunk);
+        chunk = ch;
+      } else {
+        chunk += ch;
+      }
+    }
+    current = chunk;
   }
-  lines.push(current);
+
+  if (current) lines.push(current);
   return lines;
+}
+
+/**
+ * Free stock sources sometimes return photos with letterbox bars baked into
+ * the pixels. Cover-fitting such an image faithfully preserves those bars,
+ * which reads as "the background doesn't fill the card" — so detect a uniform
+ * border and crop it away first.
+ *
+ * Detection runs on a downscaled copy: cheaper, and small amounts of JPEG
+ * noise average out instead of defeating the uniformity test.
+ */
+function trimLetterbox(img: ImageBitmap): { sx: number; sy: number; sw: number; sh: number } {
+  const full = { sx: 0, sy: 0, sw: img.width, sh: img.height };
+
+  const dw = 160;
+  const scale = dw / img.width;
+  const dh = Math.max(1, Math.round(img.height * scale));
+
+  const probe = document.createElement("canvas");
+  probe.width = dw;
+  probe.height = dh;
+  const pctx = probe.getContext("2d", { willReadFrequently: true });
+  if (!pctx) return full;
+  pctx.drawImage(img, 0, 0, dw, dh);
+
+  let data: Uint8ClampedArray;
+  try {
+    data = pctx.getImageData(0, 0, dw, dh).data;
+  } catch {
+    return full; // tainted canvas — keep the whole frame
+  }
+
+  const px = (x: number, y: number) => {
+    const i = (y * dw + x) * 4;
+    return [data[i], data[i + 1], data[i + 2]] as const;
+  };
+  const close = (a: readonly number[], b: readonly number[]) =>
+    Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 36;
+
+  const rowUniform = (y: number, ref: readonly number[]) => {
+    for (let x = 0; x < dw; x++) if (!close(px(x, y), ref)) return false;
+    return true;
+  };
+  const colUniform = (x: number, ref: readonly number[]) => {
+    for (let y = 0; y < dh; y++) if (!close(px(x, y), ref)) return false;
+    return true;
+  };
+
+  const maxY = Math.floor(dh * 0.3);
+  const maxX = Math.floor(dw * 0.3);
+
+  let top = 0;
+  while (top < maxY && rowUniform(top, px(0, 0))) top++;
+  let bottom = dh - 1;
+  while (bottom > dh - 1 - maxY && rowUniform(bottom, px(0, dh - 1))) bottom--;
+  let left = 0;
+  while (left < maxX && colUniform(left, px(0, 0))) left++;
+  let right = dw - 1;
+  while (right > dw - 1 - maxX && colUniform(right, px(dw - 1, 0))) right--;
+
+  const w = right - left + 1;
+  const h = bottom - top + 1;
+  // Nothing meaningful trimmed, or the result is implausibly small — keep all.
+  if (w >= dw && h >= dh) return full;
+  if (w < dw * 0.5 || h < dh * 0.5) return full;
+
+  return {
+    sx: Math.round(left / scale),
+    sy: Math.round(top / scale),
+    sw: Math.round(w / scale),
+    sh: Math.round(h / scale),
+  };
+}
+
+/** Largest type size at which the whole centre block still fits the region. */
+function fitVerseBlock(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxHeight: number,
+) {
+  const measure = (fontSize: number) => {
+    ctx.font = `500 ${fontSize}px Georgia, 'Times New Roman', serif`;
+    const lines = wrapText(ctx, text, maxWidth);
+    const lineHeight = Math.round(fontSize * 1.42);
+    const textHeight = lines.length * lineHeight;
+    const height =
+      QUOTE_H + GAP_QUOTE_TEXT + textHeight + GAP_TEXT_QUOTE + QUOTE_H +
+      GAP_QUOTE_REF + ACCENT_GAP + REF_H + GAP_REF_DATE + DATE_H;
+    return { fontSize, lines, lineHeight, textHeight, height };
+  };
+
+  for (let fontSize = 78; fontSize > 30; fontSize -= 2) {
+    const block = measure(fontSize);
+    if (block.height <= maxHeight) return block;
+  }
+  return measure(30);
 }
 
 function drawLivynMark(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
@@ -112,153 +243,152 @@ async function compositeImage(
   canvas.height = CANVAS_H;
   const ctx = canvas.getContext("2d")!;
 
-  // Background: cover-fit the source image to 9:16 canvas
   const img = await createImageBitmap(bgBlob);
-  const srcRatio = img.width / img.height;
+  const cx = CANVAS_W / 2;
+
+  // === BACKGROUND ========================================================
+  // Trim any baked-in letterbox bars first, then cover-fit what remains so
+  // the photo genuinely reaches every edge.
+  const source = trimLetterbox(img);
   const dstRatio = CANVAS_W / CANVAS_H;
-  let sx = 0, sy = 0, sw = img.width, sh = img.height;
-  if (srcRatio > dstRatio) {
-    // source is wider — crop sides
-    sw = img.height * dstRatio;
-    sx = (img.width - sw) / 2;
+  let { sx, sy, sw, sh } = source;
+  if (sw / sh > dstRatio) {
+    const nw = sh * dstRatio;
+    sx += (sw - nw) / 2;
+    sw = nw;
   } else {
-    // source is taller — crop top/bottom
-    sh = img.width / dstRatio;
-    sy = (img.height - sh) / 2;
+    const nh = sw / dstRatio;
+    sy += (sh - nh) / 2;
+    sh = nh;
   }
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, CANVAS_W, CANVAS_H);
 
-  // Light vertical overlay — keep the photo clearly visible edge-to-edge
-  // (a heavy overlay makes the background look like it doesn't fill the page)
+  // Darken only the top and bottom, where the brand and footer sit. The middle
+  // stays bright so the image still reads as a photograph.
   const overlay = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-  overlay.addColorStop(0, "rgba(0, 12, 8, 0.35)");
-  overlay.addColorStop(0.3, "rgba(0, 10, 6, 0.15)");
-  overlay.addColorStop(0.55, "rgba(0, 10, 6, 0.22)");
-  overlay.addColorStop(0.82, "rgba(0, 12, 8, 0.4)");
-  overlay.addColorStop(1, "rgba(0, 14, 9, 0.62)");
+  overlay.addColorStop(0, "rgba(0, 10, 7, 0.58)");
+  overlay.addColorStop(0.16, "rgba(0, 10, 7, 0.24)");
+  overlay.addColorStop(0.5, "rgba(0, 10, 7, 0.18)");
+  overlay.addColorStop(0.78, "rgba(0, 10, 7, 0.44)");
+  overlay.addColorStop(1, "rgba(0, 10, 7, 0.74)");
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  // Soft center vignette just behind the verse for readability
-  const vignette = ctx.createRadialGradient(
-    CANVAS_W / 2, CANVAS_H / 2, 120,
-    CANVAS_W / 2, CANVAS_H / 2, CANVAS_W * 0.95,
-  );
-  vignette.addColorStop(0, "rgba(0,0,0,0.28)");
-  vignette.addColorStop(0.55, "rgba(0,0,0,0.08)");
-  vignette.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  // === REGIONS ===========================================================
+  const headerTop = 132;
+  const markSize = 64;
+  const headerBottom = headerTop + markSize + 52;
 
-  // === TOP: Livyn brand header ===
-  const topY = 180;
-  drawLivynMark(ctx, CANVAS_W / 2 - 90, topY, 68);
+  const pillH = 74;
+  const pillY = CANVAS_H - 292;
+  const campaignY = CANVAS_H - 162;
+  const domainY = CANVAS_H - 116;
+  const footerTop = pillY - 48;
+
+  const midTop = headerBottom + 48;
+  const midH = footerTop - 48 - midTop;
+
+  // Size the verse to the space actually available, rather than guessing from
+  // character count — long verses used to run into the footer.
+  const block = fitVerseBlock(ctx, verseText, CANVAS_W - SIDE_MARGIN * 2, midH);
+  const blockTop = midTop + (midH - block.height) / 2;
+
+  // Soft scrim behind the verse only, so busy photos stay readable without
+  // flattening the whole image.
+  const scrim = ctx.createLinearGradient(0, blockTop - 110, 0, blockTop + block.height + 110);
+  scrim.addColorStop(0, "rgba(0,0,0,0)");
+  scrim.addColorStop(0.5, "rgba(0,0,0,0.34)");
+  scrim.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = scrim;
+  ctx.fillRect(0, blockTop - 110, CANVAS_W, block.height + 220);
+
+  // === TOP: brand lockup, centred as a single unit =======================
+  ctx.font = "900 52px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  const wordW = ctx.measureText("LIVYN").width;
+  const markGap = 16;
+  const lockupX = cx - (markSize + markGap + wordW) / 2;
+
+  drawLivynMark(ctx, lockupX + markSize / 2, headerTop + markSize / 2, markSize);
 
   ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "900 52px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-  ctx.shadowColor = "rgba(0,0,0,0.6)";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
   ctx.shadowBlur = 12;
-  ctx.fillText("LIVYN", CANVAS_W / 2 - 42, topY + 18);
+  ctx.fillText("LIVYN", lockupX + markSize + markGap, headerTop + markSize / 2 + 2);
 
-  // Tagline under wordmark
-  ctx.shadowBlur = 6;
   ctx.textAlign = "center";
-  ctx.fillStyle = "rgba(255,255,255,0.75)";
-  ctx.font = "600 18px -apple-system, BlinkMacSystemFont, sans-serif";
-  const tagline = "FAITH  ·  EVERY DAY  ·  EVERY STEP";
-  ctx.fillText(tagline, CANVAS_W / 2, topY + 68);
+  ctx.textBaseline = "top";
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = "rgba(255,255,255,0.78)";
+  ctx.font = "600 19px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("FAITH  ·  EVERY DAY  ·  EVERY STEP", cx, headerTop + markSize + 14);
 
-  // Decorative divider under brand
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.strokeStyle = "rgba(255,255,255,0.32)";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(CANVAS_W / 2 - 60, topY + 100);
-  ctx.lineTo(CANVAS_W / 2 + 60, topY + 100);
+  ctx.moveTo(cx - 54, headerTop + markSize + 50);
+  ctx.lineTo(cx + 54, headerTop + markSize + 50);
   ctx.stroke();
 
-  // === CENTER: Verse text ===
+  // === CENTRE: verse, quotes, reference ==================================
+  let y = blockTop;
+
   ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(107, 201, 148, 0.6)";
+  ctx.font = `italic ${QUOTE_FONT}px Georgia, 'Times New Roman', serif`;
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = 16;
+  ctx.fillText("“", cx, y - QUOTE_FONT * 0.14);
+  y += QUOTE_H + GAP_QUOTE_TEXT;
 
-  // Opening quote mark (large, decorative)
-  ctx.fillStyle = "rgba(107, 201, 148, 0.55)";
-  ctx.font = "italic 220px Georgia, 'Times New Roman', serif";
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
-  ctx.shadowBlur = 20;
-  ctx.fillText("“", CANVAS_W / 2, 620);
-
-  // Verse text — big, bold, high contrast
-  const textMaxWidth = CANVAS_W - 160;
-  const len = verseText.length;
-  const fontSize =
-    len > 280 ? 44 :
-    len > 220 ? 50 :
-    len > 160 ? 58 :
-    len > 100 ? 68 : 78;
-
-  ctx.font = `500 ${fontSize}px Georgia, 'Times New Roman', serif`;
+  ctx.font = `500 ${block.fontSize}px Georgia, 'Times New Roman', serif`;
   ctx.fillStyle = "#FFFFFF";
-  ctx.shadowColor = "rgba(0,0,0,0.85)";
-  ctx.shadowBlur = 18;
-  ctx.shadowOffsetY = 3;
+  ctx.shadowColor = "rgba(0,0,0,0.8)";
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 2;
+  block.lines.forEach((line, i) => ctx.fillText(line, cx, y + i * block.lineHeight));
+  y += block.textHeight + GAP_TEXT_QUOTE;
 
-  const lines = wrapText(ctx, verseText, textMaxWidth);
-  const lineHeight = fontSize * 1.45;
-  const totalTextHeight = lines.length * lineHeight;
-  const centerY = CANVAS_H / 2;
-  const startY = centerY - totalTextHeight / 2 + fontSize / 2;
-
-  lines.forEach((line, i) => {
-    ctx.fillText(line, CANVAS_W / 2, startY + i * lineHeight);
-  });
-
-  // Closing quote mark
-  ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = "rgba(107, 201, 148, 0.55)";
-  ctx.font = "italic 220px Georgia, 'Times New Roman', serif";
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
-  ctx.shadowBlur = 20;
-  ctx.fillText("”", CANVAS_W / 2, startY + totalTextHeight + 100);
+  ctx.fillStyle = "rgba(107, 201, 148, 0.6)";
+  ctx.font = `italic ${QUOTE_FONT}px Georgia, 'Times New Roman', serif`;
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = 16;
+  ctx.fillText("”", cx, y - QUOTE_FONT * 0.14);
+  y += QUOTE_H + GAP_QUOTE_REF;
 
-  // === Verse reference — prominent, boxed style ===
   ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
-
-  const refY = startY + totalTextHeight + 220;
-
-  // Small accent line above reference
-  ctx.strokeStyle = "rgba(107, 201, 148, 0.8)";
+  ctx.strokeStyle = "rgba(107, 201, 148, 0.85)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(CANVAS_W / 2 - 40, refY - 40);
-  ctx.lineTo(CANVAS_W / 2 + 40, refY - 40);
+  ctx.moveTo(cx - 44, y);
+  ctx.lineTo(cx + 44, y);
   ctx.stroke();
+  y += ACCENT_GAP;
 
-  // Reference text — bold, prominent, green tint
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "800 44px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.shadowColor = "rgba(0,0,0,0.6)";
   ctx.shadowBlur = 10;
-  ctx.fillText(verseRef.toUpperCase(), CANVAS_W / 2, refY);
+  ctx.fillText(verseRef.toUpperCase(), cx, y);
+  y += REF_H + GAP_REF_DATE;
 
-  // Today's date under the reference
   const dateStr = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.fillStyle = "rgba(255,255,255,0.78)";
   ctx.font = "500 26px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.shadowBlur = 8;
-  ctx.fillText(dateStr, CANVAS_W / 2, refY + 52);
+  ctx.fillText(dateStr, cx, y);
 
-  // === BOTTOM: Livyn campaign footer ===
-  // Frosted pill badge: [logo] Dibuat dengan aplikasi LIVYN
+  // === BOTTOM: campaign footer ===========================================
   ctx.shadowBlur = 0;
-  ctx.textAlign = "center";
 
   const pillText = "Dibuat dengan aplikasi";
   const brandText = "LIVYN";
@@ -271,9 +401,7 @@ async function compositeImage(
   const gap = 12;
   const padX = 30;
   const pillW = padX + logoSize + gap + pillTextW + 10 + brandTextW + padX;
-  const pillH = 74;
   const pillX = (CANVAS_W - pillW) / 2;
-  const pillY = CANVAS_H - 215;
 
   ctx.fillStyle = "rgba(10, 22, 16, 0.55)";
   ctx.strokeStyle = "rgba(255,255,255,0.28)";
@@ -288,7 +416,7 @@ async function compositeImage(
 
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillStyle = "rgba(255,255,255,0.88)";
   ctx.font = "500 26px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(pillText, cursorX, pillY + pillH / 2 + 1);
   cursorX += pillTextW + 10;
@@ -296,19 +424,21 @@ async function compositeImage(
   ctx.fillStyle = "#6BC994";
   ctx.font = "900 28px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(brandText, cursorX, pillY + pillH / 2 + 1);
-  ctx.textBaseline = "alphabetic";
 
-  // Campaign line + domain
   ctx.textAlign = "center";
-  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(255,255,255,0.82)";
   ctx.font = "600 24px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.shadowColor = "rgba(0,0,0,0.5)";
   ctx.shadowBlur = 8;
-  ctx.fillText("Firman, doa & renungan setiap hari", CANVAS_W / 2, pillY + pillH + 48);
+  ctx.fillText("Firman, doa & renungan setiap hari", cx, campaignY);
 
   ctx.fillStyle = "rgba(107, 201, 148, 0.95)";
   ctx.font = "700 25px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("livyn.app", CANVAS_W / 2, pillY + pillH + 88);
+  ctx.fillText("livyn.app", cx, domainY);
+
+  ctx.shadowBlur = 0;
+  ctx.textBaseline = "alphabetic";
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob!), "image/png");
