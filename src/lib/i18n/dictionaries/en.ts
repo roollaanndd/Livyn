@@ -81,6 +81,23 @@ export const en: Dictionary = {
     count: "{count} verses",
   },
 
+  verseImage: {
+    cta: "Create verse image",
+    ctaSub: "Ready to share on Instagram Story / WhatsApp Status",
+    ctaCompact: "Create image",
+    generate: "Generate verse image",
+    generateHint: "9:16 format, ready for Instagram Stories, WhatsApp Status and other socials",
+    generating: "Creating your image…",
+    generatingHint: "About 10-15 seconds",
+    failed: "Couldn't create the image",
+    retry: "Try again",
+    regenerate: "Generate again",
+    save: "Save",
+    saved: "Saved!",
+    share: "Share",
+    alt: "Verse image",
+  },
+
   prayers: {
     title: "Prayer",
     remindersTitle: "Prayer Reminders",

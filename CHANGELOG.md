@@ -2,6 +2,14 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.8.1] - 2026-07-28
+
+### Gambar ayat dari koleksi favorit
+
+- **Setiap ayat favorit bisa dibuatkan gambar**, sama seperti Ayat Hari Ini — format 9:16 siap untuk Story Instagram dan Status WhatsApp, lengkap dengan tombol simpan, bagikan, dan generate ulang.
+- Generator dipakai ulang apa adanya, jadi hasilnya identik dengan kartu ayat harian. Ditambah varian **ringkas**: chip kecil di tiap kartu favorit, bukan tombol selebar layar yang akan mengubur ayat-ayatnya. Panel pratinjaunya tetap mengembang selebar kartu supaya gambar 9:16 tidak terjepit.
+- **Teks generator ikut dwibahasa.** Sebelumnya semua labelnya — "Buat Gambar Ayat", "Membuat gambar...", "Simpan", "Bagikan", pesan galat — masih Indonesia walau aplikasi diatur ke English.
+
 ## [0.8.0] - 2026-07-28
 
 ### Home dirapikan

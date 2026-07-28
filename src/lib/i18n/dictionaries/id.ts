@@ -81,6 +81,23 @@ export const id = {
     count: "{count} ayat",
   },
 
+  verseImage: {
+    cta: "Buat Gambar Ayat",
+    ctaSub: "Untuk dibagikan ke Story IG / Status WA",
+    ctaCompact: "Buat Gambar",
+    generate: "Generate Gambar Ayat",
+    generateHint: "Format 9:16 siap untuk Story Instagram, WhatsApp Status, dan sosmed lainnya",
+    generating: "Membuat gambar…",
+    generatingHint: "Sekitar 10-15 detik",
+    failed: "Gagal membuat gambar",
+    retry: "Coba Lagi",
+    regenerate: "Generate ulang",
+    save: "Simpan",
+    saved: "Tersimpan!",
+    share: "Bagikan",
+    alt: "Gambar ayat",
+  },
+
   prayers: {
     title: "Doa",
     remindersTitle: "Pengingat Doa",
