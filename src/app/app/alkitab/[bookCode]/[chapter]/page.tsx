@@ -9,6 +9,7 @@ import {
   getUserHighlightsForChapter,
   getUserNotesForChapter,
 } from "@/lib/queries/bible";
+import { favoritedVersesInChapter } from "@/lib/queries/favorites";
 import { TopBar } from "@/components/nav/top-bar";
 import { FontSizeControl } from "@/components/devotion/font-size-control";
 import { VerseList } from "@/components/bible/verse-list";
@@ -30,10 +31,11 @@ export default async function ChapterReaderPage({
   const cookieStore = await cookies();
   const translation = cookieStore.get("bible-version")?.value || "TB";
 
-  const [{ verses }, highlights, notes] = await Promise.all([
+  const [{ verses }, highlights, notes, favorited] = await Promise.all([
     getOrFetchChapterVerses(book.id, bookCode, chapter, translation),
     getUserHighlightsForChapter(session.sub, bookCode, chapter),
     getUserNotesForChapter(session.sub, bookCode, chapter),
+    favoritedVersesInChapter(session.sub, bookCode, chapter),
   ]);
 
   const prevChapter = chapter > 1 ? chapter - 1 : null;
@@ -60,6 +62,7 @@ export default async function ChapterReaderPage({
             verses={verses}
             initialHighlightedVerses={highlights.map((h: { verse: number }) => h.verse)}
             initialNotes={notes.map((n: { id: string; verse: number; text: string }) => ({ id: n.id, verse: n.verse, text: n.text }))}
+            initialFavoritedVerses={[...favorited]}
           />
         )}
 

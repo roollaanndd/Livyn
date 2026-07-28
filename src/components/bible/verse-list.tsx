@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Highlighter, StickyNote, Copy } from "lucide-react";
+import { Highlighter, StickyNote, Copy, Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 type Verse = { id: string; verse: number; text: string };
 type NoteRow = { id: string; verse: number; text: string };
@@ -15,6 +16,7 @@ export function VerseList({
   verses,
   initialHighlightedVerses,
   initialNotes,
+  initialFavoritedVerses = [],
 }: {
   bookCode: string;
   chapter: number;
@@ -22,7 +24,10 @@ export function VerseList({
   verses: Verse[];
   initialHighlightedVerses: number[];
   initialNotes: NoteRow[];
+  initialFavoritedVerses?: number[];
 }) {
+  const t = useT();
+  const [favorited, setFavorited] = useState(new Set(initialFavoritedVerses));
   const [highlighted, setHighlighted] = useState(new Set(initialHighlightedVerses));
   const [notes, setNotes] = useState(new Map(initialNotes.map((n) => [n.verse, n.text])));
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
@@ -60,6 +65,34 @@ export function VerseList({
     }
   }
 
+  async function toggleFavorite(verse: number, text: string) {
+    const wasFavorited = favorited.has(verse);
+    setFavorited((prev) => {
+      const next = new Set(prev);
+      if (wasFavorited) next.delete(verse);
+      else next.add(verse);
+      return next;
+    });
+
+    const res = await fetch("/api/favorit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookCode, bookName, chapter, verse, text }),
+    }).catch(() => null);
+
+    if (!res?.ok) {
+      setFavorited((prev) => {
+        const next = new Set(prev);
+        if (wasFavorited) next.add(verse);
+        else next.delete(verse);
+        return next;
+      });
+      toast.error(t("common.errorGeneric"));
+      return;
+    }
+    toast.success(wasFavorited ? t("favorites.removedToast") : t("favorites.savedToast"));
+  }
+
   async function copyVerse(verse: number, text: string) {
     await navigator.clipboard.writeText(`"${text}" — ${bookName} ${chapter}:${verse}`);
     toast.success("Ayat disalin");
@@ -70,6 +103,7 @@ export function VerseList({
       {verses.map((v) => {
         const isActive = activeVerse === v.verse;
         const isHighlighted = highlighted.has(v.verse);
+        const isFavorited = favorited.has(v.verse);
         const note = notes.get(v.verse);
         return (
           <div key={v.id} id={`v${v.verse}`} className="scroll-mt-20">
@@ -92,7 +126,18 @@ export function VerseList({
 
             {isActive && (
               <div className="mb-2 ml-2 space-y-2 rounded-md border border-border bg-surface-muted p-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => toggleFavorite(v.verse, v.text)}
+                    aria-pressed={isFavorited}
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium",
+                      isFavorited ? "bg-primary text-primary-foreground" : "bg-surface text-muted-foreground",
+                    )}
+                  >
+                    {isFavorited ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+                    {isFavorited ? t("favorites.saved") : t("favorites.save")}
+                  </button>
                   <button
                     onClick={() => toggleHighlight(v.verse)}
                     className={cn(

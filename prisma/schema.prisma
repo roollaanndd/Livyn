@@ -32,6 +32,13 @@ model User {
   fontSize          String   @default("md")
   themePreference   String   @default("system") // light | dark | system
   language          String   @default("id")
+  /// Legal consent. Null until the user accepts; termsVersion lets a future
+  /// wording change re-ask only the people who accepted an older version.
+  termsAcceptedAt   DateTime?
+  termsVersion      String?
+  /// 24 comma-separated counters, one per hour (Asia/Jakarta), recording when
+  /// this user actually opens the app. Drives the smart-reminder suggestion.
+  habitHours        String   @default("")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -56,6 +63,9 @@ model User {
   pushSubscriptions  PushSubscription[]
   challengeProgress  ChallengeProgress[]
   readingPlanEnrollments ReadingPlanEnrollment[]
+  favoriteVerses     FavoriteVerse[]
+  personalPrayers    PersonalPrayer[]
+  dailyActivity      DailyActivity[]
   points             Int      @default(0)
 
   friendshipsRequested   Friendship[] @relation("FriendshipRequester")
@@ -291,9 +301,64 @@ model PrayerReminder {
   repeat      Boolean  @default(true)
   verseAfter  Boolean  @default(true)
   active      Boolean  @default(true)
+  /// When true the cron sends this reminder at the user's own habit hour
+  /// instead of `time`, so a 06:00 reminder follows someone who always opens
+  /// the app at 22:00 rather than shouting into an empty morning.
+  autoAdjust  Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   logs        PrayerLog[]
+}
+
+/// A verse the user chose to keep. Text and reference are denormalised so a
+/// favourite survives even if the verse is later re-sourced from a different
+/// Bible API.
+model FavoriteVerse {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookCode  String
+  bookName  String
+  chapter   Int
+  verse     Int
+  text      String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, bookCode, chapter, verse])
+  @@index([userId, createdAt])
+}
+
+/// One row per user per day per habit, powering the "today's rhythm" ring row
+/// on Home. Only kinds with no other record of their own are stored here —
+/// prayer and journal are read from PrayerLog and JournalEntry instead.
+/// kind: "verse" | "devotion"
+model DailyActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       String   // "YYYY-MM-DD" in Asia/Jakarta
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day, kind])
+  @@index([userId, day])
+}
+
+/// A private prayer, separate from a Circle PrayerRequest which is shared.
+/// status: "open" | "answered"
+model PersonalPrayer {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  body         String?
+  status       String    @default("open")
+  answeredNote String?
+  answeredAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId, status])
 }
 
 model PrayerLog {

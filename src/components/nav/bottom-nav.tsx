@@ -2,22 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpenText, AlarmClock, BookOpen } from "lucide-react";
+import { Home, BookOpenText, AlarmClock, BookOpen, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LivynAiIcon } from "@/components/brand/logo";
 import { SPRING, TAP } from "@/lib/motion";
+import { useT } from "@/lib/i18n/client";
+import type { TKey } from "@/lib/i18n/translate";
 
-const TABS = [
-  { href: "/app", label: "Beranda", icon: Home, exact: true },
-  { href: "/app/alkitab", label: "Alkitab", icon: BookOpen },
-  { href: "/app/ai-pastor", label: "AI Pastor", icon: null, isCenter: true },
-  { href: "/app/devosi", label: "Renungan", icon: BookOpenText },
-  { href: "/app/doa", label: "Doa", icon: AlarmClock },
+type Tab = {
+  href: string;
+  labelKey: TKey;
+  icon: LucideIcon | null;
+  exact?: boolean;
+  isCenter?: boolean;
+};
+
+const TABS: Tab[] = [
+  { href: "/app", labelKey: "nav.home", icon: Home, exact: true },
+  { href: "/app/alkitab", labelKey: "nav.bible", icon: BookOpen },
+  { href: "/app/ai-pastor", labelKey: "nav.aiPastor", icon: null, isCenter: true },
+  { href: "/app/devosi", labelKey: "nav.devotion", icon: BookOpenText },
+  { href: "/app/doa", labelKey: "nav.prayer", icon: AlarmClock },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2">
@@ -59,7 +70,7 @@ export function BottomNav() {
                       "mt-1 text-[10px] font-semibold transition-colors",
                       active ? "text-primary" : "text-muted-foreground",
                     )}>
-                      {tab.label}
+                      {t(tab.labelKey)}
                     </span>
                   </Link>
                 );
@@ -101,7 +112,7 @@ export function BottomNav() {
                       active ? "text-primary font-semibold" : "text-muted-foreground",
                     )}
                   >
-                    {tab.label}
+                    {t(tab.labelKey)}
                   </span>
                 </Link>
               );

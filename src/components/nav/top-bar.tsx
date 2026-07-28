@@ -47,12 +47,27 @@ export function TopBar({
   );
 }
 
-export function IconLink({ href, children, label }: { href: string; children: React.ReactNode; label: string }) {
+export function IconLink({
+  href,
+  children,
+  label,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  label: string;
+  /** Lets callers restyle for a dark surface — the Home identity card sits on
+   * the primary gradient, where the default muted colours disappear. */
+  className?: string;
+}) {
   return (
     <Link
       href={href}
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-2xl hover:bg-surface-muted transition-colors active:scale-95"
+      className={cn(
+        "flex h-10 w-10 items-center justify-center rounded-2xl hover:bg-surface-muted transition-colors active:scale-95",
+        className,
+      )}
     >
       {children}
     </Link>
