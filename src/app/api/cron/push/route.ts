@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push/send";
 import { getTodayVerse } from "@/lib/queries/home";
+import { formatHour, peakHour } from "@/lib/habit";
 
 // Triggered by an external scheduler (Vercel Cron, or any cron-job.org /
 // GitHub Actions schedule hitting this URL with the shared secret). Designed
@@ -29,9 +30,27 @@ export async function GET(req: NextRequest) {
   const dow = jkt.getUTCDay();
 
   const reminders = await prisma.prayerReminder.findMany({ where: { active: true } });
+
+  // Members with autoAdjust on are sent at their own habit hour instead of the
+  // hour they once typed in. One lookup per such member, cached across their
+  // reminders so a person with four reminders costs one query, not four.
+  const habitHourByUser = new Map<string, number | null>();
+  async function effectiveTime(r: { userId: string; time: string; autoAdjust?: boolean }) {
+    if (!r.autoAdjust) return r.time;
+    if (!habitHourByUser.has(r.userId)) {
+      const user = await prisma.user
+        .findUnique({ where: { id: r.userId }, select: { habitHours: true } })
+        .catch(() => null);
+      habitHourByUser.set(r.userId, user ? (peakHour(user.habitHours)?.hour ?? null) : null);
+    }
+    const hour = habitHourByUser.get(r.userId);
+    // Not enough evidence yet — fall back to the time they set themselves.
+    return hour === null || hour === undefined ? r.time : formatHour(hour);
+  }
+
   let prayerSent = 0;
   for (const r of reminders) {
-    const diff = nowMinutes - minutesSinceMidnight(r.time);
+    const diff = nowMinutes - minutesSinceMidnight(await effectiveTime(r));
     if (diff < 0 || diff >= windowMinutes) continue;
     if (!r.daysOfWeek.split(",").map(Number).includes(dow)) continue;
     const { sent } = await sendPushToUser(r.userId, {

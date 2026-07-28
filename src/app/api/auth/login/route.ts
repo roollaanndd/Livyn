@@ -6,6 +6,8 @@ import { signAccessToken } from "@/lib/auth/jwt";
 import { issueRefreshToken } from "@/lib/auth/tokens";
 import { setSessionCookies } from "@/lib/auth/session";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { isLocale } from "@/lib/i18n/config";
+import { setLocaleCookie } from "@/lib/i18n/server";
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
@@ -54,6 +56,8 @@ export async function POST(req: NextRequest) {
     const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
     const { token: refreshToken } = await issueRefreshToken(user.id);
     await setSessionCookies(accessToken, refreshToken);
+    // Carry the member's saved language onto this device.
+    if (isLocale(user.language)) await setLocaleCookie(user.language);
 
     db.loginEvent.create({ userId: user.id, ipAddress: ip, userAgent, success: true }).catch(() => {});
 

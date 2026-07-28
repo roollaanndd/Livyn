@@ -2,6 +2,48 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.8.0] - 2026-07-28
+
+### Home dirapikan
+
+- **Kartu identitas tunggal**: sapaan, nama, level, poin, dan streak digabung ke satu kartu di paling atas. Sebelumnya kartu Poin/Level (gradien hijau) bersaing dengan kartu Ayat (gradien gelap) — dua hero yang saling melemahkan. Sekarang Ayat jadi satu-satunya hero.
+- **Strip "Ritme hari ini"**: empat lingkaran (Ayat, Renungan, Doa, Jurnal) yang menjawab "hari ini aku sudah apa saja?". Statusnya diambil dari data nyata, bukan tebakan — doa dari `PrayerLog`, jurnal dari `JournalEntry`, ayat dan renungan dari tabel `DailyActivity` baru yang dicatat saat isinya benar-benar tampil di layar.
+- **Kartu ganda dihapus**: Jurnal, Renungan, dan Tantangan sebelumnya muncul dua kali — sebagai ikon *dan* sebagai kartu. Kini masing-masing sekali.
+- **8 ikon jadi 4 + "Lainnya"**: Alkitab, Doa, Circle, Khotbah tetap terlihat; sisanya lewat "Lainnya →" ke Profil.
+- **Label pemisah**: "Ritme hari ini", "Lanjutkan", "Jelajahi" memecah tumpukan kartu jadi kelompok yang bisa dipindai.
+- **Komunitas jadi satu kartu ringkas** dengan angka, bukan dua kartu terpisah.
+
+### Dwibahasa Indonesia / English
+
+- **Pemilih bahasa di Profil** (ID/EN), tersimpan di cookie sekaligus di kolom `User.language`, jadi pilihannya ikut ke perangkat lain saat login.
+- **Urutan penentuan bahasa**: cookie → header `Accept-Language` browser → Indonesia.
+- **Cakupan terjemahan**: Home, bottom nav, Profil, Doa, Ayat Favorit, layar persetujuan, S&K, dan Kebijakan Privasi. Dasbor admin/kontributor dan isi konten (renungan, ayat, khotbah) masih Indonesia — lihat README.
+- Tidak memakai routing `/[lang]/…` supaya seluruh direktori `src/app` tidak perlu dipindah.
+
+### Syarat & Ketentuan
+
+- **Layar persetujuan sekali di awal** dengan satu centang, muncul sebelum masuk `/app`.
+- **Disimpan di database** (`termsAcceptedAt` + `termsVersion`), bukan localStorage — persetujuan tidak hilang saat ganti perangkat, dan perubahan wording nanti bisa meminta persetujuan ulang hanya untuk yang belum setuju versi baru.
+- **Ditegakkan di server** pada layout `/app`, bukan disembunyikan di UI.
+- **Draf S&K dan Kebijakan Privasi** dalam dua bahasa, ditulis dari apa yang aplikasi ini benar-benar lakukan. Belum ditinjau ahli hukum.
+
+### Fitur baru
+
+- **Ayat Favorit**: simpan ayat dari kartu Ayat Hari Ini maupun dari pembaca Alkitab, beri catatan pribadi, lihat koleksinya di `/app/favorit`.
+- **Doa pribadi & doa terjawab**: tulis doa pribadi (terpisah dari doa Circle), tandai terjawab beserta ceritanya, dan lihat daftar doa yang sudah dijawab.
+- **Pengingat pintar**: Livyn mencatat jam kamu biasanya membuka aplikasi (histogram 24 jam di `User.habitHours`), lalu menawarkan memindahkan pengingat ke jam itu — atau mengambil alih penjadwalannya sepenuhnya lewat sakelar "ikuti jam kebiasaanku". Cron push menghormati setelan ini.
+- **Popup notifikasi**: ajakan halus mengaktifkan notifikasi, muncul sekali dan hanya selama izin browser masih netral.
+
+### Basis data
+
+- Kolom baru pada `User`: `termsAcceptedAt`, `termsVersion`, `habitHours`.
+- Kolom baru pada `PrayerReminder`: `autoAdjust`.
+- Tabel baru: `FavoriteVerse`, `PersonalPrayer`, `DailyActivity`.
+
+### Lain-lain
+
+- `package.json` dinaikkan dari `0.1.0` ke `0.8.0`. Sebelumnya versi di `package.json` dan CHANGELOG tidak pernah disinkronkan.
+
 ## [0.7.0] - 2026-07-26
 
 ### Perbaikan PWA

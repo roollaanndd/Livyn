@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getTodaysDevotion, formatTodaysDate } from "@/lib/devotions/daily-themes";
 import { TopBar } from "@/components/nav/top-bar";
 import { DailyShareButton } from "@/components/devotion/daily-share-button";
+import { ActivityBeacon } from "@/components/home/activity-beacon";
 
 // Simple, home-consistent gradient per accent — kept subtle so the writing stays hero.
 const ACCENT_GRADIENTS: Record<string, string> = {
@@ -43,6 +44,8 @@ export default async function DailyDevotionPage() {
 
   return (
     <div className="relative bg-background">
+      {/* Opening today's devotion is what ticks the rhythm ring on Home. */}
+      <ActivityBeacon kind="devotion" />
       {/* Soft home-themed backdrop */}
       <div className={`pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-gradient-to-b ${ACCENT_GRADIENTS[accent]}`} />
 

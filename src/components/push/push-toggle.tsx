@@ -4,89 +4,56 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
-}
+import { useT } from "@/lib/i18n/client";
+import { pushSupported, subscribeToPush, unsubscribeFromPush, currentSubscription } from "@/lib/push/client";
 
 type Status = "loading" | "unsupported" | "off" | "on";
 
 export function PushToggle() {
+  const t = useT();
   const [status, setStatus] = useState<Status>("loading");
 
+  // Resolved asynchronously on purpose: the browser's subscription state is an
+  // external system, and setting state synchronously here would cascade renders.
   useEffect(() => {
-    async function check() {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        setStatus("unsupported");
-        return;
-      }
-      const reg = await navigator.serviceWorker.register("/sw.js");
-      const sub = await reg.pushManager.getSubscription();
-      setStatus(sub ? "on" : "off");
+    async function resolve() {
+      if (!pushSupported()) return "unsupported" as const;
+      const sub = await currentSubscription();
+      return sub ? ("on" as const) : ("off" as const);
     }
-    check().catch(() => setStatus("unsupported"));
+    resolve()
+      .then(setStatus)
+      .catch(() => setStatus("unsupported"));
   }, []);
 
   async function enable() {
     setStatus("loading");
-    try {
-      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!publicKey) {
-        toast.error("Notifikasi belum dikonfigurasi di server ini");
-        setStatus("off");
-        return;
-      }
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        toast.error("Izin notifikasi ditolak");
-        setStatus("off");
-        return;
-      }
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
-      const json = sub.toJSON();
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
-      });
-      toast.success("Notifikasi diaktifkan");
+    const result = await subscribeToPush();
+    if (result === "subscribed") {
+      toast.success(t("push.enabled"));
       setStatus("on");
-    } catch {
-      toast.error("Gagal mengaktifkan notifikasi");
-      setStatus("off");
+      return;
     }
+    if (result === "denied") toast.error(t("push.denied"));
+    else if (result === "unconfigured") toast.error(t("push.notConfigured"));
+    else toast.error(t("push.enableFailed"));
+    setStatus("off");
   }
 
   async function disable() {
     setStatus("loading");
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        await fetch("/api/push/unsubscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: sub.endpoint }),
-        });
-        await sub.unsubscribe();
-      }
-      toast.success("Notifikasi dimatikan");
+    const ok = await unsubscribeFromPush();
+    if (ok) {
+      toast.success(t("push.disabled"));
       setStatus("off");
-    } catch {
-      toast.error("Gagal mematikan notifikasi");
+    } else {
+      toast.error(t("push.disableFailed"));
       setStatus("on");
     }
   }
 
   if (status === "unsupported") {
-    return <span className="text-xs text-muted-foreground">Tidak didukung di perangkat ini</span>;
+    return <span className="text-xs text-muted-foreground">{t("push.unsupported")}</span>;
   }
 
   return (
@@ -97,7 +64,8 @@ export function PushToggle() {
         "relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-60",
         status === "on" ? "bg-primary" : "bg-border",
       )}
-      aria-label="Aktifkan notifikasi push"
+      aria-label={t("push.softPromptAccept")}
+      aria-pressed={status === "on"}
     >
       {status === "loading" ? (
         <Loader2 className="absolute inset-0 m-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />

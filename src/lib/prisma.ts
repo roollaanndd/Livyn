@@ -50,6 +50,9 @@ const FK_MAP: Record<string, Record<string, { fkCol: string; table: string }>> =
   WeeklyMission: { circle: { fkCol: "circleId", table: "Circle" }, createdBy: { fkCol: "createdById", table: "User" } },
   MissionCheckIn: { mission: { fkCol: "missionId", table: "WeeklyMission" }, user: { fkCol: "userId", table: "User" } },
   CircleBroadcast: { circle: { fkCol: "circleId", table: "Circle" }, createdBy: { fkCol: "createdById", table: "User" } },
+  FavoriteVerse: { user: { fkCol: "userId", table: "User" } },
+  PersonalPrayer: { user: { fkCol: "userId", table: "User" } },
+  DailyActivity: { user: { fkCol: "userId", table: "User" } },
 };
 
 const REVERSE_FK_MAP: Record<string, Record<string, { table: string; fkCol: string }>> = {
