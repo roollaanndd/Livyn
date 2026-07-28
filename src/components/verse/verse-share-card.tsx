@@ -11,10 +11,17 @@ import {
   RefreshCw,
   Sparkles,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 interface VerseShareCardProps {
   verseText: string;
   verseRef: string;
+  /** "full" is the wide gradient CTA under the daily-verse hero. "compact" is a
+   * chip sized to sit inline in a list, where a full-width CTA per row would
+   * bury the verses it belongs to. */
+  variant?: "full" | "compact";
+  className?: string;
 }
 
 const CANVAS_W = 1080;
@@ -445,7 +452,13 @@ async function compositeImage(
   });
 }
 
-export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
+export function VerseShareCard({
+  verseText,
+  verseRef,
+  variant = "full",
+  className,
+}: VerseShareCardProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -465,7 +478,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
       });
 
       if (!res.ok) {
-        let msg = "Gagal membuat gambar.";
+        let msg = t("verseImage.failed");
         try {
           const data = await res.json();
           if (data.error) msg = data.error;
@@ -490,11 +503,11 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
       setComposedBlob(composed);
       setImageUrl(dataUrl);
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "Gagal membuat gambar.");
+      setErrorMsg(e instanceof Error ? e.message : t("verseImage.failed"));
     } finally {
       setLoading(false);
     }
-  }, [verseText, verseRef]);
+  }, [verseText, verseRef, t]);
 
   function download() {
     if (!composedBlob) return;
@@ -534,27 +547,39 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
 
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && !imageUrl && !loading) generate();
+  }
+
   return (
-    <div className="mt-4">
-      <button
-        onClick={() => {
-          const next = !open;
-          setOpen(next);
-          if (next && !imageUrl && !loading) generate();
-        }}
-        className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-primary to-primary/85 px-4 py-3.5 text-left shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
-      >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20">
-          <ImageIcon className="h-4.5 w-4.5 text-white" />
-        </div>
-        <div className="flex-1">
-          <span className="block text-[14px] font-bold text-white">Buat Gambar Ayat</span>
-          <span className="block text-[11.5px] text-white/80">
-            Untuk dibagikan ke Story IG / Status WA
-          </span>
-        </div>
-        <Sparkles className="h-4.5 w-4.5 text-white/80" />
-      </button>
+    <div className={cn(variant === "full" && "mt-4", className)}>
+      {variant === "compact" ? (
+        <button
+          onClick={toggle}
+          aria-expanded={open}
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3.5 py-2 text-[12px] font-bold text-primary transition-transform active:scale-95"
+        >
+          <ImageIcon className="h-3.5 w-3.5" />
+          {t("verseImage.ctaCompact")}
+        </button>
+      ) : (
+        <button
+          onClick={toggle}
+          aria-expanded={open}
+          className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-primary to-primary/85 px-4 py-3.5 text-left shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20">
+            <ImageIcon className="h-4.5 w-4.5 text-white" />
+          </div>
+          <div className="flex-1">
+            <span className="block text-[14px] font-bold text-white">{t("verseImage.cta")}</span>
+            <span className="block text-[11.5px] text-white/80">{t("verseImage.ctaSub")}</span>
+          </div>
+          <Sparkles className="h-4.5 w-4.5 text-white/80" />
+        </button>
+      )}
 
       <AnimatePresence>
         {open && (
@@ -571,7 +596,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
-                    alt="Gambar ayat"
+                    alt={t("verseImage.alt")}
                     className="block w-full h-auto"
                     style={{ aspectRatio: "9 / 16", objectFit: "cover" }}
                   />
@@ -590,16 +615,16 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                       <p className="text-[13px] text-muted-foreground">
-                        Membuat gambar...
+                        {t("verseImage.generating")}
                       </p>
                       <p className="text-[11px] text-muted-foreground/60">
-                        Sekitar 10-15 detik
+                        {t("verseImage.generatingHint")}
                       </p>
                     </div>
                   ) : errorMsg ? (
                     <div className="flex flex-col items-center gap-3 px-6 text-center">
                       <p className="text-[13px] text-red-500 font-medium">
-                        Gagal membuat gambar
+                        {t("verseImage.failed")}
                       </p>
                       <p className="text-[11px] text-muted-foreground max-w-[240px]">
                         {errorMsg}
@@ -608,7 +633,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                         onClick={generate}
                         className="mt-1 text-[13px] font-semibold text-primary"
                       >
-                        Coba Lagi
+                        {t("verseImage.retry")}
                       </button>
                     </div>
                   ) : (
@@ -617,10 +642,10 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                         <Sparkles className="h-6 w-6 text-white" />
                       </div>
                       <p className="text-[13px] font-semibold text-primary">
-                        Generate Gambar Ayat
+                        {t("verseImage.generate")}
                       </p>
                       <p className="text-[11px] text-muted-foreground max-w-[220px] text-center leading-relaxed">
-                        Format 9:16 siap untuk Story Instagram, WhatsApp Status, dan sosmed lainnya
+                        {t("verseImage.generateHint")}
                       </p>
                     </button>
                   )}
@@ -633,7 +658,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                     onClick={generate}
                     disabled={loading}
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-heading hover:bg-surface-muted/80 transition-colors disabled:opacity-50"
-                    aria-label="Generate ulang"
+                    aria-label={t("verseImage.regenerate")}
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -651,7 +676,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                     ) : (
                       <Download className="h-4 w-4" />
                     )}
-                    <span>{downloadDone ? "Tersimpan!" : "Simpan"}</span>
+                    <span>{downloadDone ? t("verseImage.saved") : t("verseImage.save")}</span>
                   </button>
                   {canShare && (
                     <button
@@ -660,7 +685,7 @@ export function VerseShareCard({ verseText, verseRef }: VerseShareCardProps) {
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
                     >
                       <Share2 className="h-4 w-4" />
-                      <span>Bagikan</span>
+                      <span>{t("verseImage.share")}</span>
                     </button>
                   )}
                 </div>

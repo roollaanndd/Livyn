@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trash2, PenLine, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { VerseShareCard } from "@/components/verse/verse-share-card";
 import { useT } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n/config";
 import type { FavoriteVerseRow } from "@/lib/queries/favorites";
@@ -94,6 +95,15 @@ export function FavoriteList({ favorites, locale }: { favorites: FavoriteVerseRo
                 year: "numeric",
               })}
             </p>
+
+            {/* Full-width block on its own line: opening this renders a 9:16
+                preview, which needs the whole card rather than a flex slot. */}
+            <VerseShareCard
+              className="mt-3"
+              verseText={row.text}
+              verseRef={`${row.bookName} ${row.chapter}:${row.verse}`}
+              variant="compact"
+            />
           </Card>
         </li>
       ))}
