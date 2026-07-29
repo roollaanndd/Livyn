@@ -6,16 +6,22 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
   pull_request:
   workflow_dispatch: {}
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   verify:
+    # A branch with an open pull request would otherwise be checked twice per
+    # push — once for the push, once for the pull_request event — so the push
+    # trigger is narrowed to the default branch and everything else arrives via
+    # its pull request. workflow_dispatch always runs.
+    if: >-
+      github.event_name != 'push' ||
+      github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
