@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
-import { isAdmin } from "@/lib/auth/rbac";
+import { isAdmin, rankOf } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import { memberLimitFor } from "@/lib/community/permissions";
@@ -34,9 +34,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           rejectReason: null,
         },
       });
-      // Grant "leader" role on the user record — do not downgrade admins.
+      // Grant "leader" on the user record, but never as a downgrade: role is a
+      // single field, so writing it over a contributor's or moderator's role
+      // would quietly strip powers they already hold. Rank decides.
       const user = await tx.user.findUnique({ where: { id: profile.userId }, select: { role: true } });
-      if (user && user.role !== "admin" && user.role !== "super_admin") {
+      if (user && rankOf(user.role) < rankOf("leader")) {
         await tx.user.update({ where: { id: profile.userId }, data: { role: "leader" } });
       }
       // Bump the member limit on any existing pastoral circles they own.

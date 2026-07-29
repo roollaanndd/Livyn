@@ -1,30 +1,56 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { BookOpenCheck, Download, Loader2, CheckCircle2 } from "lucide-react";
 import { downloadFullBible, isBibleDownloaded } from "@/lib/bible/offline-store";
 
+/**
+ * Whether the Bible is already on this device lives in localStorage, which is an
+ * external store rather than React state. Reading it in an effect and calling
+ * setState meant an extra render on every mount; useSyncExternalStore reads it
+ * directly, with a null server snapshot so the card stays absent until the
+ * browser can answer.
+ */
+const listeners = new Set<() => void>();
+
+function subscribe(onChange: () => void) {
+  listeners.add(onChange);
+  // Another tab finishing the download counts too.
+  window.addEventListener("storage", onChange);
+  return () => {
+    listeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+function notifyDownloadStateChanged() {
+  for (const listener of listeners) listener();
+}
+
 export function DownloadBibleCard() {
-  const [state, setState] = useState<"unknown" | "needed" | "downloading" | "done" | "error">("unknown");
+  const downloaded = useSyncExternalStore(
+    subscribe,
+    () => isBibleDownloaded(),
+    () => null,
+  );
+  const [phase, setPhase] = useState<"idle" | "downloading" | "error">("idle");
   const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    setState(isBibleDownloaded() ? "done" : "needed");
-  }, []);
-
   async function start() {
-    setState("downloading");
+    setPhase("downloading");
     setProgress(0);
     const ok = await downloadFullBible((done, total) => {
       setProgress(Math.round((done / total) * 100));
     });
-    setState(ok ? "done" : "error");
+    setPhase(ok ? "idle" : "error");
+    notifyDownloadStateChanged();
   }
 
-  if (state === "unknown") return null;
+  // null only before the first client render — nothing to say yet.
+  if (downloaded === null) return null;
 
-  if (state === "done") {
+  if (downloaded) {
     return (
       <div className="mx-5 mt-4 flex items-center gap-2.5 rounded-2xl border border-primary/15 bg-primary-soft/40 px-4 py-3">
         <CheckCircle2 className="h-4.5 w-4.5 shrink-0 text-primary" />
@@ -51,7 +77,7 @@ export function DownloadBibleCard() {
             66 kitab Terjemahan Baru (±5 MB) — sekali unduh, seluruh Alkitab bisa dibaca kapan saja, bahkan tanpa internet.
           </p>
 
-          {state === "downloading" ? (
+          {phase === "downloading" ? (
             <div className="mt-3">
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
                 <motion.div
@@ -70,10 +96,10 @@ export function DownloadBibleCard() {
               className="mt-3 flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-[13.5px] font-bold text-primary transition-transform active:scale-95"
             >
               <Download className="h-4 w-4" />
-              {state === "error" ? "Coba Unduh Lagi" : "Unduh Sekarang"}
+              {phase === "error" ? "Coba Unduh Lagi" : "Unduh Sekarang"}
             </button>
           )}
-          {state === "error" && (
+          {phase === "error" && (
             <p className="mt-2 text-[11.5px] text-white/80">
               Unduhan terputus. Periksa koneksi internetmu lalu coba lagi.
             </p>

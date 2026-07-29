@@ -17,5 +17,12 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Kata sandi wajib diisi"),
 });
 
+/** Same strength rules as registration — a reset must not be a way around them. */
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token tidak valid").max(200),
+  password: registerSchema.shape.password,
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

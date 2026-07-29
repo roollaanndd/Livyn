@@ -2,6 +2,38 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.9.0] - 2026-07-29
+
+Hasil audit menyeluruh atas keamanan, kebenaran fungsional, dan higiene rekayasa.
+Laporan lengkap dengan skor dan bukti tiap temuan ada di `docs/AUDIT-2026-07.md`.
+
+### Keamanan
+
+- **Kredensial hardcoded dihapus.** Kunci Supabase live (project ref lengkap, berlaku sampai 2036) ter-commit sebagai fallback di dua file, dan secret JWT punya fallback konstan — artinya satu env var yang salah tulis di produksi cukup untuk membuat siapa pun bisa memalsukan token `super_admin`. Konfigurasi kini lewat `src/lib/env.ts` yang gagal keras, bukan diam-diam memakai nilai bawaan. **Kunci Supabase itu ada di riwayat git dan harus dirotasi.**
+- **Injeksi filter PostgREST ditutup.** Input kotak pencarian masuk mentah ke query string, sehingga sebuah `&` bisa menambahkan filter buatan penyerang dan membuka renungan serta khotbah yang belum dipublikasikan. Semua nilai dan nama kolom kini di-encode ketat, dengan pengutipan PostgREST untuk isi `in.(...)` dan `or=(...)`.
+- **Eskalasi hak istimewa ditutup.** Moderator bisa men-suspend admin, dan admin bisa menurunkan super_admin, karena panel pengguna tidak pernah membandingkan peringkat dengan targetnya. Wewenang kini berjalan tegas ke bawah — peringkat setara pun ditolak.
+- **CSP diperketat ke nonce + `strict-dynamic`.** `script-src 'unsafe-inline'` sebelumnya membuat CSP nyaris tak berarti melawan XSS. Karena nonce hanya bisa dipasang saat render permintaan sungguhan, seluruh route kini dynamic. Diverifikasi di Chromium: nol pelanggaran, hidrasi jalan, tema terpasang.
+- **Header keamanan tidak lagi hilang saat sesi di-refresh** — jalur itu sebelumnya menyajikan halaman tanpa CSP dan tanpa HSTS.
+- Endpoint `/api/verse-image` kini butuh login, punya rate limit, dan batas panjang; `/api/ai-pastor` membatasi ukuran percakapan yang ditagihkan; secret cron dibandingkan konstan-waktu dan `windowMinutes` di-clamp; rate limiter tidak lagi tumbuh tanpa batas.
+
+### Diperbaiki
+
+- **Seluruh gamifikasi sebenarnya tidak pernah berjalan.** Adapter database membuang operand `{ increment: n }` tanpa jejak, jadi `User.points`, `pointsEarned`, dan `Sermon.viewCount` tidak pernah bertambah sekali pun. Level, bonus streak, dan hitungan tayangan semuanya membaca kolom itu.
+- **Dashboard kontributor crash setiap kali dibuka**: `prisma.devotion.aggregate` dipanggil padahal method itu tidak pernah ada di adapter. Kini diimplementasikan.
+- **Reset kata sandi berujung buntu** — token dibuat dan tautan ditulis ke route yang tidak ada, tanpa API untuk menukarkannya, sementara UI sudah menyuruh pengguna memeriksa inbox. Halaman `/atur-ulang-sandi` dan `POST /api/auth/reset-password` ditambahkan: token sekali pakai, dicocokkan sebagai hash, dan semua sesi dicabut setelah berhasil.
+- **Role `leader` tidak dikenal RBAC** meski admin memberikannya, sehingga `hasRole` selalu menolak pendeta terverifikasi dan role itu tidak bisa dipulihkan lewat form admin. Penyetujuan pemimpin juga menimpa role contributor/moderator, menghapus hak yang sudah dimiliki.
+- **Filter pengaman AI Pastor tidak berpengaruh apa pun** (hasilnya dihitung lalu dibuang), dan salah satu polanya keliru mengelompokkan alternasi sehingga cocok dengan "bunuh diri" — justru pesan yang paling butuh alur krisis. Pola diperbaiki, dan sinyalnya kini mengarahkan reply, bukan menyumbat percakapan.
+- Daftar tabel `updatedAt` melenceng dari schema di dua arah: memuat tabel tanpa kolom itu (penulisan akan ditolak database) dan melewatkan `User`, `Devotion`, `Sermon`, `Circle` (yang `updatedAt`-nya karena itu tak pernah bergerak).
+- Tombol "Baca" di detail rencana baca memakai varian `Button` yang tidak ada, jadi tampil tanpa warna latar sama sekali.
+- Halaman `/offline` memakai `<a>` untuk navigasi internal — permintaan dokumen penuh, satu-satunya hal yang pasti gagal di halaman yang justru ada untuk kondisi offline.
+
+### Jaring pengaman
+
+- **69 test** di 6 file (`npm test`), mencakup encoding filter, peringkat RBAC, penanganan increment, rate limiter, token akses, aturan kata sandi, dan pola keamanan AI Pastor.
+- **CI** (`.github/workflows/ci.yml`) menjalankan lint, typecheck, test, dan build pada setiap push dan pull request.
+- **`typescript.ignoreBuildErrors` dihapus.** Ia menyembunyikan 53 error tipe; build kini gagal bila tipe tidak lolos. Adapter database tidak lagi diekspor sebagai `any` — bentuk API-nya kini diketik, yang justru memunculkan dua bug di atas.
+- Lint bersih: nol error, nol warning.
+
 ## [0.8.1] - 2026-07-28
 
 ### Gambar ayat dari koleksi favorit

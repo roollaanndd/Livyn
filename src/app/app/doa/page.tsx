@@ -44,7 +44,7 @@ export default async function PrayerPage() {
       />
 
       <PrayerReminders
-        initialReminders={reminders.map((r: { createdAt: Date }) => ({ ...r, createdAt: r.createdAt.toISOString() }))}
+        initialReminders={reminders.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }))}
         initialDoneToday={Array.from(doneToday)}
         streak={streak}
       />

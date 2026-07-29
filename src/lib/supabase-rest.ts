@@ -1,31 +1,13 @@
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ??
-  (() => {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) return "";
-    // Pooler format: postgresql://[user].[project_ref]:[pw]@...pooler.supabase.com
-    // Direct format: postgresql://...@db.[project_ref].supabase.co
-    const poolerMatch = dbUrl.match(/\/\/[^.]+\.([a-z]{20})[.:@]/);
-    const directMatch = dbUrl.match(/db\.([a-z]{20})\.supabase/);
-    const ref = poolerMatch?.[1] ?? directMatch?.[1];
-    if (ref) return `https://${ref}.supabase.co`;
-    return "";
-  })();
-
-// The anon key is Supabase's "publishable" key — designed for client-side use.
-// Security comes from RLS + SECURITY DEFINER functions, not key secrecy.
-const SUPABASE_ANON_KEY =
-  process.env.SUPABASE_ANON_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jdG5vbmd1ZGt1eWNvb3BieG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NDg5NzMsImV4cCI6MjEwMDAyNDk3M30.XwSmLiWGc3L2RRMBGHcrNl0AFS2OEZuO3qABa718e0M";
+import { supabaseKey, supabaseUrl } from "@/lib/env";
 
 async function rpc<T>(fnName: string, params: Record<string, unknown>): Promise<T> {
-  const url = `${SUPABASE_URL}/rest/v1/rpc/${fnName}`;
+  const key = supabaseKey();
+  const url = `${supabaseUrl()}/rest/v1/rpc/${encodeURIComponent(fnName)}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: key,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
       Prefer: "return=representation",
     },
