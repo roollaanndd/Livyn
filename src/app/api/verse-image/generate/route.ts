@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const maxDuration = 30;
-
-const requestSchema = z.object({
-  text: z.string().trim().min(1).max(600),
-  ref: z.string().trim().min(1).max(80),
-});
 
 const VERSE_KEYWORDS: Record<string, string[]> = {
   kasih: ["sunset landscape", "golden hour nature", "warm sunrise meadow"],
@@ -140,14 +134,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const parsed = requestSchema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data tidak valid" },
-      { status: 400 },
-    );
+  const { text, ref } = await req.json();
+  if (!text || !ref) {
+    return NextResponse.json({ error: "text and ref are required" }, { status: 400 });
   }
-  const { text } = parsed.data;
 
   const query = getSearchQuery(text);
   // Random seed on every request so each generate produces a fresh background.

@@ -1,8 +1,7 @@
 import { randomBytes, createHash } from "crypto";
 import { db } from "@/lib/supabase-rest";
-import { REFRESH_TOKEN_TTL_DAYS } from "./ttl";
 
-export { REFRESH_TOKEN_TTL_DAYS };
+export const REFRESH_TOKEN_TTL_DAYS = 30;
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

@@ -1,140 +1,115 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { accessTokenSecret } from "@/lib/env";
-import { rankOf, type Role } from "@/lib/auth/rbac";
 
-const PROTECTED_PREFIXES: Array<{ prefix: string; minRole: Role }> = [
+const ACCESS_SECRET = new TextEncoder().encode(
+  process.env.JWT_ACCESS_SECRET ?? "insecure-dev-secret-do-not-use-in-prod",
+);
+
+const ROLE_RANK: Record<string, number> = {
+  user: 0,
+  contributor: 1,
+  moderator: 2,
+  admin: 3,
+  super_admin: 4,
+};
+
+const PROTECTED_PREFIXES: Array<{ prefix: string; minRole: string }> = [
   { prefix: "/app", minRole: "user" },
   { prefix: "/contributor", minRole: "contributor" },
   { prefix: "/admin", minRole: "moderator" },
 ];
 
-/**
- * Builds the CSP for one request.
- *
- * Scripts are allowed by nonce plus 'strict-dynamic' rather than by
- * 'unsafe-inline'. With 'unsafe-inline' any injected `<script>` on the page runs,
- * which leaves CSP contributing almost nothing against XSS. Next.js reads the
- * nonce out of the request's CSP header during render and stamps it onto its own
- * framework and bundle tags, so no markup here needs to know about it.
- *
- * Styles still permit 'unsafe-inline': Tailwind and framer-motion both write
- * element style attributes, and style-src cannot be locked down without dropping
- * animation. 'unsafe-eval' is dev-only — React uses eval there to rebuild server
- * stack traces in the browser.
- */
-function contentSecurityPolicy(nonce: string, isDev: boolean): string {
-  return [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https:",
-    "media-src 'self' https:",
-    "font-src 'self' data:",
-    "connect-src 'self'",
-    "worker-src 'self'",
-    "manifest-src 'self'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
-  ].join("; ");
-}
+export default async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const match = PROTECTED_PREFIXES.find((p) => pathname.startsWith(p.prefix));
 
-function applySecurityHeaders(res: NextResponse, csp: string) {
-  res.headers.set("Content-Security-Policy", csp);
+  const res = NextResponse.next();
+
+  // Security headers on every response.
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   if (process.env.NODE_ENV === "production") {
     res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
   }
-  return res;
-}
+  // 'unsafe-eval' is only needed for React/Turbopack's dev-mode debugging
+  // (stack trace reconstruction, HMR) and is dropped in production builds.
+  const scriptSrc = process.env.NODE_ENV === "production" ? "script-src 'self' 'unsafe-inline';" : "script-src 'self' 'unsafe-inline' 'unsafe-eval';";
+  res.headers.set(
+    "Content-Security-Policy",
+    `default-src 'self'; img-src 'self' data: https:; media-src 'self' https:; ${scriptSrc} style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none';`,
+  );
 
-export default async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const isDev = process.env.NODE_ENV !== "production";
-
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-  const csp = contentSecurityPolicy(nonce, isDev);
-
-  // The nonce reaches the renderer through the *request* headers; Next.js parses
-  // it from the CSP header there. x-nonce is for server components that render a
-  // <Script> of their own.
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("Content-Security-Policy", csp);
-
-  const nextResponse = () =>
-    applySecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), csp);
-  const redirectTo = (path: string) =>
-    applySecurityHeaders(NextResponse.redirect(new URL(path, req.url)), csp);
-
-  const match = PROTECTED_PREFIXES.find((p) => pathname.startsWith(p.prefix));
-  if (!match) return nextResponse();
+  if (!match) return res;
 
   const token = req.cookies.get("livyn_at")?.value;
   const refreshToken = req.cookies.get("livyn_rt")?.value;
 
-  /**
-   * Trades an unexpired refresh cookie for a new pair. Every response out of
-   * here carries the security headers too — the old code rebuilt a bare
-   * NextResponse on this path, so a session refresh silently served the page
-   * with no CSP and no HSTS.
-   */
-  const refreshSession = async () => {
-    if (!refreshToken) return redirectTo("/");
+  if (!token) {
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
 
-    const refreshRes = await fetch(new URL("/api/auth/refresh", req.url), {
+    const refreshUrl = new URL("/api/auth/refresh", req.url);
+    const refreshRes = await fetch(refreshUrl, {
       method: "POST",
       headers: { Cookie: `livyn_rt=${refreshToken}` },
     });
 
     if (!refreshRes.ok) {
-      const redirect = redirectTo("/");
+      const redirect = NextResponse.redirect(new URL("/", req.url));
       redirect.cookies.delete("livyn_at");
       redirect.cookies.delete("livyn_rt");
       return redirect;
     }
 
-    const refreshed = nextResponse();
-    for (const cookie of refreshRes.headers.getSetCookie()) {
-      refreshed.headers.append("Set-Cookie", cookie);
+    const refreshedRes = NextResponse.next();
+    refreshedRes.headers.set("X-Frame-Options", "DENY");
+    refreshedRes.headers.set("X-Content-Type-Options", "nosniff");
+    refreshedRes.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    const setCookies = refreshRes.headers.getSetCookie();
+    for (const cookie of setCookies) {
+      refreshedRes.headers.append("Set-Cookie", cookie);
     }
-    return refreshed;
-  };
-
-  if (!token) return refreshSession();
-
-  try {
-    const { payload } = await jwtVerify(token, accessTokenSecret(), {
-      issuer: "livyn",
-      algorithms: ["HS256"],
-    });
-    if (rankOf(String(payload.role ?? "user")) < rankOf(match.minRole)) {
-      return redirectTo("/app");
-    }
-  } catch {
-    return refreshSession();
+    return refreshedRes;
   }
 
-  return nextResponse();
+  try {
+    const { payload } = await jwtVerify(token, ACCESS_SECRET, { issuer: "livyn" });
+    const role = String(payload.role ?? "user");
+    if ((ROLE_RANK[role] ?? 0) < (ROLE_RANK[match.minRole] ?? 0)) {
+      return NextResponse.redirect(new URL("/app", req.url));
+    }
+  } catch {
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+
+    const refreshUrl = new URL("/api/auth/refresh", req.url);
+    const refreshRes = await fetch(refreshUrl, {
+      method: "POST",
+      headers: { Cookie: `livyn_rt=${refreshToken}` },
+    });
+
+    if (!refreshRes.ok) {
+      const redirect = NextResponse.redirect(new URL("/", req.url));
+      redirect.cookies.delete("livyn_at");
+      redirect.cookies.delete("livyn_rt");
+      return redirect;
+    }
+
+    const refreshedRes = NextResponse.next();
+    const setCookies = refreshRes.headers.getSetCookie();
+    for (const cookie of setCookies) {
+      refreshedRes.headers.append("Set-Cookie", cookie);
+    }
+    return refreshedRes;
+  }
+
+  return res;
 }
 
 export const config = {
-  // Prefetches and immutable static assets are skipped: they need no nonce, and
-  // a per-request CSP on a cacheable asset only defeats caching.
-  matcher: [
-    {
-      source: "/((?!_next/static|_next/image|favicon.ico|sw.js|icon-.*\\.png|apple-touch-icon.png).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

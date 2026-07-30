@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { cronSecret } from "@/lib/env";
 import { sendPushToUser } from "@/lib/push/send";
 import { getTodayVerse } from "@/lib/queries/home";
 import { formatHour, peakHour } from "@/lib/habit";
@@ -18,29 +16,13 @@ function minutesSinceMidnight(hhmm: string) {
   return h * 60 + m;
 }
 
-/** Constant-time compare, so a wrong secret cannot be narrowed down by timing. */
-function secretMatches(presented: string | null, expected: string): boolean {
-  if (!presented) return false;
-  const a = Buffer.from(presented);
-  const b = Buffer.from(`Bearer ${expected}`);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
-
 export async function GET(req: NextRequest) {
-  const expected = cronSecret();
-  if (!expected || !secretMatches(req.headers.get("authorization"), expected)) {
+  const auth = req.headers.get("authorization");
+  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // A caller-supplied window decides how far back reminders are considered due.
-  // Clamped so a stray `windowMinutes=100000` cannot re-send every reminder in
-  // the table, and a non-numeric value falls back instead of becoming NaN
-  // (which made every comparison false and silently sent nothing).
-  const requestedWindow = Number(req.nextUrl.searchParams.get("windowMinutes"));
-  const windowMinutes = Number.isFinite(requestedWindow)
-    ? Math.min(Math.max(Math.floor(requestedWindow), 1), 24 * 60)
-    : 15;
+  const windowMinutes = Number(req.nextUrl.searchParams.get("windowMinutes") ?? 15);
   // Reminder times are Indonesian local times; the server runs in UTC.
   // Shift to Asia/Jakarta (UTC+7, no DST) before comparing.
   const jkt = new Date(Date.now() + 7 * 60 * 60 * 1000);

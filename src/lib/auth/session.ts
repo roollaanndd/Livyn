@@ -1,8 +1,8 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { verifyAccessToken, type AccessTokenPayload } from "./jwt";
-import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_DAYS } from "./ttl";
+import { ACCESS_TOKEN_TTL_SECONDS, verifyAccessToken, type AccessTokenPayload } from "./jwt";
+import { REFRESH_TOKEN_TTL_DAYS } from "./tokens";
 
 export const ACCESS_COOKIE = "livyn_at";
 export const REFRESH_COOKIE = "livyn_rt";

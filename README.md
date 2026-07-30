@@ -6,28 +6,13 @@ Aplikasi pendamping rohani harian: renungan, Alkitab, pengingat doa, dan khotbah
 
 ```bash
 npm install
-cp .env.example .env          # isi DATABASE_URL dan SUPABASE_ANON_KEY (lihat catatan di file itu)
+cp .env.example .env          # isi DATABASE_URL dengan connection string Postgres (mis. Supabase)
 npx prisma migrate deploy     # menerapkan skema ke database
 npm run db:seed               # mengisi data contoh (kategori, Alkitab, renungan, khotbah, pengguna)
 npm run dev
 ```
 
 Buka http://localhost:3000.
-
-`JWT_ACCESS_SECRET` opsional untuk dev — nilai dev-only akan dipakai dengan peringatan.
-Di produksi ia wajib: tanpa itu aplikasi menolak melayani permintaan, alih-alih
-menandatangani sesi dengan konstanta yang bisa dibaca siapa saja.
-
-### Pemeriksaan sebelum commit
-
-```bash
-npm run verify   # lint + typecheck + test
-npm test         # 69 test (node:test lewat tsx)
-npm run build    # gagal bila ada error tipe
-```
-
-CI menjalankan keempatnya pada setiap push dan pull request
-(`.github/workflows/ci.yml`).
 
 ### Akun demo (password sama untuk semua: `Livyn123!`)
 
@@ -42,7 +27,7 @@ CI menjalankan keempatnya pada setiap push dan pull request
 ## Arsitektur
 
 - **Next.js 16 App Router + TypeScript + Tailwind v4** — satu aplikasi full-stack (UI, API routes, dan proxy/middleware) dalam satu deploy unit.
-- **PostgreSQL (Supabase) lewat PostgREST** — skemanya didefinisikan dengan Prisma (`prisma/schema.prisma`, dan migrasinya diterapkan dengan Prisma CLI), tetapi runtime **tidak** memakai Prisma Client. `src/lib/prisma.ts` adalah adapter yang meniru API Prisma di atas REST API Supabase, karena connection pooler Supavisor bermasalah; `src/lib/supabase-rest.ts` memanggil SQL function untuk jalur autentikasi. Konsekuensi keamanannya penting: setiap query berjalan sebagai `SUPABASE_ANON_KEY`, jadi Row-Level Security di proyek Supabase adalah satu-satunya hal yang membatasi apa yang bisa dijangkau kunci itu. Lihat `docs/AUDIT-2026-07.md` §K1.
+- **Prisma + PostgreSQL (Supabase)** — satu database yang sama dipakai untuk dev dan produksi lewat `DATABASE_URL`. Row-Level Security aktif di semua tabel (deny-all secara default) untuk mengunci REST API bawaan Supabase; aplikasi ini sendiri hanya terhubung lewat koneksi Postgres langsung via Prisma, bukan lewat API tersebut.
 - **Autentikasi kustom**: hashing kata sandi Argon2id (`@node-rs/argon2`), JWT access token (15 menit, `jose`) di cookie httpOnly, refresh token rotation dengan deteksi reuse (family revocation) tersimpan sebagai hash di database.
 - **RBAC**: `user < contributor < moderator < admin < super_admin`, ditegakkan di `src/proxy.ts` (proteksi route) *dan* di setiap route handler API (defense in depth).
 - **Keamanan**: rate limiting in-memory pada endpoint auth, security headers + CSP di `src/proxy.ts`, validasi input Zod di semua route mutasi, audit log (`AuditLog`) untuk aksi sensitif, riwayat login (`LoginEvent`), refresh-token-reuse detection.
@@ -89,7 +74,7 @@ Master prompt aslinya meminta stack yang jauh lebih besar (aplikasi native Flutt
 - **Ayat penguat jurnal**: ayat penguat yang muncul setelah menulis jurnal dipilih lewat pencocokan kata kunci deterministik terhadap ~130 ayat kurasi (`src/lib/journal/verse-matcher.ts`). Cukup akurat untuk tema-tema umum (takut, sedih, cemas, syukur, dll.) tapi tidak memahami konteks bebas seperti LLM.
 - **Google/Apple Login**: tombolnya ada di UI tapi memerlukan kredensial OAuth produksi untuk diaktifkan.
 - **Upload & transcoding video/gambar**: kontributor menempelkan URL video yang sudah dihosting (belum ada pipeline upload + transcoding + virus scan).
-- **Email transaksional**: halaman dan API reset kata sandi kini lengkap (`/atur-ulang-sandi` + `POST /api/auth/reset-password`), tapi belum ada provider email — tautannya masih hanya di-log ke konsol server, jadi pemulihan kata sandi praktis dibantu operator sampai pengirimannya tersambung. Perhatikan bahwa baris log itu memuat kredensial hidup.
+- **Email transaksional**: reset kata sandi membuat token yang valid tapi baru di-log ke konsol server (belum ada provider email).
 - **2FA, device fingerprinting, deteksi impossible-travel**: kolom skema sudah disiapkan (`twoFactorEnabled`, `Device` model) tapi alur lengkapnya belum diimplementasikan.
 - **Video khotbah**: memakai klip placeholder yang di-generate lokal (`public/media/sample-sermon.webm`), bukan konten khotbah sungguhan.
 
@@ -98,7 +83,7 @@ Master prompt aslinya meminta stack yang jauh lebih besar (aplikasi native Flutt
 Database Postgres (Supabase, proyek `livyn`, region `ap-southeast-1`) sudah disiapkan dan diisi data awal yang sama seperti di atas.
 
 1. Set `DATABASE_URL` di Vercel ke connection string Supabase (Project Settings → Database → Connection string; gunakan mode "Transaction" / connection pooling untuk fungsi serverless).
-2. Set `JWT_ACCESS_SECRET` yang kuat (`openssl rand -base64 48`) dan `SUPABASE_ANON_KEY` sebagai environment variable di Vercel. Keduanya wajib: aplikasi menolak permintaan bila salah satu tidak ada, alih-alih memakai nilai bawaan. (`JWT_REFRESH_SECRET` tidak lagi dicantumkan — refresh token berupa string acak opaque yang disimpan sebagai hash SHA-256, bukan JWT, jadi tidak pernah ada yang membacanya.)
+2. Set `JWT_ACCESS_SECRET` dan `JWT_REFRESH_SECRET` yang kuat (`openssl rand -base64 48`) sebagai environment variable di Vercel — jangan pakai nilai dev.
 3. Untuk AI Pastor, set `OPENROUTER_API_KEY` (dapatkan di https://openrouter.ai/keys). Opsional: set `AI_PASTOR_MODEL` (comma-separated, terbaik dulu) untuk mengarahkan pilihan model; defaultnya memakai daftar kandidat gratis di `src/lib/ai-pastor/model.ts`.
 4. Untuk notifikasi push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (generate dengan `npx web-push generate-vapid-keys`), `VAPID_SUBJECT` (`mailto:...`), dan `CRON_SECRET` (string acak apa saja — Vercel Cron otomatis mengirimkannya sebagai header `Authorization: Bearer $CRON_SECRET` ke endpoint cron bila env var ini bernama persis `CRON_SECRET`).
 5. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.

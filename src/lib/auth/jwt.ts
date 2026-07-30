@@ -1,8 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
-import { accessTokenSecret } from "@/lib/env";
-import { ACCESS_TOKEN_TTL_SECONDS } from "./ttl";
 
-export { ACCESS_TOKEN_TTL_SECONDS };
+const ACCESS_SECRET = new TextEncoder().encode(
+  process.env.JWT_ACCESS_SECRET ?? "insecure-dev-secret-do-not-use-in-prod",
+);
+
+export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
 
 export type AccessTokenPayload = {
   sub: string;
@@ -17,17 +19,12 @@ export async function signAccessToken(payload: AccessTokenPayload): Promise<stri
     .setIssuedAt()
     .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
     .setIssuer("livyn")
-    .sign(accessTokenSecret());
+    .sign(ACCESS_SECRET);
 }
 
 export async function verifyAccessToken(token: string): Promise<AccessTokenPayload | null> {
   try {
-    // HS256 is pinned: without it a token could name its own algorithm and a
-    // forged `alg: "none"` header would verify against no signature at all.
-    const { payload } = await jwtVerify(token, accessTokenSecret(), {
-      issuer: "livyn",
-      algorithms: ["HS256"],
-    });
+    const { payload } = await jwtVerify(token, ACCESS_SECRET, { issuer: "livyn" });
     return payload as unknown as AccessTokenPayload;
   } catch {
     return null;

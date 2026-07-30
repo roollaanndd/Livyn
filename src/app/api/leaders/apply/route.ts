@@ -32,12 +32,6 @@ export async function POST(req: NextRequest) {
     ? await prisma.leaderProfile.update({ where: { userId: session.sub }, data })
     : await prisma.leaderProfile.create({ data: { userId: session.sub, ...data } });
 
-  if (!profile) {
-    // An update that matches nothing returns no row — the profile was removed
-    // between the lookup above and the write. Say so rather than dereference it.
-    return NextResponse.json({ error: "Gagal menyimpan pengajuan. Coba lagi." }, { status: 409 });
-  }
-
   await logAudit({ userId: session.sub, action: "leader.application_submitted", targetType: "LeaderProfile", targetId: profile.id });
   return NextResponse.json({ profile });
 }

@@ -11,6 +11,12 @@ interface BibleVersion {
   nameLocal: string;
 }
 
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${365 * 24 * 60 * 60};samesite=lax`;
 }
@@ -18,13 +24,11 @@ function setCookie(name: string, value: string) {
 export function VersionSelector({ current }: { current: string }) {
   const router = useRouter();
   const [versions, setVersions] = useState<BibleVersion[]>([]);
-  // Starts true: the fetch below runs on mount, so the first paint is already
-  // the loading state. Setting it from inside the effect only caused an extra
-  // render pass to reach the same place.
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/alkitab/versions")
       .then((r) => r.json())
       .then((data) => setVersions(data.versions ?? []))

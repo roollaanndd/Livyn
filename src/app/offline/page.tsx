@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -33,14 +32,12 @@ export default function OfflinePage() {
           Coba Lagi
         </button>
 
-        {/* Link, not <a>: a full document request is the one thing that cannot
-            succeed on the page whose whole purpose is being offline. */}
-        <Link
+        <a
           href="/app/alkitab"
           className="text-sm font-medium text-primary hover:underline"
         >
           Baca Alkitab Offline
-        </Link>
+        </a>
       </div>
     </div>
   );

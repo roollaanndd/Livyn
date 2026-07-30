@@ -20,10 +20,6 @@ import { checkSafety } from "@/lib/ai-pastor/safety";
 
 export const maxDuration = 30;
 
-/** Ceilings on the replayed conversation — see the checks in POST. */
-const MAX_MESSAGES = 60;
-const MAX_CONVERSATION_CHARS = 24_000;
-
 // Strip characters > 0x7F (non-ASCII) that some AI SDK / runtime paths can
 // accidentally push into HTTP headers, causing WebIDL ByteString errors.
 // Indonesian text is essentially pure ASCII so meaning is preserved.
@@ -115,23 +111,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // The conversation is replayed from the client on every turn, so its size is
-  // caller-controlled and every token of it is billed. Without a ceiling one
-  // request inside the rate limit can cost as much as hundreds.
-  if (messages.length > MAX_MESSAGES) {
-    return new Response(
-      JSON.stringify({ error: "Percakapan terlalu panjang. Mulai percakapan baru." }),
-      { status: 413, headers: { "Content-Type": "application/json" } },
-    );
-  }
-
-  if (JSON.stringify(messages).length > MAX_CONVERSATION_CHARS) {
-    return new Response(
-      JSON.stringify({ error: "Pesan terlalu panjang. Ringkas pertanyaanmu ya." }),
-      { status: 413, headers: { "Content-Type": "application/json" } },
-    );
-  }
-
   // --- PIPELINE: Intent Engine -> Context Injection -> LLM -> Safety Filter ---
 
   const lastUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
@@ -156,17 +135,12 @@ export async function POST(req: NextRequest) {
   const intent = classifyIntent(lastUserText);
   const intentContext = getIntentContext(intent);
   const verseContext = getRelevantVerses(lastUserText);
+  const systemPrompt = buildSystemPrompt(intent, intentContext, verseContext);
 
-  // The result of this check used to be logged and then dropped, so the safety
-  // module had no effect on anything. It now reaches the system prompt, which is
-  // where the reply is actually shaped.
   const inputCheck = checkSafety(lastUserText);
-  const systemPrompt = buildSystemPrompt(
-    intent,
-    intentContext,
-    verseContext,
-    inputCheck.safe ? undefined : inputCheck.reason,
-  );
+  if (!inputCheck.safe) {
+    console.warn(`[ai-pastor] Input blocked: ${inputCheck.reason}`);
+  }
 
   try {
     const converted = await convertToModelMessages(messages);

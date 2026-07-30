@@ -276,7 +276,7 @@ export function PlanDetailView({
                   {isNext && !done && (
                     <Button
                       size="sm"
-                      variant="primary"
+                      variant="default"
                       onClick={() => markDay(item.day)}
                       disabled={loading === item.day}
                       className="shrink-0 text-xs"
