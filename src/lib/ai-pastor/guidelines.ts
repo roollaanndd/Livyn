@@ -1,5 +1,5 @@
 import { CORE_DOCTRINES, DENOMINATIONAL_SENSITIVITY } from "./doctrine";
-import { getCrisisResources } from "./safety";
+import { getCrisisResources, sensitiveTopicReminder } from "./safety";
 import { PASTOR_VOICE, PASTOR_VOICE_REMINDER } from "./voice";
 import type { IntentType } from "./intent";
 
@@ -28,6 +28,7 @@ export function buildSystemPrompt(
   intent: IntentType,
   intentContext: string,
   verseContext: string,
+  sensitiveReason?: string,
 ): string {
   const sections = [PASTOR_VOICE, DOCTRINE_GUARDRAIL, BOUNDARIES];
 
@@ -39,6 +40,10 @@ export function buildSystemPrompt(
 
   if (intent === "crisis") {
     sections.push(getCrisisResources());
+  } else if (sensitiveReason) {
+    // Crisis wins: someone in crisis needs the hotline numbers and warmth, not
+    // a reminder about topics to sidestep.
+    sections.push(sensitiveTopicReminder(sensitiveReason));
   }
 
   sections.push(intentContext, verseContext, PASTOR_VOICE_REMINDER);

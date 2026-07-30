@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
+import { headers } from "next/headers";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -36,11 +38,25 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // The Content-Security-Policy set in proxy.ts allows scripts by per-request
+  // nonce. Next.js can only stamp that nonce onto its script tags while
+  // rendering for a real request, so a page prerendered at build time would ship
+  // script tags the browser then refuses to run — a blank screen, not a
+  // degraded one. Waiting for the connection here opts every route into dynamic
+  // rendering, which is the price of dropping 'unsafe-inline'.
+  await connection();
+
+  // next-themes writes its own inline script to set the theme class before first
+  // paint. Next.js stamps its own tags with the nonce but knows nothing about
+  // that one, so it has to be handed over explicitly — otherwise CSP blocks it
+  // and every visitor gets a flash of the wrong theme.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="id" suppressHydrationWarning className={`${inter.variable} ${manrope.variable} h-full`}>
       <body className="min-h-full antialiased font-sans">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange nonce={nonce}>
           <AuthProvider>
             {children}
             <ServiceWorkerRegister />

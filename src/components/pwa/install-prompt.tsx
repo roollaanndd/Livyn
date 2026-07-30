@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Share } from "lucide-react";
 
@@ -25,25 +25,52 @@ function isStandalone() {
   );
 }
 
+/**
+ * Whether this device should be offered the install prompt at all.
+ *
+ * Every input is browser-only — display mode, user agent, and the dismissal
+ * timestamp in localStorage — so this is an external store, not React state.
+ * Deriving it in an effect and calling setState meant a cascading render on
+ * every mount and a "hidden" first paint even for eligible devices.
+ *
+ * "hidden": already installed, or dismissed within the cool-off window.
+ * "ios":    Safari has no beforeinstallprompt, so show the manual instructions.
+ * "prompt": wait for beforeinstallprompt and offer the real button.
+ */
+type Eligibility = "hidden" | "ios" | "prompt";
+
+const listeners = new Set<() => void>();
+
+function subscribe(onChange: () => void) {
+  listeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    listeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+function notifyEligibilityChanged() {
+  for (const listener of listeners) listener();
+}
+
+function readEligibility(): Eligibility {
+  if (isStandalone()) return "hidden";
+
+  const dismissedAt = localStorage.getItem(DISMISS_KEY);
+  if (dismissedAt && Date.now() - Number(dismissedAt) < DISMISS_DAYS * 86_400_000) {
+    return "hidden";
+  }
+
+  return isIos() ? "ios" : "prompt";
+}
+
 export function InstallPrompt() {
+  const eligibility = useSyncExternalStore(subscribe, readEligibility, () => "hidden" as Eligibility);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIos, setShowIos] = useState(false);
-  const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    if (isStandalone()) return;
-
-    const dismissedAt = localStorage.getItem(DISMISS_KEY);
-    if (dismissedAt) {
-      const diff = Date.now() - Number(dismissedAt);
-      if (diff < DISMISS_DAYS * 86_400_000) return;
-    }
-    setDismissed(false);
-
-    if (isIos()) {
-      setShowIos(true);
-      return;
-    }
+    if (eligibility !== "prompt") return;
 
     function handler(e: Event) {
       e.preventDefault();
@@ -51,26 +78,30 @@ export function InstallPrompt() {
     }
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [eligibility]);
 
   function dismiss() {
     localStorage.setItem(DISMISS_KEY, String(Date.now()));
-    setDismissed(true);
     setDeferredPrompt(null);
-    setShowIos(false);
+    notifyEligibilityChanged();
   }
+
+  const showIos = eligibility === "ios";
 
   async function install() {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
+      // Installed: record it the same way a dismissal is recorded so the card
+      // does not come back before the cool-off window elapses.
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
       setDeferredPrompt(null);
-      setDismissed(true);
+      notifyEligibilityChanged();
     }
   }
 
-  const show = !dismissed && (deferredPrompt || showIos);
+  const show = eligibility !== "hidden" && (deferredPrompt || showIos);
   if (!show) return null;
 
   return (

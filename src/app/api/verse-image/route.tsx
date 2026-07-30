@@ -1,9 +1,28 @@
 import { ImageResponse } from "next/og";
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/session";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
+// A rendered verse card is a picture of whatever text the caller passed, served
+// from this app's own domain and carrying its logo. Left open it is both free
+// rendering compute and a way to dress arbitrary words up as something Livyn
+// published, so it is gated exactly like /api/verse-image/generate.
+const MAX_TEXT_LENGTH = 600;
+const MAX_REF_LENGTH = 80;
+
 export async function GET(req: NextRequest) {
+  const session = await getCurrentUser();
+  if (!session) {
+    return NextResponse.json({ error: "Silakan login terlebih dahulu." }, { status: 401 });
+  }
+
+  const limited = rateLimit(`verse-img-render:${session.sub}`, 60, 60 * 60 * 1000);
+  if (!limited.ok) {
+    return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi nanti." }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const text = searchParams.get("text");
   const ref = searchParams.get("ref");
@@ -11,6 +30,13 @@ export async function GET(req: NextRequest) {
 
   if (!text || !ref) {
     return NextResponse.json({ error: "text and ref are required" }, { status: 400 });
+  }
+
+  if (text.length > MAX_TEXT_LENGTH || ref.length > MAX_REF_LENGTH) {
+    return NextResponse.json(
+      { error: `Teks maksimal ${MAX_TEXT_LENGTH} karakter dan referensi maksimal ${MAX_REF_LENGTH} karakter.` },
+      { status: 400 },
+    );
   }
 
   const themes: Record<
