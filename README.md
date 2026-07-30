@@ -75,6 +75,7 @@ Master prompt aslinya meminta stack yang jauh lebih besar (aplikasi native Flutt
 - **Google/Apple Login**: tombolnya ada di UI tapi memerlukan kredensial OAuth produksi untuk diaktifkan.
 - **Upload & transcoding video/gambar**: kontributor menempelkan URL video yang sudah dihosting (belum ada pipeline upload + transcoding + virus scan).
 - **Email transaksional**: reset kata sandi membuat token yang valid tapi baru di-log ke konsol server (belum ada provider email).
+- **Notifikasi push memerlukan konfigurasi yang belum terpasang.** Kodenya lengkap, tapi tidak akan mengirim apa pun sampai empat hal ini ada — lihat "Menyalakan notifikasi" di bawah.
 - **2FA, device fingerprinting, deteksi impossible-travel**: kolom skema sudah disiapkan (`twoFactorEnabled`, `Device` model) tapi alur lengkapnya belum diimplementasikan.
 - **Video khotbah**: memakai klip placeholder yang di-generate lokal (`public/media/sample-sermon.webm`), bukan konten khotbah sungguhan.
 
@@ -87,6 +88,29 @@ Database Postgres (Supabase, proyek `livyn`, region `ap-southeast-1`) sudah disi
 3. Untuk AI Pastor, set `OPENROUTER_API_KEY` (dapatkan di https://openrouter.ai/keys). Opsional: set `AI_PASTOR_MODEL` (comma-separated, terbaik dulu) untuk mengarahkan pilihan model; defaultnya memakai daftar kandidat gratis di `src/lib/ai-pastor/model.ts`.
 4. Untuk notifikasi push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (generate dengan `npx web-push generate-vapid-keys`), `VAPID_SUBJECT` (`mailto:...`), dan `CRON_SECRET` (string acak apa saja — Vercel Cron otomatis mengirimkannya sebagai header `Authorization: Bearer $CRON_SECRET` ke endpoint cron bila env var ini bernama persis `CRON_SECRET`).
 5. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.
+
+### Menyalakan notifikasi
+
+Notifikasi tidak akan terkirim sampai keempat hal ini terpasang. Ini murni konfigurasi
+— kodenya sudah lengkap. Diagnosis 2026-07-30: workflow pengingat gagal **78 kali
+berturut-turut** karena `CRON_SECRET` tidak pernah di-set di GitHub, dan tabel
+`PushSubscription` masih kosong karena kunci VAPID belum ada sehingga tombol
+notifikasi di Profil tidak pernah bisa mendaftarkan perangkat.
+
+1. **Kunci VAPID di Vercel.** Generate dengan `npx web-push generate-vapid-keys`, lalu
+   set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (`mailto:...`), dan
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (nilainya sama dengan `VAPID_PUBLIC_KEY`). Yang
+   terakhir masuk ke bundel klien saat build, jadi **wajib redeploy** setelah ditambah.
+2. **`CRON_SECRET` di Vercel.** String acak apa saja, mis. `openssl rand -hex 32`.
+3. **`CRON_SECRET` yang sama di GitHub** — Settings → Secrets and variables → Actions.
+   Nilainya harus identik dengan yang di Vercel; kalau berbeda, endpoint menolak 401.
+4. **Aktifkan di aplikasi.** Tiap pengguna harus menyalakan sendiri tombol notifikasi di
+   `/app/profil` dan mengizinkan permintaan browser — tanpa itu tidak ada perangkat yang
+   terdaftar dan tidak ada yang bisa dikirimi.
+
+Untuk memastikan sudah benar: jalankan workflow "Prayer reminder push" secara manual
+(Actions → Run workflow). Kalau konfigurasinya kurang, pesannya sekarang menyebut
+persis apa yang hilang, bukan `401` telanjang.
 
 ### Push notification (Web Push)
 

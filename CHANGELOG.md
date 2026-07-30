@@ -2,6 +2,26 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.8.2] - 2026-07-30
+
+### Tantangan bulanan akhirnya benar-benar menghitung
+
+- **Poin tidak pernah bertambah.** Adapter database membuang operand `{ increment: n }` — penulisannya sukses, tapi angkanya tidak pernah bergerak. Bukti di produksi: satu anggota sudah menandai 4 pasal, `pointsEarned`-nya mentok di 12 (nilai dari penandaan pertama, satu-satunya yang lewat jalur `create`), dan `User.points` masih **0**. Level dan progress bar karena itu tidak pernah naik. Increment/decrement kini diselesaikan terhadap nilai baris saat itu sebelum ditulis.
+- **Dashboard kontributor crash setiap dibuka**: `prisma.devotion.aggregate` dipanggil padahal method itu tidak pernah ada di adapter. Kini diimplementasikan (`_sum`, `_avg`, `_min`, `_max`, `_count`).
+- Daftar tabel `updatedAt` disamakan dengan schema: sebelumnya memuat `PasswordResetToken` yang tidak punya kolom itu (penulisan ke tabel itu akan ditolak database) dan melewatkan `User`, `Devotion`, `Sermon`, `Circle` yang punya — sehingga `updatedAt` keempatnya tidak pernah bergerak dari nilai saat dibuat.
+- Ditambah 9 test untuk perilaku adapter ini (`npm test`).
+
+### Loading antar menu
+
+- **Fungsi dipindah ke region Singapura** (`sin1`). Database Supabase ada di `ap-southeast-1`, sementara fungsi berjalan di `iad1` (US East) — setiap query menyeberangi Pasifik dengan ~220ms round trip, dan satu halaman melakukan beberapa query berurutan. Ini penyebab terbesar lambatnya membuka menu.
+- **Tab bawah kini prefetch penuh.** Semua route di aplikasi ini dinamis, dan Next.js hanya prefetch route dinamis sampai boundary `loading.tsx` — artinya yang tersimpan cuma spinner-nya, bukan datanya, jadi setiap ketukan tab menunggu render server dari nol.
+
+### Notifikasi
+
+- **Penyebab matinya notifikasi teridentifikasi, tapi perbaikannya ada di konfigurasi, bukan kode** — lihat README. Ringkasnya: `CRON_SECRET` tidak pernah di-set di GitHub Actions secrets, jadi workflow pengingat mengirim `Authorization: Bearer ` kosong dan ditolak 401 — **78 run gagal berturut-turut**. Selain itu belum ada satu pun `PushSubscription`, yang konsisten dengan kunci VAPID belum terpasang sehingga tombol notifikasi tidak pernah bisa mendaftar.
+- Kegagalannya kini bisa didiagnosis: workflow berhenti dengan pesan eksplisit bila secret-nya kosong, dan `/api/cron/push` membedakan "secret server belum di-set" (503) dari "secret pemanggil salah" (401), serta melaporkan kunci VAPID mana yang hilang alih-alih melempar 500 di tengah jalan.
+- Jadwal cron Vercel digeser ke `0 23 * * *` (06:00 WIB). Sebelumnya `0 6 * * *` UTC, yang berarti ayat pagi terkirim jam 13:00 WIB.
+
 ## [0.8.1] - 2026-07-28
 
 ### Gambar ayat dari koleksi favorit

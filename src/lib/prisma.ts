@@ -261,12 +261,84 @@ async function fetchJson(url: string, init?: RequestInit) {
   return revived;
 }
 
-// Tables whose Prisma schema declares @updatedAt — a client-side feature with
-// no DB default, so this adapter must supply the value on create/update.
-const UPDATED_AT_TABLES = new Set(["WatchProgress", "Note", "PasswordResetToken", "Setting", "JournalEntry"]);
+/**
+ * Tables whose Prisma schema declares @updatedAt — a client-side feature with
+ * no DB default, so this adapter must supply the value on create/update.
+ *
+ * Kept in step with schema.prisma by hand, and it had drifted both ways: it
+ * listed PasswordResetToken, which has no such column (any write to that table
+ * would be rejected outright), and omitted User, Devotion, Sermon and Circle,
+ * whose updatedAt therefore never moved off its creation value.
+ */
+const UPDATED_AT_TABLES = new Set([
+  "User",
+  "Devotion",
+  "Sermon",
+  "WatchProgress",
+  "Note",
+  "Setting",
+  "JournalEntry",
+  "Circle",
+]);
+
+/**
+ * Splits `{ points: { increment: 10 }, name: "x" }` into the plain fields and
+ * the numeric deltas, so the deltas can be resolved against current values.
+ *
+ * prepareData used to `continue` past any increment operand, dropping it while
+ * the write still succeeded. That is why User.points sat at 0 and
+ * ChallengeProgress.pointsEarned froze after the first chapter: only the create
+ * path ever wrote a real number.
+ */
+function splitAtomicOps(data: Record<string, unknown>) {
+  const fields: Record<string, unknown> = {};
+  const deltas: Record<string, number> = {};
+
+  for (const [key, val] of Object.entries(data)) {
+    if (val && typeof val === "object" && !Array.isArray(val) && !(val instanceof Date)) {
+      const op = val as Record<string, unknown>;
+      if ("increment" in op) {
+        deltas[key] = Number(op.increment) || 0;
+        continue;
+      }
+      if ("decrement" in op) {
+        deltas[key] = -(Number(op.decrement) || 0);
+        continue;
+      }
+    }
+    fields[key] = val;
+  }
+
+  return { fields, deltas };
+}
 
 function createModel(modelName: string) {
   const table = toTableName(modelName);
+
+  /**
+   * Turns `{ increment: n }` into an absolute value.
+   *
+   * PostgREST cannot express `col = col + n` over the table API, so this reads
+   * the row and writes back the sum. It is a read-modify-write, so two awards
+   * landing at the same instant can still collide — but the previous behaviour
+   * was to discard the operation entirely. Move this to a SQL function (like the
+   * existing auth_* RPCs) if these counters ever become contended.
+   */
+  async function resolveDeltas(where: Record<string, unknown>, deltas: Record<string, number>) {
+    const columns = Object.keys(deltas);
+    if (columns.length === 0) return {};
+
+    const url = `${BASE}/${table}?${buildWhere(where)}&select=${encodeURIComponent(columns.join(","))}&limit=1`;
+    const rows = await fetchJson(url, { headers: { Accept: "application/json" } });
+    const current = ((rows as Record<string, unknown>[] | null)?.[0] ?? {}) as Record<string, unknown>;
+
+    const resolved: Record<string, number> = {};
+    for (const col of columns) {
+      const value = Number(current[col]);
+      resolved[col] = (Number.isFinite(value) ? value : 0) + deltas[col];
+    }
+    return resolved;
+  }
 
   return {
     async findUnique(args: { where: Record<string, unknown>; select?: Record<string, boolean>; include?: Record<string, boolean | object> }) {
@@ -321,7 +393,9 @@ function createModel(modelName: string) {
     async update(args: { where: Record<string, unknown>; data: Record<string, unknown>; select?: Record<string, boolean>; include?: Record<string, boolean | object> }) {
       const sel = buildSelect(table, args);
       const where = buildWhere(args.where);
-      const body = prepareData(args.data);
+      const { fields, deltas } = splitAtomicOps(args.data);
+      const body = prepareData(fields);
+      Object.assign(body, await resolveDeltas(args.where, deltas));
       if (UPDATED_AT_TABLES.has(table) && body.updatedAt === undefined) body.updatedAt = new Date().toISOString();
       const url = `${BASE}/${table}?${where}&select=${encodeURIComponent(sel)}`;
       const res = await request(url, {
@@ -383,6 +457,60 @@ function createModel(modelName: string) {
       return total ? parseInt(total, 10) : 0;
     },
 
+    /**
+     * Prisma-style aggregate.
+     *
+     * This method did not exist: the Proxy handed back a model object without
+     * it, so `prisma.devotion.aggregate(...)` resolved to undefined and the
+     * contributor dashboard threw on `viewsAgg._sum` every time it loaded.
+     *
+     * PostgREST can aggregate server-side, but only over columns explicitly
+     * exposed for it, so the columns are fetched and folded here. Fine for the
+     * per-author scopes this is used with; a large scope should get a view.
+     */
+    async aggregate(args: {
+      where?: Record<string, unknown>;
+      _sum?: Record<string, boolean>;
+      _avg?: Record<string, boolean>;
+      _min?: Record<string, boolean>;
+      _max?: Record<string, boolean>;
+    }) {
+      const columns = new Set<string>();
+      for (const spec of [args._sum, args._avg, args._min, args._max]) {
+        if (spec) for (const [col, on] of Object.entries(spec)) if (on) columns.add(col);
+      }
+
+      const selected = columns.size > 0 ? [...columns].join(",") : "id";
+      const where = buildWhere(args.where);
+      let url = `${BASE}/${table}?select=${encodeURIComponent(selected)}`;
+      if (where) url += `&${where}`;
+
+      const rows = ((await fetchJson(url, { headers: { Accept: "application/json" } })) ?? []) as Record<string, unknown>[];
+      const numbersIn = (col: string) => rows.map((r) => Number(r[col])).filter((n) => Number.isFinite(n));
+
+      const fold = (
+        spec: Record<string, boolean> | undefined,
+        reduce: (values: number[]) => number | null,
+      ) => {
+        const out: Record<string, number | null> = {};
+        if (!spec) return out;
+        for (const [col, on] of Object.entries(spec)) {
+          if (!on) continue;
+          const values = numbersIn(col);
+          out[col] = values.length === 0 ? null : reduce(values);
+        }
+        return out;
+      };
+
+      return {
+        _sum: fold(args._sum, (v) => v.reduce((a, b) => a + b, 0)),
+        _avg: fold(args._avg, (v) => v.reduce((a, b) => a + b, 0) / v.length),
+        _min: fold(args._min, (v) => Math.min(...v)),
+        _max: fold(args._max, (v) => Math.max(...v)),
+        _count: rows.length,
+      };
+    },
+
     async upsert(args: { where: Record<string, unknown>; create: Record<string, unknown>; update: Record<string, unknown>; select?: Record<string, boolean>; include?: Record<string, boolean | object> }) {
       const existing = await this.findUnique({ where: args.where, select: { id: true } });
       if (existing) {
@@ -396,10 +524,10 @@ function createModel(modelName: string) {
 function prepareData(data: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(data)) {
-    if (val && typeof val === "object" && "increment" in (val as Record<string, unknown>)) {
-      // Prisma increment — handled via RPC later if needed; skip for now
-      continue;
-    }
+    // increment/decrement never reach here — update() resolves them against the
+    // current row first (see splitAtomicOps). A create() carrying one would be a
+    // caller mistake, and letting it through as an object is a louder failure
+    // than silently dropping the field.
     if (val && typeof val === "object" && "set" in (val as Record<string, unknown>)) {
       result[key] = (val as Record<string, unknown>).set;
       continue;

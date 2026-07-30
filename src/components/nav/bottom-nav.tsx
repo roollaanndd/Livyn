@@ -30,6 +30,13 @@ export function BottomNav() {
   const pathname = usePathname();
   const t = useT();
 
+  // Every tab here is a dynamic route, and Next.js only prefetches dynamic
+  // routes down to the nearest loading.tsx by default — which for these is just
+  // the spinner, no data. So tapping a tab always waited on a cold server
+  // render. This nav is permanently on screen, so the five destinations prefetch
+  // in full and a tap lands on data that is already in the router cache.
+  const PREFETCH_FULL_ROUTE = true;
+
   return (
     <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2">
       <div className="relative">
@@ -43,6 +50,7 @@ export function BottomNav() {
                   <Link
                     key={tab.href}
                     href={tab.href}
+                    prefetch={PREFETCH_FULL_ROUTE}
                     className="relative flex flex-col items-center justify-center pb-2 pt-1"
                   >
                     <motion.div
@@ -80,6 +88,7 @@ export function BottomNav() {
                 <Link
                   key={tab.href}
                   href={tab.href}
+                  prefetch={PREFETCH_FULL_ROUTE}
                   className="relative flex flex-col items-center gap-1 py-2.5 pt-3.5"
                 >
                   <motion.div className="relative" whileTap={TAP}>
