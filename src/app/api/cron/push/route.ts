@@ -18,8 +18,31 @@ function minutesSinceMidnight(hhmm: string) {
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET) {
+    // Distinguishable from a wrong secret on purpose: an unset CRON_SECRET on
+    // this side is a deployment problem, and answering both cases with a bare
+    // "Unauthorized" is what made this take so long to diagnose.
+    return NextResponse.json(
+      { error: "CRON_SECRET is not configured on the server, so this endpoint cannot authenticate any caller." },
+      { status: 503 },
+    );
+  }
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Checked before any sending is attempted: sendPushToUser throws on missing
+  // VAPID keys, which surfaced as an opaque 500 halfway through a run.
+  const missingVapid = ["VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT"].filter(
+    (name) => !process.env[name],
+  );
+  if (missingVapid.length > 0) {
+    return NextResponse.json(
+      {
+        error: `Web Push is not configured: ${missingVapid.join(", ")} missing. Generate keys with \`npx web-push generate-vapid-keys\` and set them (plus NEXT_PUBLIC_VAPID_PUBLIC_KEY, same value as VAPID_PUBLIC_KEY) in the deployment environment.`,
+      },
+      { status: 503 },
+    );
   }
 
   const windowMinutes = Number(req.nextUrl.searchParams.get("windowMinutes") ?? 15);

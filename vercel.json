@@ -1,8 +1,14 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "// regions": "The database lives in Supabase ap-southeast-1 (Singapore) and this app talks to it over HTTP (PostgREST), so every query pays a full round trip. Functions were running in iad1 (US East), which put ~220ms of Pacific latency on each one — a page making four sequential queries spent most of a second waiting on the network alone. Running next to the database is the single biggest win available here.",
+  "regions": ["sin1"],
+
+  "// crons": "23:00 UTC is 06:00 WIB. The endpoint only sends the daily verse from 06:00 Jakarta time onward, so firing at 06:00 UTC (13:00 WIB) delivered the morning verse in the afternoon.",
   "crons": [
     {
       "path": "/api/cron/push",
-      "schedule": "0 6 * * *"
+      "schedule": "0 23 * * *"
     }
   ]
 }
