@@ -1,0 +1,74 @@
+/* Theme for the vendored scroll-world engine.
+ *
+ * The engine ships its own tokens inside `@layer sw`, so everything here is
+ * deliberately unlayered — unlayered rules beat any layered rule regardless of
+ * order, which is exactly how the engine expects to be re-themed.
+ *
+ * The landing page commits to one look (deep-green night, warm gold light) in
+ * both colour schemes: the scenes are lit for a dark backdrop, and a cinematic
+ * page that flips to cream in light mode would fight its own artwork. */
+
+.sw-root {
+  --sw-bg: #0a1610;
+  --sw-ink: #edf3ef;
+  --sw-ink-soft: #93a79c;
+  --sw-accent: #c89b3c;
+  --sw-font-display: var(--font-manrope), ui-rounded, system-ui, sans-serif;
+  --sw-font-body: var(--font-inter), -apple-system, system-ui, sans-serif;
+}
+
+/* Present from the server render, so the page never flashes the app's cream
+ * background before the engine mounts. */
+body:has(.sw-page) {
+  background: #0a1610;
+  color: #edf3ef;
+}
+
+/* The engine's defaults assume a light page: its buttons and chips are filled
+ * with `--sw-ink`, which on a dark theme means light-on-light. Re-point them
+ * at the accent (the dark-theme note in the skill's Gotchas). */
+.sw-root .sw-btn--primary,
+.sw-root .sw-topcta {
+  color: #08120d;
+  background: var(--sw-accent);
+}
+
+.sw-root .sw-btn--ghost {
+  color: var(--sw-ink);
+  border-color: color-mix(in srgb, var(--sw-ink) 32%, transparent);
+}
+
+.sw-root .sw-nav {
+  background: color-mix(in srgb, #0a1610 62%, transparent);
+  border-color: color-mix(in srgb, var(--sw-accent) 22%, transparent);
+}
+
+.sw-root .sw-nav__item.is-active {
+  color: #08120d;
+  background: var(--sw-accent);
+}
+
+.sw-root .sw-copy__tags li {
+  color: color-mix(in srgb, var(--sw-accent) 78%, #ffffff);
+  background: color-mix(in srgb, var(--sw-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--sw-accent) 34%, transparent);
+}
+
+.sw-root .sw-route__label {
+  color: var(--sw-ink);
+  background: color-mix(in srgb, #0a1610 84%, transparent);
+  border-color: color-mix(in srgb, var(--sw-accent) 22%, transparent);
+}
+
+/* The scenes are drawn on their own night sky, so the engine's atmosphere
+ * layer only needs to fill the letterboxing that `object-fit: cover` leaves
+ * on very wide or very tall viewports. */
+.sw-root .sw-sky__glow {
+  opacity: 0.5;
+}
+
+/* The no-JS fallback. Hidden by default because the engine renders the same
+ * copy far better; the <noscript> block on the page turns it back on. */
+.sw-static {
+  display: none;
+}
