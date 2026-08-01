@@ -36,7 +36,8 @@ Buka http://localhost:3000.
 
 ### Inti
 
-- `/`, `/onboarding` — splash screen animasi + onboarding carousel (Bahasa Indonesia)
+- `/` — landing page publik: satu dunia diorama isometrik yang dilewati sambil menggulir, dengan pintu masuk ke aplikasi (lihat "Landing page" di bawah)
+- `/mulai`, `/onboarding` — splash screen animasi + onboarding carousel (Bahasa Indonesia). `/mulai` adalah pintu masuk aplikasi yang sebelumnya ada di `/`; perilakunya tidak berubah (masuk → `/app`, kunjungan pertama → `/onboarding`, selebihnya → `/masuk`)
 - `/masuk`, `/daftar`, `/lupa-sandi` — autentikasi
 - `/app` — dashboard: ayat hari ini (ayat kurasi dengan rotasi acak harian), renungan tematik, pengingat doa, khotbah terbaru, peristiwa Kristiani (dihitung otomatis termasuk Paskah dll.)
 - `/app/devosi` — renungan harian tematik dengan alur khotbah singkat (pembuka, merenungkan firman, aplikasi, refleksi, doa penutup), berbeda setiap hari, tombol bagikan
@@ -62,6 +63,27 @@ Buka http://localhost:3000.
 - `/contributor` — dasbor kontributor: statistik, buat/kirim renungan & khotbah (autosave draft lokal)
 - `/admin` — dasbor admin: moderasi konten, manajemen pengguna & peran, kategori, tantangan bulanan, verifikasi leader, log audit
 - Notifikasi push (Web Push/VAPID) untuk pengingat doa dan ayat harian — lihat `PushToggle` di `/app/profil` untuk mengaktifkan, dan bagian "Push notification" di bawah untuk setelan server
+
+## Landing page (`/`)
+
+Halaman depan publik dibangun dengan **scroll-world** ([github.com/oso95/scroll-world](https://github.com/oso95/scroll-world), MIT): saat pengunjung menggulir, kamera bergerak melewati tujuh adegan berurutan — terang, renungan, Alkitab, doa, AI Pastor, circle — dan berakhir di pintu masuk aplikasi.
+
+- `src/lib/scroll-world/scrub-engine.js` — mesin scroll-scrub dari skill itu, di-vendor apa adanya. Modifikasi lokal hanya dua (didokumentasikan di header file): `mountScrollWorld` mengembalikan `destroy()` dan ada ESM export, keduanya supaya navigasi client-side Next.js tidak meninggalkan rAF loop dan CSS global yang menempel.
+- `src/lib/scroll-world/livyn-world.ts` — isi dunia: adegan, teks, dan tujuan tombol masuk. Tombol menyesuaikan pengunjung: yang belum masuk diarahkan ke `/mulai` (splash → onboarding/login), yang sudah masuk langsung ke `/app`, plus pintasan ke `/admin` atau `/contributor` sesuai peran.
+- `scripts/build-scenes.mjs` → `public/scroll-world/scenes/*.svg` — gambar adegannya. Jalankan `node scripts/build-scenes.mjs` setelah mengubah skrip; hasilnya ikut di-commit. Tiap adegan dirender dua kali: 16:9 untuk desktop dan **9:16 asli** untuk ponsel (`*-m.svg`, dipakai otomatis lewat `stillMobile`) — bukan hasil crop, karena crop 16:9 di layar ponsel cuma menampilkan sepertiga diorama.
+- Tidak ada perubahan apa pun di `/app`, `/admin`, atau `/contributor`.
+
+### Yang belum ada: klip kamera
+
+Bentuk penuh scroll-world memakai klip video hasil generasi AI yang di-*scrub* oleh posisi scroll — kamera betul-betul terbang masuk ke tiap adegan tanpa potongan. Klip itu **belum dibuat**: pipeline-nya butuh Monid/Higgsfield berbayar (≈ $27 untuk rantai 1080p tujuh adegan) plus `ffmpeg`, dan keduanya tidak tersedia di lingkungan build ini. Yang berjalan sekarang adalah lapisan still-nya: tiap adegan mendorong kameranya perlahan (`scale`) dan saling melarut di perbatasan — jadi halamannya tetap utuh, hanya belum sinematik.
+
+Menambahkan klipnya nanti bersifat aditif — ikuti `SKILL.md` di repo scroll-world, lalu:
+
+1. Taruh hasil encode di `public/scroll-world/clips/`.
+2. Isi `clip` (dan `clipMobile`) di tiap adegan pada `livyn-world.ts`, dan isi `connectors` sepanjang `sections.length - 1`.
+3. Tambahkan `blob:` ke direktif `media-src` di CSP (`src/proxy.ts`). Mesin ini memuat tiap klip sebagai `Blob` supaya selalu bisa di-*seek*, dan CSP saat ini (`media-src 'self' https:`) akan memblokirnya. Ini satu-satunya perubahan di luar folder landing page yang diperlukan.
+
+Selama `clip` kosong, mesin memang sengaja tidak memuat video sama sekali.
 
 ## Keterbatasan build ini (transparansi)
 
