@@ -71,6 +71,22 @@ Halaman depan publik dibangun dengan **scroll-world** ([github.com/oso95/scroll-
 - `src/lib/scroll-world/scrub-engine.js` — mesin scroll-scrub dari skill itu, di-vendor apa adanya. Modifikasi lokal hanya dua (didokumentasikan di header file): `mountScrollWorld` mengembalikan `destroy()` dan ada ESM export, keduanya supaya navigasi client-side Next.js tidak meninggalkan rAF loop dan CSS global yang menempel.
 - `src/lib/scroll-world/livyn-world.ts` — isi dunia: adegan, teks, dan tujuan tombol masuk. Tombol menyesuaikan pengunjung: yang belum masuk diarahkan ke `/mulai` (splash → onboarding/login), yang sudah masuk langsung ke `/app`, plus pintasan ke `/admin` atau `/contributor` sesuai peran.
 - `scripts/build-scenes.mjs` → `public/scroll-world/scenes/*.svg` — gambar adegannya. Jalankan `node scripts/build-scenes.mjs` setelah mengubah skrip; hasilnya ikut di-commit. Tiap adegan dirender dua kali: 16:9 untuk desktop dan **9:16 asli** untuk ponsel (`*-m.svg`, dipakai otomatis lewat `stillMobile`) — bukan hasil crop, karena crop 16:9 di layar ponsel cuma menampilkan sepertiga diorama.
+- `src/lib/scroll-world/scene-manifest.json` — menentukan berkas mana yang dipakai tiap adegan. Defaultnya SVG di atas.
+
+### Mengganti gambar adegan dengan hasil Fooocus
+
+SVG itu **placeholder** — dibuat dengan kode karena membangkitkan gambar butuh kredit yang waktu itu tidak ada. [Fooocus](https://github.com/lllyasviel/Fooocus) menggantikan langkah itu secara lokal dan gratis; kitnya ada di `tools/fooocus/`.
+
+1. Bangkitkan tiap adegan memakai prompt di `tools/fooocus/prompts/` — **satu style preamble yang sama persis** di depan setiap prompt, karena pengulangan itulah yang membuat tujuh gambar terpisah terbaca sebagai satu dunia. Setelan lengkap ada di `tools/fooocus/prompts/README.md`.
+2. Render dua kali: 1344×768 (desktop) dan 768×1344 (ponsel), namanya `<adegan>.png` dan `<adegan>-m.png`.
+3. Impor:
+
+   ```bash
+   node scripts/adopt-scenes.mjs ~/fooocus/outputs/2026-08-01
+   node scripts/adopt-scenes.mjs --reset    # kembali ke SVG
+   ```
+
+Skrip memvalidasi tiap berkas (termasuk menolak gambar landscape yang ditaruh di slot potret), menyalinnya ke `public/scroll-world/scenes/`, dan memperbarui manifest. Adegan yang belum dibangkitkan tetap memakai SVG-nya, jadi bisa dicicil satu per satu.
 - Tidak ada perubahan apa pun di `/app`, `/admin`, atau `/contributor`.
 
 ### Yang belum ada: klip kamera

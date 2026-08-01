@@ -1,4 +1,5 @@
 import { hasRole, isAdmin } from "@/lib/auth/rbac";
+import manifest from "./scene-manifest.json";
 import type { ScrollWorldConfig, ScrollWorldSection } from "./scrub-engine";
 
 /**
@@ -11,9 +12,18 @@ import type { ScrollWorldConfig, ScrollWorldSection } from "./scrub-engine";
  * each scene and fill in `connectors`. Nothing else changes. See the README.
  */
 
-const SCENE = (id: string) => `/scroll-world/scenes/${id}.svg`;
+/**
+ * Where each scene's art lives. The committed default points at the SVGs drawn
+ * by `scripts/build-scenes.mjs`; `scripts/adopt-scenes.mjs` rewrites entries as
+ * you generate real art in Fooocus, one scene at a time. A scene that hasn't
+ * been generated keeps its drawing, so a half-finished render session still
+ * leaves a coherent page.
+ */
+const ART: Record<string, { still: string; stillMobile: string }> = manifest;
+
+const SCENE = (id: string) => ART[id].still;
 /** The 9:16 cut of the same scene, served on phones. */
-const SCENE_M = (id: string) => `/scroll-world/scenes/${id}-m.svg`;
+const SCENE_M = (id: string) => ART[id].stillMobile;
 
 type Viewer = { signedIn: boolean; role?: string };
 
