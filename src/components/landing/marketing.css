@@ -1,0 +1,272 @@
+/* The page below the scroll cinematic.
+ *
+ * It stays on the cinematic's dark palette rather than reverting to the app's
+ * light theme: the flight ends on a night sky, and flipping to cream at the
+ * seam reads as two different websites stitched together.
+ *
+ * z-index 5 puts this above the engine's fixed sky (z-0) and below its stage
+ * (z-10), which is what lets the hand-off in scroll-world.css work. */
+
+.lv-page {
+  position: relative;
+  z-index: 5;
+  background: #0a1610;
+  color: #edf3ef;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  /* The engine reserves a trailing viewport so the last clip can finish
+     playing. Left alone that reads as a screen of nothing between the film and
+     the page, so this climbs over most of it and leaves a short dark beat. */
+  margin-top: -70vh;
+}
+
+.lv-section {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(4rem, 10vw, 7rem) clamp(1.25rem, 5vw, 4rem);
+  /* The top bar stays fixed over this page, so anchored jumps have to stop
+     clear of it rather than landing underneath. */
+  scroll-margin-top: 6rem;
+}
+
+.lv-eyebrow {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c89b3c;
+  margin: 0 0 0.75rem;
+}
+
+.lv-h2 {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: #edf3ef;
+  max-width: 20ch;
+}
+
+.lv-lede {
+  margin: 1.25rem 0 0;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.6;
+  color: #93a79c;
+  max-width: 52ch;
+}
+
+/* Features ---------------------------------------------------------------- */
+
+.lv-grid {
+  list-style: none;
+  margin: clamp(2rem, 5vw, 3.5rem) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.lv-card {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(200, 155, 60, 0.14);
+}
+
+.lv-card__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.85rem;
+  background: rgba(200, 155, 60, 0.12);
+  color: #d9b45f;
+  margin-bottom: 1rem;
+}
+
+.lv-card__title {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+  color: #edf3ef;
+}
+
+.lv-card__body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #93a79c;
+}
+
+/* Call to action ---------------------------------------------------------- */
+
+.lv-cta {
+  text-align: center;
+  border-top: 1px solid rgba(200, 155, 60, 0.12);
+  border-bottom: 1px solid rgba(200, 155, 60, 0.12);
+  background: radial-gradient(60% 80% at 50% 0%, rgba(200, 155, 60, 0.1), transparent 70%);
+}
+
+.lv-cta .lv-h2,
+.lv-cta .lv-lede {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.lv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.9rem 1.6rem;
+  border-radius: 999px;
+  transition: transform 0.2s ease;
+}
+
+.lv-btn:hover {
+  transform: translateY(-2px);
+}
+
+.lv-btn--primary {
+  color: #08120d;
+  background: #c89b3c;
+}
+
+.lv-btn--ghost {
+  color: #edf3ef;
+  border: 1.5px solid rgba(237, 243, 239, 0.28);
+}
+
+/* The demo button is the app's own component; only its skin is adjusted so it
+   sits next to the link buttons above rather than looking transplanted. */
+.lv-demo {
+  border-radius: 999px !important;
+  background: #c89b3c !important;
+  color: #08120d !important;
+  border: 0 !important;
+}
+
+.lv-proof {
+  margin: 1.75rem 0 0;
+  font-size: 0.9rem;
+  color: #7d8f86;
+}
+
+/* FAQ --------------------------------------------------------------------- */
+
+.lv-faq {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.lv-faq__item {
+  border-radius: 1rem;
+  border: 1px solid rgba(200, 155, 60, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.1rem 1.35rem;
+}
+
+.lv-faq__q {
+  cursor: pointer;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #edf3ef;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.lv-faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.lv-faq__q::after {
+  content: "+";
+  color: #c89b3c;
+  font-size: 1.35rem;
+  line-height: 1;
+  flex: none;
+}
+
+.lv-faq__item[open] .lv-faq__q::after {
+  content: "–";
+}
+
+.lv-faq__a {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #93a79c;
+  max-width: 60ch;
+}
+
+/* Footer ------------------------------------------------------------------ */
+
+.lv-footer {
+  border-top: 1px solid rgba(200, 155, 60, 0.12);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4rem) clamp(1.25rem, 5vw, 4rem)
+    calc(clamp(2.5rem, 6vw, 4rem) + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 1.75rem;
+}
+
+.lv-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.lv-footer__tag {
+  margin: 0.2rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #6d7f76;
+}
+
+.lv-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.75rem;
+}
+
+.lv-footer__links a {
+  color: #93a79c;
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.lv-footer__links a:hover {
+  color: #edf3ef;
+}
+
+.lv-footer__legal {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #5f7169;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-btn:hover {
+    transform: none;
+  }
+}

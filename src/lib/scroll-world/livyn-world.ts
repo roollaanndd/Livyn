@@ -158,6 +158,3 @@ export function livynWorld(viewer: Viewer): ScrollWorldConfig {
     connectors: [],
   };
 }
-
-/** The same copy, for the no-JS fallback and for crawlers. */
-export const WORLD_SECTIONS = SCENES;
