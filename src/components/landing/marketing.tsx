@@ -77,7 +77,10 @@ const FAQ = [
   },
   {
     q: "Bisa dipakai tanpa sinyal?",
-    a: "Pasal Alkitab yang sudah kamu unduh tetap bisa dibaca saat offline. Fitur lain memerlukan koneksi.",
+    // The offline feature is a one-time download of the whole Bible into
+    // IndexedDB (src/lib/bible/offline-store.ts), not a per-chapter save —
+    // an earlier draft of this answer said chapters, which was wrong.
+    a: "Bisa. Unduh Alkitab sekali dari halaman Alkitab, dan setelah itu teks yang tersimpan tetap terbaca tanpa koneksi. Fitur lain memerlukan sinyal.",
   },
   {
     q: "Apakah jurnal dan doaku bersifat pribadi?",
