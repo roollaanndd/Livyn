@@ -2,6 +2,14 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.8.4] - 2026-08-02
+
+### Latar baru sudah ter-deploy tapi tidak kelihatan
+
+- **Service worker menyandera gambar adegan.** `sw.js` memperlakukan **semua** `.svg` sebagai aset abadi dan menyajikannya *cache-first*, sementara berkas adegan memakai nama tetap (`/scroll-world/scenes/terang.svg`) yang isinya ditimpa tiap kali digambar ulang. Akibatnya siapa pun yang pernah membuka halaman depan akan terus melihat gambar lama selamanya — desain baru ter-deploy, tapi tidak ada yang bisa melihatnya. Aset di `/scroll-world/` sekarang memakai *stale-while-revalidate*: tampil instan dari cache, disegarkan di latar, jadi muatan berikutnya sudah gambar baru dengan sendirinya.
+- `CACHE_NAME` dinaikkan ke `livyn-v3`, yang menghapus cache lama di `activate` — ini yang membebaskan perangkat yang sudah terlanjur menyimpan gambar lama.
+- **URL adegan sekarang membawa hash isinya** (`terang.svg?v=996ec16d`), ditulis ke manifest oleh `build-scenes.mjs` dan `adopt-scenes.mjs`. Nama berkasnya tidak pernah berubah, jadi tanpa ini setiap lapis cache — service worker, browser, CDN — tetap menyajikan gambar sebelumnya. Entri yang sudah diarahkan ke hasil generate dibiarkan apa adanya, jadi halaman yang baru separuh digenerate tidak ikut kereset.
+
 ## [0.8.3] - 2026-08-02
 
 ### Landing page: satu penurunan dari orbit sampai pintu gereja

@@ -16,6 +16,7 @@
 //
 // Prompts and the settings to generate with: tools/fooocus/prompts/README.md
 
+import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -79,9 +80,19 @@ function dimensions(file) {
 // Manifest
 // ---------------------------------------------------------------------------
 
+/** A scene URL with a hash of the file's contents on it. The names are fixed,
+ *  so without this the service worker, the browser and the CDN all keep
+ *  serving whatever art was there before. */
+function stamped(file) {
+  const path = join(SCENES_DIR, file);
+  if (!existsSync(path)) return `/scroll-world/scenes/${file}`;
+  const hash = createHash("sha1").update(readFileSync(path)).digest("hex").slice(0, 8);
+  return `/scroll-world/scenes/${file}?v=${hash}`;
+}
+
 const svgManifest = () =>
   Object.fromEntries(
-    SCENES.map((id) => [id, { still: `/scroll-world/scenes/${id}.svg`, stillMobile: `/scroll-world/scenes/${id}-m.svg` }])
+    SCENES.map((id) => [id, { still: stamped(`${id}.svg`), stillMobile: stamped(`${id}-m.svg`) }])
   );
 
 function readManifest() {
@@ -178,7 +189,7 @@ for (const id of SCENES) {
     } else {
       mkdirSync(SCENES_DIR, { recursive: true });
       copyFileSync(file, dest);
-      manifest[id][key] = `/scroll-world/scenes/${variant}${ext}`;
+      manifest[id][key] = stamped(`${variant}${ext}`);
       console.log(`  adopted ${variant} (${dim.w}x${dim.h})`);
     }
     adopted++;
