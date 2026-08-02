@@ -1,0 +1,30 @@
+{
+  "terang": {
+    "still": "/scroll-world/scenes/terang.svg",
+    "stillMobile": "/scroll-world/scenes/terang-m.svg"
+  },
+  "renungan": {
+    "still": "/scroll-world/scenes/renungan.svg",
+    "stillMobile": "/scroll-world/scenes/renungan-m.svg"
+  },
+  "alkitab": {
+    "still": "/scroll-world/scenes/alkitab.svg",
+    "stillMobile": "/scroll-world/scenes/alkitab-m.svg"
+  },
+  "doa": {
+    "still": "/scroll-world/scenes/doa.svg",
+    "stillMobile": "/scroll-world/scenes/doa-m.svg"
+  },
+  "pastor": {
+    "still": "/scroll-world/scenes/pastor.svg",
+    "stillMobile": "/scroll-world/scenes/pastor-m.svg"
+  },
+  "circle": {
+    "still": "/scroll-world/scenes/circle.svg",
+    "stillMobile": "/scroll-world/scenes/circle-m.svg"
+  },
+  "mulai": {
+    "still": "/scroll-world/scenes/mulai.svg",
+    "stillMobile": "/scroll-world/scenes/mulai-m.svg"
+  }
+}

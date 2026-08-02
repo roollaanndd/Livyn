@@ -67,8 +67,33 @@ body:has(.sw-page) {
   opacity: 0.5;
 }
 
-/* The no-JS fallback. Hidden by default because the engine renders the same
- * copy far better; the <noscript> block on the page turns it back on. */
-.sw-static {
+/* Hand-off to the page below the cinematic.
+ *
+ * Everything the engine draws is `position: fixed` and stays put for the whole
+ * document, so once the flight finishes it would cover the marketing page.
+ * `sw-done` is toggled at the seam by scroll-world.tsx. `visibility` rather
+ * than `display` so nothing is torn down and re-laid-out on the way back up —
+ * scrolling up restores the flight mid-frame. */
+.sw-root.sw-done .sw-sky,
+.sw-root.sw-done .sw-stage,
+.sw-root.sw-done .sw-copylayer,
+.sw-root.sw-done .sw-route,
+.sw-root.sw-done .sw-hint,
+.sw-root.sw-done .sw-scrollbar {
+  visibility: hidden;
+}
+
+/* The top bar is the exception: it survives as the page's nav, so the way back
+ * into the app is on screen the whole way down. It needs a backdrop once it is
+ * over content rather than over the sky. */
+.sw-root.sw-done .sw-topbar {
+  background: color-mix(in srgb, #0a1610 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--sw-accent) 14%, transparent);
+}
+
+/* Section nav belongs to the flight; past the seam it would scroll you back
+ * into the cinematic from a page that has its own sections. */
+.sw-root.sw-done .sw-nav {
   display: none;
 }
