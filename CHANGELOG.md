@@ -11,6 +11,7 @@ Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 - Urutan adegan sekarang punya arti: ia adalah ketinggian kamera dan tidak bisa ditukar. Warna aksen tiap bagian mengikuti cahaya di ketinggian itu — biru dingin di orbit, menghangat sepanjang turun, emas di pintu.
 - Tiap adegan tetap dirender dua kali, 16:9 dan 9:16 asli untuk ponsel, dan potret bukan hasil crop: bidang pandang horizontalnya sama sehingga gerejanya selebar itu juga di layar ponsel, hanya langit dan halamannya yang lebih banyak terlihat.
 - Prompt Fooocus di `tools/fooocus/prompts/` ikut ditulis ulang mengikuti penurunan yang sama, jadi hasil generate nanti menggantikan SVG tanpa mengubah ceritanya.
+- **`scripts/generate-scenes.mjs` baru**: membangkitkan ketujuh adegan sebagai foto lewat API gambar Google — tidak butuh GPU, tinggal `GEMINI_API_KEY`. Ia mengirim style preamble yang sama persis di depan tiap prompt **plus frame SVG-nya sebagai referensi komposisi**, supaya hasilnya tetap satu penurunan (kamera tidak pindah, gerejanya tidak berpindah blok) dan bukan tujuh kota yang berbeda. Model tidak di-hardcode — skripnya menanyakan model apa yang bisa dipakai kunci itu, lalu memilih yang paling berat. Adegan yang gagal tetap memakai SVG-nya, jadi run separuh jalan pun meninggalkan halaman yang utuh.
 - Tidak ada perubahan di `/app`, `/admin`, atau `/contributor`.
 
 ## [0.8.2] - 2026-07-30
