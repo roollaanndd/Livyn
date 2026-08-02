@@ -21,11 +21,14 @@
 // clip's poster would take, so swapping in real clips later is additive
 // (see README → Landing page).
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const OUT = resolve(dirname(fileURLToPath(import.meta.url)), "../public/scroll-world/scenes");
+const HERE = dirname(fileURLToPath(import.meta.url));
+const OUT = resolve(HERE, "../public/scroll-world/scenes");
+const MANIFEST = resolve(HERE, "../src/lib/scroll-world/scene-manifest.json");
 
 // ---------------------------------------------------------------------------
 // Formats
@@ -1042,7 +1045,18 @@ const SCENES = [
 
 mkdirSync(OUT, { recursive: true });
 
+/** The URL the page asks for, carrying a hash of what it will get.
+ *
+ *  The filenames never change, so without this every cache in the chain — the
+ *  service worker, the browser, the CDN — happily keeps serving the previous
+ *  artwork after a re-render, and a redesign ships to nobody. */
+const stamped = (file, contents) =>
+  `/scroll-world/scenes/${file}?v=${createHash("sha1").update(contents).digest("hex").slice(0, 8)}`;
+
+const written = {};
+
 for (const scene of SCENES) {
+  written[scene.id] = {};
   for (const fmt of FORMATS) {
     F = fmt;
     const { defs, body } = scene.build();
@@ -1053,9 +1067,34 @@ for (const scene of SCENES) {
       rect(0, 0, F.W, F.H, C.space) +
       body +
       `</svg>`;
-    writeFileSync(resolve(OUT, `${scene.id}${F.suffix}.svg`), svg);
-    console.log(`  ${scene.id}${F.suffix}.svg  ${(svg.length / 1024).toFixed(0)} KB`);
+    const file = `${scene.id}${F.suffix}.svg`;
+    writeFileSync(resolve(OUT, file), svg);
+    written[scene.id][F.suffix ? "stillMobile" : "still"] = stamped(file, svg);
+    console.log(`  ${file}  ${(svg.length / 1024).toFixed(0)} KB`);
   }
 }
 
+// The page reads the manifest, not this directory. Entries that adopt-scenes.mjs
+// has already pointed at generated art are left alone — only the ones still on
+// a drawn SVG get their hash refreshed, so a half-generated page stays put.
+let manifest = {};
+try {
+  manifest = JSON.parse(readFileSync(MANIFEST, "utf8"));
+} catch {
+  /* first run, or someone truncated it — rebuilt from what we just wrote */
+}
+
+let refreshed = 0;
+for (const [id, paths] of Object.entries(written)) {
+  const current = manifest[id] || {};
+  const next = { ...current };
+  for (const key of ["still", "stillMobile"]) {
+    if (!current[key] || current[key].split("?")[0].endsWith(".svg")) next[key] = paths[key];
+  }
+  if (JSON.stringify(next) !== JSON.stringify(current)) refreshed++;
+  manifest[id] = next;
+}
+writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
+
 console.log(`\n${SCENES.length} scenes x ${FORMATS.length} formats -> ${OUT}`);
+console.log(`${refreshed} manifest ${refreshed === 1 ? "entry" : "entries"} refreshed -> ${MANIFEST}`);

@@ -10,11 +10,17 @@
 //  - Only genuinely immutable, non-personalised things get cached: the
 //    content-hashed /_next/static/ bundles, images, fonts, and the /bible/
 //    JSON that powers offline reading.
+//  - The landing page's scene art is the exception that proves the rule. It
+//    lives at fixed URLs that get rewritten in place whenever the art is
+//    regenerated, so cache-first pinned the old pictures on every device that
+//    had ever loaded the page — a redesign that shipped and nobody could see.
+//    Those get stale-while-revalidate instead: paint from cache, refresh in
+//    the background, so new art lands on the next load by itself.
 //
 // Bumping CACHE_NAME purges every older cache in `activate`, which is how
 // existing installs shed the stale entries written by earlier versions.
 
-const CACHE_NAME = "livyn-v2";
+const CACHE_NAME = "livyn-v3";
 const OFFLINE_URL = "/offline";
 
 const PRECACHE_URLS = [OFFLINE_URL, "/icon-192.png", "/icon-512.png"];
@@ -70,6 +76,11 @@ function isImmutableAsset(url) {
   );
 }
 
+/** Assets that keep their URL but change their content. */
+function isRevalidatingAsset(url) {
+  return url.pathname.startsWith("/scroll-world/");
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
@@ -85,6 +96,13 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(navigateOrOffline(request));
+    return;
+  }
+
+  // Order matters: the scene art is also an .svg, so this has to win over
+  // the immutable rule below.
+  if (isRevalidatingAsset(url)) {
+    event.respondWith(staleWhileRevalidate(request, event));
     return;
   }
 
@@ -111,6 +129,30 @@ async function cacheFirst(request) {
   } catch {
     return Response.error();
   }
+}
+
+/** Answer from cache if we have it, and refresh the entry either way. The
+ *  first load after new art ships still shows the old frame; the one after it
+ *  is current, and no CACHE_NAME bump is needed to get there. */
+async function staleWhileRevalidate(request, event) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const fetching = fetch(request)
+    .then(async (response) => {
+      if (response.ok && response.type !== "opaque") await cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => null);
+
+  if (cached) {
+    // Keep the worker alive until the refresh finishes, or it can be killed
+    // mid-flight and the cache never updates.
+    event.waitUntil(fetching);
+    return cached;
+  }
+
+  return (await fetching) || Response.error();
 }
 
 async function navigateOrOffline(request) {

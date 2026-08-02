@@ -1,30 +1,30 @@
 {
   "terang": {
-    "still": "/scroll-world/scenes/terang.svg",
-    "stillMobile": "/scroll-world/scenes/terang-m.svg"
+    "still": "/scroll-world/scenes/terang.svg?v=996ec16d",
+    "stillMobile": "/scroll-world/scenes/terang-m.svg?v=312c67f4"
   },
   "renungan": {
-    "still": "/scroll-world/scenes/renungan.svg",
-    "stillMobile": "/scroll-world/scenes/renungan-m.svg"
+    "still": "/scroll-world/scenes/renungan.svg?v=985e66de",
+    "stillMobile": "/scroll-world/scenes/renungan-m.svg?v=09d450d4"
   },
   "alkitab": {
-    "still": "/scroll-world/scenes/alkitab.svg",
-    "stillMobile": "/scroll-world/scenes/alkitab-m.svg"
+    "still": "/scroll-world/scenes/alkitab.svg?v=2c8f542a",
+    "stillMobile": "/scroll-world/scenes/alkitab-m.svg?v=e244e752"
   },
   "doa": {
-    "still": "/scroll-world/scenes/doa.svg",
-    "stillMobile": "/scroll-world/scenes/doa-m.svg"
+    "still": "/scroll-world/scenes/doa.svg?v=565cabb6",
+    "stillMobile": "/scroll-world/scenes/doa-m.svg?v=7615884a"
   },
   "pastor": {
-    "still": "/scroll-world/scenes/pastor.svg",
-    "stillMobile": "/scroll-world/scenes/pastor-m.svg"
+    "still": "/scroll-world/scenes/pastor.svg?v=2d7b80b6",
+    "stillMobile": "/scroll-world/scenes/pastor-m.svg?v=7c9bffb4"
   },
   "circle": {
-    "still": "/scroll-world/scenes/circle.svg",
-    "stillMobile": "/scroll-world/scenes/circle-m.svg"
+    "still": "/scroll-world/scenes/circle.svg?v=8b2d380c",
+    "stillMobile": "/scroll-world/scenes/circle-m.svg?v=05420e55"
   },
   "mulai": {
-    "still": "/scroll-world/scenes/mulai.svg",
-    "stillMobile": "/scroll-world/scenes/mulai-m.svg"
+    "still": "/scroll-world/scenes/mulai.svg?v=62bd3931",
+    "stillMobile": "/scroll-world/scenes/mulai-m.svg?v=0ee9ce1d"
   }
 }
