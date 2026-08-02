@@ -47,3 +47,6 @@ next-env.d.ts
 
 # local scratch scripts
 /scratch-*.js
+
+# Generated scene art before it is imported (scripts/generate-scenes.mjs)
+.scene-renders/

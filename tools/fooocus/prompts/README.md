@@ -9,6 +9,10 @@ made because generating them needed image credits nobody had.
 Fooocus replaces that step for free, locally. These prompts generate the same seven
 altitudes as rendered SDXL images.
 
+The same two files drive `scripts/generate-scenes.mjs`, which calls Google's image API
+instead — same preamble, same per-scene prompts, no GPU needed, and it attaches the drawn
+frame as a composition reference. See "Membangkitkan gambar adegan" in the root README.
+
 ## Two rules
 
 **1. `style-preamble.txt` goes in front of every scene prompt, byte-identical every time.**
