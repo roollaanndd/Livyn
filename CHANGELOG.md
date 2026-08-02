@@ -2,6 +2,18 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.8.3] - 2026-08-02
+
+### Landing page: satu penurunan dari orbit sampai pintu gereja
+
+- **Latar halaman depan diganti total.** Sebelumnya tujuh diorama isometrik yang berdiri sendiri-sendiri; sekarang satu penurunan tanpa putus: bumi dari orbit (dengan Nusantara di tengah piringannya dan lampu-lampu kota di sisi malam) → menembus atmosfer di atas lapisan awan → kota dari ketinggian → atap dan jendela yang menyala → gereja di antara gedung-gedung → mukanya dengan mawar kaca dan salib yang menyala → pintunya yang terbuka. Pintu itu pintu masuk aplikasi.
+- **Zoom-nya betulan, bukan tumpukan gambar.** Adegan 3–7 adalah satu model kota yang sama difoto kamera pinhole yang sama dari lima ketinggian (900 m → 6 m), jadi gereja yang cuma beberapa piksel di foto udara adalah gereja yang sama yang kamu berdiri di depannya di akhir. Push-in bawaan mesin scroll-world menutup jarak antar ketinggian, jadi sambungannya terbaca sebagai satu gerakan.
+- Urutan adegan sekarang punya arti: ia adalah ketinggian kamera dan tidak bisa ditukar. Warna aksen tiap bagian mengikuti cahaya di ketinggian itu — biru dingin di orbit, menghangat sepanjang turun, emas di pintu.
+- Tiap adegan tetap dirender dua kali, 16:9 dan 9:16 asli untuk ponsel, dan potret bukan hasil crop: bidang pandang horizontalnya sama sehingga gerejanya selebar itu juga di layar ponsel, hanya langit dan halamannya yang lebih banyak terlihat.
+- Prompt Fooocus di `tools/fooocus/prompts/` ikut ditulis ulang mengikuti penurunan yang sama, jadi hasil generate nanti menggantikan SVG tanpa mengubah ceritanya.
+- **`scripts/generate-scenes.mjs` baru**: membangkitkan ketujuh adegan sebagai foto lewat API gambar Google — tidak butuh GPU, tinggal `GEMINI_API_KEY`. Ia mengirim style preamble yang sama persis di depan tiap prompt **plus frame SVG-nya sebagai referensi komposisi**, supaya hasilnya tetap satu penurunan (kamera tidak pindah, gerejanya tidak berpindah blok) dan bukan tujuh kota yang berbeda. Model tidak di-hardcode — skripnya menanyakan model apa yang bisa dipakai kunci itu, lalu memilih yang paling berat. Adegan yang gagal tetap memakai SVG-nya, jadi run separuh jalan pun meninggalkan halaman yang utuh.
+- Tidak ada perubahan di `/app`, `/admin`, atau `/contributor`.
+
 ## [0.8.2] - 2026-07-30
 
 ### Tantangan bulanan akhirnya benar-benar menghitung

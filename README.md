@@ -36,7 +36,7 @@ Buka http://localhost:3000.
 
 ### Inti
 
-- `/` — landing page publik: satu dunia diorama isometrik yang dilewati sambil menggulir, dengan pintu masuk ke aplikasi (lihat "Landing page" di bawah)
+- `/` — landing page publik: satu penurunan sinematik dari orbit bumi sampai ke pintu gereja yang dilewati sambil menggulir, dengan pintu masuk ke aplikasi (lihat "Landing page" di bawah)
 - `/mulai`, `/onboarding` — splash screen animasi + onboarding carousel (Bahasa Indonesia). `/mulai` adalah pintu masuk aplikasi yang sebelumnya ada di `/`; perilakunya tidak berubah (masuk → `/app`, kunjungan pertama → `/onboarding`, selebihnya → `/masuk`)
 - `/masuk`, `/daftar`, `/lupa-sandi` — autentikasi
 - `/app` — dashboard: ayat hari ini (ayat kurasi dengan rotasi acak harian), renungan tematik, pengingat doa, khotbah terbaru, peristiwa Kristiani (dihitung otomatis termasuk Paskah dll.)
@@ -66,16 +66,36 @@ Buka http://localhost:3000.
 
 ## Landing page (`/`)
 
-Halaman depan publik dibangun dengan **scroll-world** ([github.com/oso95/scroll-world](https://github.com/oso95/scroll-world), MIT): saat pengunjung menggulir, kamera bergerak melewati tujuh adegan berurutan — terang, renungan, Alkitab, doa, AI Pastor, circle — dan berakhir di pintu masuk aplikasi.
+Halaman depan publik dibangun dengan **scroll-world** ([github.com/oso95/scroll-world](https://github.com/oso95/scroll-world), MIT): saat pengunjung menggulir, kamera **turun tanpa putus dari orbit bumi sampai ke pintu sebuah gereja** — bumi dari luar angkasa, menembus atmosfer, kota dari ketinggian, atap-atap dan jendela yang menyala, gereja di antara gedung-gedung, mukanya, lalu pintunya yang terbuka. Pintu itu sekaligus pintu masuk aplikasi.
+
+Urutan tujuh adegan itu adalah ketinggian kamera, jadi tidak bisa ditukar: `terang` (orbit) → `renungan` (atmosfer) → `alkitab` (kota dari atas) → `doa` (kota dari rendah) → `pastor` (jalan menuju gereja) → `circle` (halaman gereja) → `mulai` (pintunya). Teks tiap adegan tetap bicara soal fiturnya.
 
 - `src/lib/scroll-world/scrub-engine.js` — mesin scroll-scrub dari skill itu, di-vendor apa adanya. Modifikasi lokal hanya dua (didokumentasikan di header file): `mountScrollWorld` mengembalikan `destroy()` dan ada ESM export, keduanya supaya navigasi client-side Next.js tidak meninggalkan rAF loop dan CSS global yang menempel.
 - `src/lib/scroll-world/livyn-world.ts` — isi dunia: adegan, teks, dan tujuan tombol masuk. Tombol menyesuaikan pengunjung: yang belum masuk diarahkan ke `/mulai` (splash → onboarding/login), yang sudah masuk langsung ke `/app`, plus pintasan ke `/admin` atau `/contributor` sesuai peran.
-- `scripts/build-scenes.mjs` → `public/scroll-world/scenes/*.svg` — gambar adegannya. Jalankan `node scripts/build-scenes.mjs` setelah mengubah skrip; hasilnya ikut di-commit. Tiap adegan dirender dua kali: 16:9 untuk desktop dan **9:16 asli** untuk ponsel (`*-m.svg`, dipakai otomatis lewat `stillMobile`) — bukan hasil crop, karena crop 16:9 di layar ponsel cuma menampilkan sepertiga diorama.
+- `scripts/build-scenes.mjs` → `public/scroll-world/scenes/*.svg` — gambar adegannya. Jalankan `node scripts/build-scenes.mjs` setelah mengubah skrip; hasilnya ikut di-commit. Adegan 3–7 bukan tujuh gambar terpisah: satu model kota yang sama difoto kamera pinhole yang sama dari lima ketinggian, jadi gereja yang cuma beberapa piksel di foto udara adalah gereja yang sama yang kamu berdiri di depannya di akhir. Adegan 1–2 (bumi dan atmosfer) digambar terpisah, memakai palet dan arah cahaya yang sama. Tiap adegan dirender dua kali: 16:9 untuk desktop dan **9:16 asli** untuk ponsel (`*-m.svg`, dipakai otomatis lewat `stillMobile`) — bukan hasil crop, karena crop 16:9 di layar ponsel cuma menampilkan sebagian kecil framenya.
 - `src/lib/scroll-world/scene-manifest.json` — menentukan berkas mana yang dipakai tiap adegan. Defaultnya SVG di atas.
 
-### Mengganti gambar adegan dengan hasil Fooocus
+### Membangkitkan gambar adegan (versi fotografis)
 
-SVG itu **placeholder** — dibuat dengan kode karena membangkitkan gambar butuh kredit yang waktu itu tidak ada. [Fooocus](https://github.com/lllyasviel/Fooocus) menggantikan langkah itu secara lokal dan gratis; kitnya ada di `tools/fooocus/`.
+Ada dua jalur, keduanya menghasilkan berkas yang sama dan diimpor dengan skrip yang sama.
+
+**1. Lewat API Google (tidak butuh GPU) — `scripts/generate-scenes.mjs`**
+
+```bash
+export GEMINI_API_KEY=...          # gratis di https://aistudio.google.com/apikey
+node scripts/generate-scenes.mjs                      # 7 adegan x 2 potongan
+node scripts/generate-scenes.mjs --only mulai         # satu adegan saja
+node scripts/generate-scenes.mjs --dry-run            # lihat promptnya, tanpa memanggil apa pun
+node scripts/adopt-scenes.mjs .scene-renders/<tanggal>
+```
+
+Skrip ini mengirim isi `tools/fooocus/prompts/` — style preamble yang sama persis di depan tiap prompt — **plus frame SVG-nya sendiri sebagai referensi komposisi**. Referensi itu intinya: penurunan ini hanya jalan kalau tiap frame lebih rendah dari sebelumnya, dan menyerahkan geometri yang sudah dihitung ke model itulah yang menjaga gerejanya tetap di tempat yang sama, bukan kota baru tiap adegan. Pakai `--no-reference` untuk teks saja.
+
+Model tidak di-hardcode: skrip menanyakan model gambar apa yang bisa dipakai kunci itu (`--list-models`) dan memilih yang paling berat. Adegan yang gagal tetap memakai SVG-nya, jadi run separuh jalan pun meninggalkan halaman yang utuh.
+
+**2. Lewat Fooocus (butuh GPU, gratis, offline)**
+
+SVG itu **placeholder** — dibuat dengan kode karena membangkitkan gambar butuh kredit atau GPU. [Fooocus](https://github.com/lllyasviel/Fooocus) menjalankan langkah itu secara lokal dan gratis di mesin ber-GPU; kitnya ada di `tools/fooocus/`. Prompt-nya sama dengan yang dipakai jalur pertama.
 
 1. Bangkitkan tiap adegan memakai prompt di `tools/fooocus/prompts/` — **satu style preamble yang sama persis** di depan setiap prompt, karena pengulangan itulah yang membuat tujuh gambar terpisah terbaca sebagai satu dunia. Setelan lengkap ada di `tools/fooocus/prompts/README.md`.
 2. Render dua kali: 1344×768 (desktop) dan 768×1344 (ponsel), namanya `<adegan>.png` dan `<adegan>-m.png`.

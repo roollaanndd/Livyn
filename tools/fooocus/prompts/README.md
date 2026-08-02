@@ -1,17 +1,29 @@
 # Scene prompts for the landing page
 
-The landing page at `/` flies a camera through seven scenes. Its art currently comes from
-`scripts/build-scenes.mjs`, which draws isometric dioramas in code — deliberate
-placeholders, made because generating them needed image credits nobody had.
+The landing page at `/` is one continuous descent: the camera starts in orbit above the
+earth, falls through the atmosphere, finds a city, picks one church out of it, and ends on
+that church's open door — which is the door into the app. Its art currently comes from
+`scripts/build-scenes.mjs`, which renders that descent in code — deliberate placeholders,
+made because generating them needed image credits nobody had.
 
 Fooocus replaces that step for free, locally. These prompts generate the same seven
-scenes as rendered SDXL images.
+altitudes as rendered SDXL images.
 
-## The one rule
+The same two files drive `scripts/generate-scenes.mjs`, which calls Google's image API
+instead — same preamble, same per-scene prompts, no GPU needed, and it attaches the drawn
+frame as a composition reference. See "Membangkitkan gambar adegan" in the root README.
 
-**`style-preamble.txt` goes in front of every scene prompt, byte-identical every time.**
+## Two rules
+
+**1. `style-preamble.txt` goes in front of every scene prompt, byte-identical every time.**
 That repetition is the entire reason seven separately-generated images read as one world.
 Change it if you like — but change it for all seven and regenerate all seven, never one.
+
+**2. The order is the camera's altitude, so it cannot be shuffled.** `terang` is orbit and
+`mulai` is the doorway; each scene has to look like it was shot lower than the one before
+it. Generate them in order and judge each one against the one above it — if scene 4 could
+plausibly have been taken from higher up than scene 3, regenerate it, because the whole
+page is that fall.
 
 The final prompt for a scene is:
 
@@ -25,7 +37,7 @@ The final prompt for a scene is:
 |---|---|
 | Performance | **Quality** |
 | Aspect ratio | **1344 × 768** for desktop, **768 × 1344** for the mobile cut |
-| Styles | `Fooocus V2`, `SAI 3D Model`, `Fooocus Sharp` |
+| Styles | `Fooocus V2`, `Fooocus Cinematic`, `SAI Photographic` |
 | Negative prompt | see below |
 | Seed | fix one seed and reuse it across all seven — it tightens cohesion further |
 
@@ -33,7 +45,7 @@ Negative prompt:
 
 ```
 text, letters, words, numbers, watermark, signature, logo, ui, interface, human face,
-photorealistic person, crowd, clutter, harsh shadow, blue colour cast, blurry, lens flare
+close-up portrait, clutter, daylight, midday sun, cartoon, flat vector, blurry, lens flare
 ```
 
 ## Generating
@@ -60,9 +72,9 @@ you can do this one scene at a time and see each one land.
 
 ## Judging the results
 
-Look at the seven together, not one at a time — the test is whether they read as one
-world, at one scale, under one light. If a scene drifts, regenerate that scene rather than
-adjusting the preamble.
+Look at the seven together, in order, not one at a time — the test is whether they read as
+one fall: one world, one light, each frame lower than the last. If a scene drifts,
+regenerate that scene rather than adjusting the preamble.
 
 Keep the subject centred and the frame edges quiet. The page crops those edges differently
 on every viewport, so nothing that matters should live near them.
