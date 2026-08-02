@@ -126,14 +126,27 @@ const rect = (x, y, w, h, fill, extra = "") =>
 const circle = (x, y, r, fill, extra = "") =>
   `<circle cx="${nf(x)}" cy="${nf(y)}" r="${nf(r)}" fill="${fill}"${extra}/>`;
 
-/** Filters every scene uses. */
+// Every soft edge in these scenes is a gradient, never a filter.
+//
+// That is a performance decision, not a stylistic one. An `feGaussianBlur`
+// makes the renderer allocate an offscreen buffer and convolve it when the
+// image is rasterised, and a city scene has hundreds of glowing things in it.
+// Measured on a 6x-throttled phone, the filtered version of these files spent
+// 8.2s in one task and scrolled at 19fps. A radial gradient with a transparent
+// outer stop looks the same at these radii and costs an ordinary fill.
+const halo = (id, color) =>
+  `<radialGradient id="${id}">` +
+  `<stop offset="0" stop-color="${color}" stop-opacity="0.62"/>` +
+  `<stop offset="0.3" stop-color="${color}" stop-opacity="0.3"/>` +
+  `<stop offset="0.65" stop-color="${color}" stop-opacity="0.09"/>` +
+  `<stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient>`;
+
+/** Which halo gradient a colour maps to. */
+const HALO = (color) =>
+  color === C.gold ? "hGold" : color === C.glow ? "hGlow" : color === C.cloud ? "hCloud" : color === C.air ? "hAir" : "hWarm";
+
 const COMMON_DEFS = () =>
-  [
-    `<filter id="soft" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="${nf(px(12))}"/></filter>`,
-    `<filter id="bloom" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="${nf(px(34))}"/></filter>`,
-    `<filter id="haze" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${nf(px(70))}"/></filter>`,
-    `<filter id="wisp" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${nf(px(24))}"/></filter>`,
-  ].join("");
+  [halo("hWarm", C.warm), halo("hGlow", C.glow), halo("hGold", C.gold), halo("hAir", C.air), halo("hCloud", C.cloud)].join("");
 
 /** A warm point light: the halo plus the thing emitting it. A near lamp is
  *  still a lamp, not a floodlight, so the halo is capped rather than scaled all
@@ -141,9 +154,8 @@ const COMMON_DEFS = () =>
 function lamp(x, y, r0, color = C.glow, strength = 1) {
   const r = Math.min(r0, px(5));
   return (
-    circle(x, y, r * 3.4, color, ` opacity="${nf(0.1 * strength)}" filter="url(#bloom)"`) +
-    circle(x, y, r * 1.5, color, ` opacity="${nf(0.3 * strength)}" filter="url(#soft)"`) +
-    circle(x, y, r * 0.38, lighten(color, 0.45), ` opacity="${nf(0.95 * strength)}"`)
+    circle(x, y, r * 4.2, `url(#${HALO(color)})`, ` opacity="${nf(0.55 * strength)}"`) +
+    circle(x, y, r * 0.42, lighten(color, 0.45), ` opacity="${nf(0.95 * strength)}"`)
   );
 }
 
@@ -287,8 +299,8 @@ function sceneOrbit() {
     const ry = rx * (0.2 + r() * 0.3);
     const rot = (r() - 0.5) * 50 + v.x * 34;
     clouds +=
-      `<ellipse cx="${nf(v.sx)}" cy="${nf(v.sy)}" rx="${nf(rx)}" ry="${nf(ry)}" fill="${C.cloud}" ` +
-      `opacity="${nf(0.1 + r() * 0.22)}" transform="rotate(${nf(rot)} ${nf(v.sx)} ${nf(v.sy)})" filter="url(#wisp)"/>`;
+      `<ellipse cx="${nf(v.sx)}" cy="${nf(v.sy)}" rx="${nf(rx)}" ry="${nf(ry)}" fill="url(#hCloud)" ` +
+      `opacity="${nf(0.16 + r() * 0.3)}" transform="rotate(${nf(rot)} ${nf(v.sx)} ${nf(v.sy)})"/>`;
   }
 
   // City lights, only where the sun isn't.
@@ -301,7 +313,7 @@ function sceneOrbit() {
     if (night <= 0.02) continue;
     const rad = px(2 + weight * 4) * (0.45 + v.z * 0.7);
     lights +=
-      circle(v.sx, v.sy, rad * 3.4, C.warm, ` opacity="${nf(0.18 * night * weight)}" filter="url(#soft)"`) +
+      circle(v.sx, v.sy, rad * 3.6, "url(#hWarm)", ` opacity="${nf(0.45 * night * weight)}"`) +
       circle(v.sx, v.sy, rad, C.glow, ` opacity="${nf(0.8 * night)}"`);
     // A scatter of smaller towns around each one.
     for (let k = 0; k < 5; k++) {
@@ -324,14 +336,21 @@ function sceneOrbit() {
     `<stop offset="1" stop-color="#000306" stop-opacity="0.95"/></radialGradient>` +
     `<radialGradient id="space" cx="0.5" cy="0.42" r="0.85">` +
     `<stop offset="0" stop-color="${C.spaceLift}"/><stop offset="1" stop-color="${C.space}"/></radialGradient>` +
+    // The atmosphere: a ring that lives in the gradient's stops rather than in
+    // a blur pass. The globe's edge sits at 0.833 of this circle's radius.
+    `<radialGradient id="atmo">` +
+    `<stop offset="0.79" stop-color="${C.air}" stop-opacity="0"/>` +
+    `<stop offset="0.833" stop-color="${C.air}" stop-opacity="0.5"/>` +
+    `<stop offset="0.87" stop-color="${C.air}" stop-opacity="0.22"/>` +
+    `<stop offset="1" stop-color="${C.air}" stop-opacity="0"/></radialGradient>` +
     `<clipPath id="globe"><circle cx="${nf(cx)}" cy="${nf(cy)}" r="${nf(R)}"/></clipPath>`;
 
   const body =
     rect(0, 0, F.W, F.H, "url(#space)") +
     stars(7, 300, F.H) +
     // Atmosphere: a cold halo outside the limb, warm where the sun grazes it.
-    circle(cx, cy, R * 1.05, C.air, ` opacity="0.32" filter="url(#bloom)"`) +
-    circle(cx + R * SUN.x * 0.75, cy - R * SUN.y * 0.75, R * 0.85, C.gold, ` opacity="0.12" filter="url(#haze)"`) +
+    circle(cx, cy, R * 1.2, "url(#atmo)") +
+    circle(cx + R * SUN.x * 0.75, cy - R * SUN.y * 0.75, R * 0.85, "url(#hGold)", ` opacity="0.3"`) +
     `<g clip-path="url(#globe)">` +
     circle(cx, cy, R, "url(#ocean)") +
     LAND.map((ring) => `<path d="${landPath(sph, ring)}" fill="${C.land}" opacity="0.95"/>`).join("") +
@@ -347,8 +366,7 @@ function sceneOrbit() {
     lights +
     `</g>` +
     // Rim light on the lit limb, and the thin bright line of the atmosphere.
-    `<circle cx="${nf(cx)}" cy="${nf(cy)}" r="${nf(R * 1.004)}" fill="none" stroke="${C.air}" stroke-opacity="0.55" stroke-width="${nf(px(3))}" filter="url(#soft)"/>` +
-    `<circle cx="${nf(cx)}" cy="${nf(cy)}" r="${nf(R * 1.02)}" fill="none" stroke="${C.glow}" stroke-opacity="0.12" stroke-width="${nf(px(10))}" filter="url(#bloom)"/>`;
+    `<circle cx="${nf(cx)}" cy="${nf(cy)}" r="${nf(R * 1.002)}" fill="none" stroke="${C.air}" stroke-opacity="0.4" stroke-width="${nf(px(2.5))}"/>`;
 
   return { defs, body };
 }
@@ -397,7 +415,7 @@ function sceneAtmosphere() {
       const s = px(1 + is.depth * 3) * (0.6 + r());
       lights += circle(x, y, s, r() > 0.75 ? C.gold : C.glow, ` opacity="${nf((0.3 + r() * 0.6) * (0.35 + is.depth))}"`);
     }
-    lights += circle(is.ix, is.iy, is.w * 0.3, C.warm, ` opacity="${nf(0.06 + is.depth * 0.12)}" filter="url(#bloom)"`);
+    lights += circle(is.ix, is.iy, is.w * 0.3, "url(#hWarm)", ` opacity="${nf(0.16 + is.depth * 0.26)}"`);
   }
 
   // The cloud deck: long bands, flattened by the grazing angle. Thin — from
@@ -410,7 +428,7 @@ function sceneAtmosphere() {
     const x = r() * F.W;
     const rx = px(120 + r() * 380) * (0.35 + depth);
     const ry = rx * (0.03 + depth * 0.11);
-    clouds += `<ellipse cx="${nf(x)}" cy="${nf(y)}" rx="${nf(rx)}" ry="${nf(ry)}" fill="${C.cloud}" opacity="${nf(0.03 + r() * 0.07)}" filter="url(#wisp)"/>`;
+    clouds += `<ellipse cx="${nf(x)}" cy="${nf(y)}" rx="${nf(rx)}" ry="${nf(ry)}" fill="url(#hCloud)" opacity="${nf(0.06 + r() * 0.12)}"/>`;
   }
 
   const defs =
@@ -422,22 +440,31 @@ function sceneAtmosphere() {
     `<stop offset="0" stop-color="${mix(C.ocean, C.air, 0.16)}"/>` +
     `<stop offset="0.18" stop-color="${darken(C.ocean, 0.25)}"/>` +
     `<stop offset="1" stop-color="${C.oceanDeep}"/></linearGradient>` +
+    // Airglow hugging the limb: the band is in the stops, so the curve comes
+    // for free and no blur pass runs.
+    `<radialGradient id="airband">` +
+    `<stop offset="0.962" stop-color="${C.air}" stop-opacity="0"/>` +
+    `<stop offset="0.985" stop-color="${C.air}" stop-opacity="0.16"/>` +
+    `<stop offset="0.997" stop-color="${C.air}" stop-opacity="0.5"/>` +
+    `<stop offset="1" stop-color="${C.air}" stop-opacity="0.1"/></radialGradient>` +
+    `<linearGradient id="deck" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0" stop-color="${C.cloud}" stop-opacity="0"/>` +
+    `<stop offset="1" stop-color="${C.cloud}" stop-opacity="0.1"/></linearGradient>` +
     `<clipPath id="below"><rect x="0" y="${nf(arcTop)}" width="${nf(F.W)}" height="${nf(F.H - arcTop)}"/></clipPath>`;
 
   const body =
     rect(0, 0, F.W, arcTop + px(6), "url(#sky2)") +
     stars(19, 170, arcTop, 0.85) +
     // The atmosphere seen edge-on: a bright band hugging the limb.
-    `<circle cx="${nf(cx)}" cy="${nf(cy)}" r="${nf(RH + px(24))}" fill="none" stroke="${C.air}" stroke-opacity="0.6" stroke-width="${nf(px(24))}" filter="url(#soft)"/>` +
-    `<circle cx="${nf(cx)}" cy="${nf(cy)}" r="${nf(RH + px(78))}" fill="none" stroke="${C.air}" stroke-opacity="0.1" stroke-width="${nf(px(70))}" filter="url(#haze)"/>` +
-    circle(F.W * 0.82, arcTop - px(50), F.W * 0.3, C.gold, ` opacity="0.16" filter="url(#haze)"`) +
+    circle(cx, cy, RH + px(60), "url(#airband)") +
+    circle(F.W * 0.82, arcTop - px(50), F.W * 0.42, "url(#hGold)", ` opacity="0.34"`) +
     `<g clip-path="url(#below)">` +
     circle(cx, cy, RH, "url(#sea2)") +
     land +
     lights +
     clouds +
     // Foreground haze, so the bottom of the frame falls away into cloud.
-    rect(0, F.H * 0.78, F.W, F.H * 0.22, C.cloud, ` opacity="0.035" filter="url(#haze)"`) +
+    rect(0, F.H * 0.7, F.W, F.H * 0.3, "url(#deck)") +
     `</g>`;
 
   return { defs, body };
@@ -783,8 +810,7 @@ function church(cam, glows, detail) {
     quad(
       cam,
       V(-7, tower.y - 0.4, 0.12), V(7, tower.y - 0.4, 0.12), V(15, -54, 0.12), V(-15, -54, 0.12),
-      C.warm,
-      ` opacity="0.16" filter="url(#soft)"`
+      "url(#spill)"
     )
   );
 
@@ -810,6 +836,11 @@ function church(cam, glows, detail) {
  * makes the five frames one continuous fall.
  */
 function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, people = 0, detail = false, accent }) {
+  // The portrait cut is what phones load, and phones are where the frame rate
+  // is won or lost, so it gets a smaller element budget: fewer lit windows,
+  // fewer lamps, fewer stars, and a coarser cut-off for buildings too far away
+  // to read anyway.
+  const lean = Boolean(F.suffix);
   const cam = makeCam({ eye, target, hfov });
   const rand = rng(6032);
   const glows = [];
@@ -849,8 +880,9 @@ function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, peo
   // --- street lamps ---------------------------------------------------------
   let lamps = "";
   let lampCount = 0;
-  for (let gx = -9; gx <= 9 && lampCount < 300; gx++) {
-    for (let t = -5; t <= 17 && lampCount < 300; t++) {
+  const lampCap = lean ? 130 : 300;
+  for (let gx = -9; gx <= 9 && lampCount < lampCap; gx++) {
+    for (let t = -5; t <= 17 && lampCount < lampCap; t++) {
       const p = cam.project(V(gx * BLOCK - INNER - 17, t * BLOCK + (t % 2 ? 46 : -46), 7));
       if (p.z <= 8 || p.x < -F.W * 0.1 || p.x > F.W * 1.1 || p.y < 0 || p.y > F.H * 1.1) continue;
       lamps += lamp(p.x, p.y, Math.max(px(1.1), cam.scale(1.5, p.z)), C.warm, clamp(0.3 + 700 / p.z, 0.3, 1));
@@ -868,13 +900,13 @@ function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, peo
     const c = cam.project(V(b.x + b.w / 2, b.y + b.d / 2, b.h / 2));
     if (c.z <= 40) continue;                                   // beside us, or behind
     const on = cam.scale(Math.max(b.w, b.h), c.z);
-    if (on < px(2)) continue;                                  // too far to matter
+    if (on < px(lean ? 3.5 : 2)) continue;                     // too far to matter
     if (c.x < -F.W * 0.3 || c.x > F.W * 1.3 || c.y > F.H * 1.35) continue;
     visible.push({ b, depth: c.z, on });
   }
   visible.sort((a, b) => a.depth - b.depth);
 
-  const budget = { left: 1200 };
+  const budget = { left: lean ? 700 : 1200 };
   const items = [];
   for (const { b, depth, on } of visible) {
     const brand = rng(b.seed);
@@ -916,6 +948,18 @@ function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, peo
     `<stop offset="0" stop-color="${C.space}"/>` +
     `<stop offset="0.5" stop-color="${C.night}"/>` +
     `<stop offset="1" stop-color="${mix(C.night, accent, 0.34)}"/></linearGradient>` +
+    // Light falling out of the door and down the steps, faded by distance in
+    // the gradient rather than by a blur.
+    `<linearGradient id="spill" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0" stop-color="${C.warm}" stop-opacity="0.3"/>` +
+    `<stop offset="1" stop-color="${C.warm}" stop-opacity="0"/></linearGradient>` +
+    `<radialGradient id="cityglow">` +
+    `<stop offset="0" stop-color="${accent}" stop-opacity="0.45"/>` +
+    `<stop offset="0.55" stop-color="${accent}" stop-opacity="0.16"/>` +
+    `<stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="airfade" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0" stop-color="${mix(C.night, accent, 0.35)}" stop-opacity="0"/>` +
+    `<stop offset="1" stop-color="${mix(C.night, accent, 0.35)}" stop-opacity="0.22"/></linearGradient>` +
     `<radialGradient id="doorlight" cx="0.5" cy="0.9" r="0.95">` +
     `<stop offset="0" stop-color="${lighten(C.glow, 0.35)}"/>` +
     `<stop offset="0.5" stop-color="${C.warm}"/>` +
@@ -923,10 +967,10 @@ function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, peo
 
   const sky =
     rect(0, 0, F.W, F.H, "url(#sky)") +
-    (skyBottom > 4 ? stars(31, Math.round(220 * starOp) + 30, skyBottom, starOp) : "") +
+    (skyBottom > 4 ? stars(31, Math.round((lean ? 120 : 220) * starOp) + 30, skyBottom, starOp) : "") +
     // The city's own light, bounced back off the air above the horizon.
     (horizon > -F.H * 0.25 && horizon < F.H * 1.15
-      ? `<ellipse cx="${nf(F.W * 0.5)}" cy="${nf(horizon)}" rx="${nf(F.W * 0.9)}" ry="${nf(F.H * 0.24 * groundHaze + px(30))}" fill="${accent}" opacity="${nf(0.24 * groundHaze)}" filter="url(#haze)"/>`
+      ? `<ellipse cx="${nf(F.W * 0.5)}" cy="${nf(horizon)}" rx="${nf(F.W * 1.1)}" ry="${nf(F.H * 0.3 * groundHaze + px(40))}" fill="url(#cityglow)" opacity="${nf(0.85 * groundHaze)}"/>`
       : "");
 
   // Bloom, with a ceiling on both radius and strength. Close to the church a
@@ -935,7 +979,7 @@ function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, peo
     .map((g) => {
       const r = Math.min(g.r, px(190));
       const op = g.op * clamp(px(190) / Math.max(g.r, 1), 0.45, 1);
-      return circle(g.x, g.y, r, g.color, ` opacity="${nf(op)}" filter="url(#bloom)"`);
+      return circle(g.x, g.y, r * 1.35, `url(#${HALO(g.color)})`, ` opacity="${nf(Math.min(1, op * 1.5))}"`);
     })
     .join("");
 
@@ -949,9 +993,7 @@ function cityScene({ eye, target, hfov = 56, starOp = 0.5, groundHaze = 0.5, peo
     lamps +
     bloom +
     // A last breath of air between the camera and the city.
-    (groundHaze > 0.2
-      ? rect(0, F.H * 0.6, F.W, F.H * 0.4, mix(C.night, accent, 0.35), ` opacity="${nf(0.12 * groundHaze)}" filter="url(#haze)"`)
-      : "");
+    (groundHaze > 0.2 ? rect(0, F.H * 0.6, F.W, F.H * 0.4, "url(#airfade)", ` opacity="${nf(groundHaze)}"`) : "");
 
   return { defs, body };
 }

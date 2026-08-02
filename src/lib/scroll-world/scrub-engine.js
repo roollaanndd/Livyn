@@ -12,6 +12,12 @@
         navigations, so without this the loop and the global `html,body`
         rules outlive the landing page.
      2. ESM export at the end, next to the CommonJS/global ones.
+     3. Posters are attached when a scene comes within range instead of all at
+        once at mount (`ensurePoster`), scenes that are fully transparent are
+        `visibility: hidden`, and the rAF scrub loop only runs once a clip has
+        actually loaded. This page's posters are detailed stills, and decoding
+        seven of them in one task cost a low-end phone 1.8s of frozen main
+        thread and half its frame rate; the flight itself is unchanged.
 
    Everything else is upstream, verbatim.
    ----------------------------------------------------------------------------
@@ -153,8 +159,10 @@ function mountScrollWorld(container, config) {
   SEGMENTS.forEach(s => {
     const scene = el('div', 'sw-scene'); scene.style.setProperty('--sw-accent', s.accent || '');
     const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
-    const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
-    if (poster) img.src = poster;
+    // Local modification 3: the URL is remembered, not assigned. read() calls
+    // ensurePoster() for the scenes near the camera, so the decode cost is
+    // paid a scene at a time as you fall rather than all at once on load.
+    s.poster = (isMobile() && s.stillM) ? s.stillM : s.still;
     scene.appendChild(img); stage.appendChild(scene);
     s.el = scene; s.img = img; s.video = null; s.hasClip = false;
     s.loading = false; s.ready = false; s.cur = 0; s.target = 0; s.visible = false;
@@ -209,6 +217,12 @@ function mountScrollWorld(container, config) {
     window.scrollTo({ top: seg.start + (seg.end - seg.start) * 0.5, behavior: reduce ? 'auto' : 'smooth' });
   }
 
+  /** Local modification 3: attach a scene's still the first time it matters. */
+  function ensurePoster(s) {
+    if (!s.poster || s.img.src) return;
+    s.img.src = s.poster;
+  }
+
   function loadClip(s) {
     // Under prefers-reduced-motion we never load the clips at all — the stills stay up
     // and simply cross-dissolve as you scroll. No scrubbed video motion, no decode cost.
@@ -229,7 +243,7 @@ function mountScrollWorld(container, config) {
         // hiding the still on metadata alone would flash an empty scene.
         v.addEventListener('seeked', () => { s.el.classList.add('has-clip'); }, { once: true });
         v.addEventListener('loadeddata', () => { try { v.pause(); } catch (e) {} if (userReady) primeVideo(v); });
-        s.el.appendChild(v); s.video = v; s.hasClip = true;
+        s.el.appendChild(v); s.video = v; s.hasClip = true; startRaf();
       }).catch(() => { s.loading = false; });
   }
 
@@ -241,13 +255,17 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
+      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) { ensurePoster(s); loadClip(s); }
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = s.linger ? lingerEase(local, s.linger) : local;
       let outside = 0;
       if (y < s.start) outside = s.start - y; else if (y > s.end) outside = y - s.end;
       const op = smooth(1 - outside / fade);
       s.el.style.opacity = op; s.visible = op > 0.001;
+      // Local modification 3: a fully faded scene is taken out of the
+      // compositor entirely rather than left as a transparent full-screen
+      // layer — seven of those is real memory on a cheap phone.
+      if (s.visible !== s.shown) { s.shown = s.visible; s.el.style.visibility = s.visible ? '' : 'hidden'; }
       s.el.style.zIndex = (i === ci) ? '120' : String(100 + Math.round(op * 10));
       if (!s.hasClip || !s.ready) {
         const sc = reduce ? 1 : 1.03 + local * 0.14;
@@ -285,6 +303,10 @@ function mountScrollWorld(container, config) {
   }
 
   let rafId = 0;
+  // Local modification 3: with no clips configured the loop has nothing to
+  // scrub, so it is started by loadClip rather than at mount. A per-frame
+  // wake-up that always no-ops still costs a low-end phone battery and jank.
+  function startRaf() { if (!rafId) rafId = requestAnimationFrame(raf); }
   function raf() {
     const eps = isMobile() ? 0.02 : 0.008;   // coarser seek step on phones = fewer decodes
     for (let i = 0; i < NSEG; i++) {
@@ -300,7 +322,7 @@ function mountScrollWorld(container, config) {
       const t = clamp(s.cur, 0, 0.999) * dur;
       if (Math.abs(s.video.currentTime - t) > eps) { try { s.video.currentTime = t; } catch (e) {} }
     }
-    rafId = requestAnimationFrame(raf);
+    if (SEGMENTS.some(s => s.clip || s.clipM)) startRaf();
   }
 
   // iOS needs a user gesture before a muted video will decode/paint reliably. On the

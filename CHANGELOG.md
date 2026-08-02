@@ -2,6 +2,26 @@
 
 Semua perubahan penting pada proyek Livyn didokumentasikan di sini.
 
+## [0.8.5] - 2026-08-02
+
+### Halaman depan lancar di HP kentang
+
+Diukur di emulasi ponsel dengan CPU di-throttle 6x, build produksi, scroll penuh dari orbit sampai pintu:
+
+| | sebelum | sesudah |
+|---|---|---|
+| FPS saat menggulir | 19,7 | **50,4** |
+| Frame terburuk | 650 ms | **133 ms** |
+| Long task terburuk | 8,2 s | **1,07 s** |
+| Total long task | 19,4 s | **3,3 s** |
+| Waktu muat | 3,4 s | **1,0 s** |
+
+- **Biang keroknya: `feGaussianBlur`.** Tiap halo lampu, bloom, dan kabut di adegan dibuat dengan filter blur SVG — satu adegan kota berisi **432** di antaranya. Tiap filter memaksa renderer mengalokasikan buffer terpisah dan mengonvolusinya saat gambar diraster; di HP lemah itu berarti main thread beku 8 detik. Semua diganti **gradien radial dengan stop luar transparan**: tampilannya sama pada radius segitu, biayanya cuma satu fill biasa. Sekarang nol filter di seluruh adegan.
+- **Poster dipasang saat dibutuhkan, bukan semuanya sekaligus.** Mesin scroll-world dulu memberi `src` ke ketujuh gambar saat mount, jadi ponsel men-decode tujuh still detail dalam satu tugas. Kini `src` menyusul begitu adegannya mendekat (jendela 1,6 layar, sama seperti pemuatan klip), jadi ongkosnya dicicil sambil turun. Diuji dengan lompatan scroll cepat: tidak ada adegan yang kosong.
+- **Adegan yang sudah lewat disembunyikan** (`visibility: hidden`, bukan cuma `opacity: 0`), jadi kompositor tidak lagi menahan tujuh lapisan selayar penuh di memori.
+- **Loop rAF hanya jalan kalau ada klip video.** Selama belum ada klip, loop itu bangun tiap frame hanya untuk tidak melakukan apa-apa — di ponsel murah itu jank dan baterai.
+- **Potongan potret (yang dipakai ponsel) dapat anggaran lebih kecil**: 700 jendela menyala (dari 1200), 130 lampu jalan (dari 300), bintang lebih sedikit, dan gedung di bawah 3,5 px dilewati. Berkasnya ikut turun ~15%.
+
 ## [0.8.4] - 2026-08-02
 
 ### Latar baru sudah ter-deploy tapi tidak kelihatan
