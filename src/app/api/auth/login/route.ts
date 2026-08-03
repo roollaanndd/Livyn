@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
   const userAgent = req.headers.get("user-agent") ?? undefined;
 
-  const ipLimit = rateLimit(`login-ip:${ip}`, 10, 10 * 60 * 1000);
+  const ipLimit = await rateLimit(`login-ip:${ip}`, 10, 10 * 60 * 1000);
   if (!ipLimit.ok) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
   const { email, password } = parsed.data;
 
-  const emailLimit = rateLimit(`login-email:${email}`, 8, 10 * 60 * 1000);
+  const emailLimit = await rateLimit(`login-email:${email}`, 8, 10 * 60 * 1000);
   if (!emailLimit.ok) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }

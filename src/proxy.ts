@@ -36,29 +36,87 @@ const PROTECTED_PREFIXES: Array<{ prefix: string; minRole: string }> = [
   { prefix: "/admin", minRole: "moderator" },
 ];
 
-export default async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const match = PROTECTED_PREFIXES.find((p) => pathname.startsWith(p.prefix));
+const isProd = process.env.NODE_ENV === "production";
 
-  const res = NextResponse.next();
+/**
+ * Generates a fresh per-request nonce so the CSP can allow specific inline
+ * scripts (Next.js hydration bootstrap, framework runtime injections) without
+ * blanket 'unsafe-inline'. Next.js reads the nonce from the `x-nonce`
+ * request header and applies it to script tags it emits — see
+ * https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
+ */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes));
+}
 
-  // Security headers on every response.
+function buildCsp(nonce: string): string {
+  // Script sources:
+  //   - 'self' for our own hashed bundles.
+  //   - Nonce for Next.js's inline hydration script.
+  //   - 'strict-dynamic' delegates trust to scripts loaded by those trusted
+  //     ones, so we don't have to enumerate every future dynamic import.
+  //   - 'unsafe-eval' only in dev (React DevTools / Turbopack HMR).
+  //   - Sentry's browser CDN if a DSN is configured, because @sentry/nextjs
+  //     lazy-loads its worker from js.sentry-cdn.com.
+  const scriptSrc = isProd
+    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.sentry-cdn.com`
+    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.sentry-cdn.com`;
+
+  // Styles must stay 'unsafe-inline' — Tailwind emits inline style attributes,
+  // and moving to hashes/nonces for styles breaks framer-motion animations
+  // that mutate style at runtime.
+  const styleSrc = "style-src 'self' 'unsafe-inline'";
+
+  // connect-src: our own origin plus Sentry ingest (varies by DSN, allow
+  // wildcard subdomain), the Google Fonts endpoint if next/font caches miss,
+  // and the browser push endpoints (self-triggered fetches use 'self').
+  const connectSrc = "connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io";
+
+  return [
+    `default-src 'self'`,
+    `img-src 'self' data: https:`,
+    `media-src 'self' https:`,
+    scriptSrc,
+    styleSrc,
+    connectSrc,
+    `font-src 'self' data:`,
+    `frame-ancestors 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `object-src 'none'`,
+  ].join("; ") + ";";
+}
+
+function applySecurityHeaders(res: NextResponse, nonce: string): NextResponse {
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  if (process.env.NODE_ENV === "production") {
+  if (isProd) {
     res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
   }
-  // 'unsafe-eval' is only needed for React/Turbopack's dev-mode debugging
-  // (stack trace reconstruction, HMR) and is dropped in production builds.
-  const scriptSrc = process.env.NODE_ENV === "production" ? "script-src 'self' 'unsafe-inline';" : "script-src 'self' 'unsafe-inline' 'unsafe-eval';";
-  res.headers.set(
-    "Content-Security-Policy",
-    `default-src 'self'; img-src 'self' data: https:; media-src 'self' https:; ${scriptSrc} style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none';`,
-  );
+  res.headers.set("Content-Security-Policy", buildCsp(nonce));
+  return res;
+}
 
-  if (!match) return res;
+function nextWithNonce(req: NextRequest, nonce: string): NextResponse {
+  // Pass the nonce forward to the app so Next.js can stamp it onto its
+  // inline hydration script. The framework picks it up from `x-nonce`
+  // on the request headers we forward downstream.
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  return applySecurityHeaders(res, nonce);
+}
+
+export default async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const match = PROTECTED_PREFIXES.find((p) => pathname.startsWith(p.prefix));
+  const nonce = generateNonce();
+
+  if (!match) return nextWithNonce(req, nonce);
 
   const token = req.cookies.get("livyn_at")?.value;
   const refreshToken = req.cookies.get("livyn_rt")?.value;
@@ -81,10 +139,7 @@ export default async function proxy(req: NextRequest) {
       return redirect;
     }
 
-    const refreshedRes = NextResponse.next();
-    refreshedRes.headers.set("X-Frame-Options", "DENY");
-    refreshedRes.headers.set("X-Content-Type-Options", "nosniff");
-    refreshedRes.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    const refreshedRes = nextWithNonce(req, nonce);
     const setCookies = refreshRes.headers.getSetCookie();
     for (const cookie of setCookies) {
       refreshedRes.headers.append("Set-Cookie", cookie);
@@ -116,7 +171,7 @@ export default async function proxy(req: NextRequest) {
       return redirect;
     }
 
-    const refreshedRes = NextResponse.next();
+    const refreshedRes = nextWithNonce(req, nonce);
     const setCookies = refreshRes.headers.getSetCookie();
     for (const cookie of setCookies) {
       refreshedRes.headers.append("Set-Cookie", cookie);
@@ -124,9 +179,14 @@ export default async function proxy(req: NextRequest) {
     return refreshedRes;
   }
 
-  return res;
+  return nextWithNonce(req, nonce);
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    // Skip static assets, the image optimizer, favicons, and the manifest —
+    // none of them render HTML that would care about the nonce, and applying
+    // the middleware there just adds latency to every asset request.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon-|apple-touch-icon).*)",
+  ],
 };

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Silakan masuk terlebih dahulu" }, { status: 401 });
   }
 
-  const limited = rateLimit(`data-export:${session.sub}`, 1, 60 * 60 * 1000);
+  const limited = await rateLimit(`data-export:${session.sub}`, 1, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json(
       { error: "Kamu sudah mengekspor data belakangan ini. Coba lagi dalam beberapa waktu." },

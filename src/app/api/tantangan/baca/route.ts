@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) return NextResponse.json({ error: "Silakan masuk terlebih dahulu" }, { status: 401 });
 
-  const limited = rateLimit(`challenge-read:${session.sub}`, 60, 60 * 60 * 1000);
+  const limited = await rateLimit(`challenge-read:${session.sub}`, 60, 60 * 60 * 1000);
   if (!limited.ok) return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi nanti." }, { status: 429 });
 
   const parsed = markChapterReadSchema.safeParse(await req.json().catch(() => null));

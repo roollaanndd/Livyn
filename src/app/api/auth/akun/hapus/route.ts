@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   }
 
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`delete-account:${session.sub}`, 5, 60 * 60 * 1000);
+  const limited = await rateLimit(`delete-account:${session.sub}`, 5, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }

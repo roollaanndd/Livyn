@@ -17,6 +17,7 @@ import {
 import { classifyIntent, getIntentContext } from "@/lib/ai-pastor/intent";
 import { getRelevantVerses } from "@/lib/ai-pastor/doctrine";
 import { checkSafety } from "@/lib/ai-pastor/safety";
+import { CRISIS_RESPONSE_TEXT } from "@/lib/ai-pastor/crisis";
 
 export const maxDuration = 30;
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const limited = rateLimit(`ai-pastor:${session.sub}`, 60, 60 * 60 * 1000);
+  const limited = await rateLimit(`ai-pastor:${session.sub}`, 60, 60 * 60 * 1000);
   if (!limited.ok) {
     return new Response(
       JSON.stringify({ error: "Terlalu banyak permintaan. Coba lagi dalam beberapa menit." }),
@@ -133,6 +134,37 @@ export async function POST(req: NextRequest) {
   })();
 
   const intent = classifyIntent(lastUserText);
+
+  // Crisis intent bypasses the LLM entirely. The response has to be
+  // deterministic — hotlines first, no sampling variability, no chance of
+  // the model burying the numbers under a rhetorical flourish. See
+  // src/lib/ai-pastor/crisis.ts for the locked text.
+  if (intent === "crisis") {
+    console.warn(`[ai-pastor] Crisis intent detected; returning locked response for user ${session.sub}`);
+    // Stream the fixed text back through the same UI channel so the client
+    // renders it identically to a normal reply — one chunk, then done.
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        // AI SDK UI message stream format: text-delta + text-done.
+        const id = crypto.randomUUID();
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-start", id })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-delta", id, delta: CRISIS_RESPONSE_TEXT })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text-end", id })}\n\n`));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "x-vercel-ai-ui-message-stream": "v1",
+      },
+    });
+  }
+
   const intentContext = getIntentContext(intent);
   const verseContext = getRelevantVerses(lastUserText);
   const systemPrompt = buildSystemPrompt(intent, intentContext, verseContext);

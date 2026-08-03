@@ -34,7 +34,7 @@ function resetEmailBody(link: string): { html: string; text: string } {
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`forgot-pw:${ip}`, 5, 15 * 60 * 1000);
+  const limited = await rateLimit(`forgot-pw:${ip}`, 5, 15 * 60 * 1000);
   // Always the same shape — never leak whether the email exists in the DB,
   // and never let a downstream send failure change the caller-visible result.
   const generic = NextResponse.json({ ok: true });

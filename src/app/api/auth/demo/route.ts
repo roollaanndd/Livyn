@@ -9,7 +9,7 @@ const DEMO_EMAIL = "anaktuhan@livyn.app";
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`demo-login:${ip}`, 20, 60 * 60 * 1000);
+  const limited = await rateLimit(`demo-login:${ip}`, 20, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }
