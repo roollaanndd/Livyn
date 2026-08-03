@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/profile/theme-toggle";
 import { LogoutButton } from "@/components/profile/logout-button";
 import { LanguageSwitch } from "@/components/profile/language-switch";
 import { PushToggle } from "@/components/push/push-toggle";
+import { AccountControls } from "@/components/profile/account-controls";
 
 export default async function ProfilePage() {
   const session = await getCurrentUser();
@@ -128,6 +129,10 @@ export default async function ProfilePage() {
           <ProfileLink href="/kebijakan-privasi" icon={ShieldCheck} label={t("profile.privacy")} />
         </Card>
       </div>
+
+      {/* Data & Akun — Play Store and App Store require both delete and export
+          to be discoverable inside the app itself. */}
+      <AccountControls hasPassword={Boolean(user.passwordHash)} />
 
       {/* Logout */}
       <div className="mt-6">
