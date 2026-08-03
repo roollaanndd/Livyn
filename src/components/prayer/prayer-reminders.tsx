@@ -8,6 +8,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  pushSupported,
+  subscribeToPush,
+  currentSubscription,
+} from "@/lib/push/client";
 
 type Reminder = {
   id: string;
@@ -55,23 +60,32 @@ export function PrayerReminders({
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
+  // Real background reminders need a push subscription on the server, not just
+  // browser permission — a granted permission with no PushSubscription row is
+  // the state the cron endpoint has nothing to send to, which is why the CTA
+  // used to end here silently. Track the subscription itself.
+  const [pushStatus, setPushStatus] =
+    useState<"loading" | "unsupported" | "off" | "on">("loading");
+  const [subscribing, setSubscribing] = useState(false);
 
-  // Notification API is browser-only and unreadable during SSR.
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
+    if (!pushSupported()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setNotifPermission(Notification.permission);
-    } else {
-      setNotifPermission("unsupported");
+      setPushStatus("unsupported");
+      return;
     }
+    currentSubscription()
+      .then((sub) => setPushStatus(sub ? "on" : "off"))
+      .catch(() => setPushStatus("off"));
   }, []);
 
-  // Best-effort local scheduling: fires a browser notification if this tab
-  // stays open through the reminder time. Real background alarms require a
-  // native app (see README) — the web platform can't wake a closed tab.
+  // Belt-and-braces: if the tab happens to be open when a reminder is due,
+  // fire a local notification too. The real delivery path is the cron push;
+  // this just avoids the awkwardness of the app being open and staying silent.
   useEffect(() => {
-    if (notifPermission !== "granted") return;
+    if (pushStatus !== "on") return;
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
     const timers = reminders
       .filter((r) => r.active)
       .map((r) => {
@@ -88,13 +102,21 @@ export function PrayerReminders({
       })
       .filter(Boolean) as ReturnType<typeof setTimeout>[];
     return () => timers.forEach(clearTimeout);
-  }, [reminders, notifPermission]);
+  }, [reminders, pushStatus]);
 
-  async function requestNotifications() {
-    if (!("Notification" in window)) return;
-    const perm = await Notification.requestPermission();
-    setNotifPermission(perm);
-    if (perm === "granted") toast.success("Notifikasi doa diaktifkan untuk sesi ini");
+  async function enablePush() {
+    if (subscribing) return;
+    setSubscribing(true);
+    const result = await subscribeToPush();
+    setSubscribing(false);
+    if (result === "subscribed") {
+      setPushStatus("on");
+      toast.success("Pengingat doa aktif — akan sampai walau aplikasi tertutup");
+      return;
+    }
+    if (result === "denied") toast.error("Izin notifikasi ditolak");
+    else if (result === "unconfigured") toast.error("Notifikasi belum dikonfigurasi di server ini");
+    else toast.error("Gagal mengaktifkan notifikasi");
   }
 
   function openCreate() {
@@ -194,14 +216,15 @@ export function PrayerReminders({
         <Flame className="h-9 w-9 text-amber-300" />
       </Card>
 
-      {notifPermission !== "granted" && notifPermission !== "unsupported" && (
+      {pushStatus === "off" && (
         <button
-          onClick={requestNotifications}
-          className="mb-5 flex w-full items-center gap-3 rounded-md border border-dashed border-primary/40 bg-primary/5 p-3.5 text-left"
+          onClick={enablePush}
+          disabled={subscribing}
+          className="mb-5 flex w-full items-center gap-3 rounded-md border border-dashed border-primary/40 bg-primary/5 p-3.5 text-left disabled:opacity-60"
         >
           <BellRing className="h-5 w-5 shrink-0 text-primary" />
           <span className="text-sm text-foreground">
-            Aktifkan notifikasi supaya Livyn bisa mengingatkanmu berdoa saat aplikasi terbuka.
+            Aktifkan notifikasi supaya Livyn bisa mengingatkanmu berdoa walau aplikasi tertutup.
           </span>
         </button>
       )}
