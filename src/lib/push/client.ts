@@ -14,11 +14,33 @@ export function pushSupported(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
 }
 
-export type SubscribeResult = "subscribed" | "denied" | "unconfigured" | "failed";
+/**
+ * iOS Safari only exposes Web Push to *installed* PWAs (from iOS 16.4).
+ * A user on iPhone Safari-in-browser will see pushSupported() return true
+ * but the actual `Notification.requestPermission()` throws or the
+ * subscription fails silently. Detect the "iOS but not installed" case so
+ * callers can show an "Install to home screen first" message instead of a
+ * generic "notifications failed" error.
+ */
+export function iosNeedsInstall(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent;
+  const isIos = /iPad|iPhone|iPod/.test(ua) && !("MSStream" in window);
+  if (!isIos) return false;
+  const isStandalone =
+    // Modern; Safari sets this on the installed PWA.
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    // Legacy Safari fallback.
+    (navigator as unknown as { standalone?: boolean }).standalone === true;
+  return !isStandalone;
+}
+
+export type SubscribeResult = "subscribed" | "denied" | "unconfigured" | "failed" | "ios-install-required";
 
 export async function subscribeToPush(): Promise<SubscribeResult> {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   if (!publicKey) return "unconfigured";
+  if (iosNeedsInstall()) return "ios-install-required";
 
   try {
     const permission = await Notification.requestPermission();

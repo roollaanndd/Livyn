@@ -116,7 +116,9 @@ export function PrayerReminders({
     }
     if (result === "denied") toast.error("Izin notifikasi ditolak");
     else if (result === "unconfigured") toast.error("Notifikasi belum dikonfigurasi di server ini");
-    else toast.error("Gagal mengaktifkan notifikasi");
+    else if (result === "ios-install-required") {
+      toast.info("Tambahkan Livyn ke layar utama iPhone dulu (Share > Tambahkan ke Layar Utama), lalu aktifkan notifikasi dari sana.");
+    } else toast.error("Gagal mengaktifkan notifikasi");
   }
 
   function openCreate() {
