@@ -3,18 +3,24 @@ import { jwtVerify } from "jose";
 
 // Same requiredSecret contract as src/lib/env.ts, inlined here because the
 // proxy runs on the Edge runtime and cannot import "server-only" modules.
-function requireJwtSecret(): string {
+// Lazy on first request so `next build` never throws over a missing env var
+// that will in fact be present at runtime.
+let cachedAccessSecret: Uint8Array | null = null;
+function getAccessSecret(): Uint8Array {
+  if (cachedAccessSecret) return cachedAccessSecret;
   const value = process.env.JWT_ACCESS_SECRET;
-  if (value && value.length > 0) return value;
+  if (value && value.length > 0) {
+    cachedAccessSecret = new TextEncoder().encode(value);
+    return cachedAccessSecret;
+  }
   if (process.env.NODE_ENV !== "production") {
-    return "insecure-dev-secret-do-not-use-in-prod";
+    cachedAccessSecret = new TextEncoder().encode("insecure-dev-secret-do-not-use-in-prod");
+    return cachedAccessSecret;
   }
   throw new Error(
     "Missing required environment variable: JWT_ACCESS_SECRET. Set it in the deployment environment; there is no safe default in production.",
   );
 }
-
-const ACCESS_SECRET = new TextEncoder().encode(requireJwtSecret());
 
 const ROLE_RANK: Record<string, number> = {
   user: 0,
@@ -87,7 +93,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, ACCESS_SECRET, { issuer: "livyn" });
+    const { payload } = await jwtVerify(token, getAccessSecret(), { issuer: "livyn" });
     const role = String(payload.role ?? "user");
     if ((ROLE_RANK[role] ?? 0) < (ROLE_RANK[match.minRole] ?? 0)) {
       return NextResponse.redirect(new URL("/app", req.url));
