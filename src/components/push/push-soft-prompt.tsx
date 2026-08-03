@@ -49,7 +49,9 @@ export function PushSoftPrompt() {
     if (result === "subscribed") toast.success(t("push.enabled"));
     else if (result === "denied") toast.error(t("push.denied"));
     else if (result === "unconfigured") toast.error(t("push.notConfigured"));
-    else toast.error(t("push.enableFailed"));
+    else if (result === "ios-install-required") {
+      toast.info("Tambahkan Livyn ke layar utama iPhone dulu (Share > Tambahkan ke Layar Utama), lalu aktifkan notifikasi dari sana.");
+    } else toast.error(t("push.enableFailed"));
 
     dismiss();
   }

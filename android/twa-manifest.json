@@ -1,0 +1,53 @@
+{
+  "packageId": "app.livyn.mobile",
+  "host": "livyn-six.vercel.app",
+  "name": "Livyn",
+  "launcherName": "Livyn",
+  "display": "standalone",
+  "themeColor": "#2D7D5F",
+  "themeColorDark": "#0D1512",
+  "navigationColor": "#0D1512",
+  "navigationColorDark": "#0D1512",
+  "navigationDividerColor": "#0D1512",
+  "navigationDividerColorDark": "#0D1512",
+  "backgroundColor": "#0D1512",
+  "enableNotifications": true,
+  "startUrl": "/app",
+  "iconUrl": "https://livyn-six.vercel.app/icon-512.png",
+  "maskableIconUrl": "https://livyn-six.vercel.app/icon-maskable-512.png",
+  "monochromeIconUrl": null,
+  "appVersion": "1",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Doa",
+      "shortName": "Doa",
+      "url": "/app/doa",
+      "iconUrl": "https://livyn-six.vercel.app/icon-192.png"
+    },
+    {
+      "name": "Renungan",
+      "shortName": "Renungan",
+      "url": "/app/devosi",
+      "iconUrl": "https://livyn-six.vercel.app/icon-192.png"
+    },
+    {
+      "name": "Alkitab",
+      "shortName": "Alkitab",
+      "url": "/app/alkitab",
+      "iconUrl": "https://livyn-six.vercel.app/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://livyn-six.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": false },
+    "playBilling": { "enabled": false }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "orientation": "portrait"
+}

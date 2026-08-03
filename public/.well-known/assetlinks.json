@@ -1,0 +1,15 @@
+[
+  {
+    "_comment": "Digital Asset Links for the Android TWA. Replace the sha256_cert_fingerprints value with the fingerprint that `bubblewrap init` emits when it generates the signing key. Without a real fingerprint here the TWA still lists on Play, but every launch shows the Chrome URL bar (fails immersive-app review).",
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.livyn.mobile",
+      "sha256_cert_fingerprints": [
+        "REPLACE_ME_WITH_FINGERPRINT_FROM_BUBBLEWRAP_INIT"
+      ]
+    }
+  }
+]
