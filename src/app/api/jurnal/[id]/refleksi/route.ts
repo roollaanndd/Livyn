@@ -38,7 +38,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Silakan masuk terlebih dahulu" }, { status: 401 });
   }
 
-  const limited = rateLimit(`journal-reflect:${session.sub}`, 20, 60 * 60 * 1000);
+  const limited = await rateLimit(`journal-reflect:${session.sub}`, 20, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi nanti." }, { status: 429 });
   }

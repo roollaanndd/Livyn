@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) return NextResponse.json({ error: "Silakan masuk terlebih dahulu" }, { status: 401 });
 
-  const limited = rateLimit(`plan-read:${session.sub}`, 60, 60 * 60 * 1000);
+  const limited = await rateLimit(`plan-read:${session.sub}`, 60, 60 * 60 * 1000);
   if (!limited.ok) return NextResponse.json({ error: "Terlalu banyak permintaan" }, { status: 429 });
 
   const body = await req.json().catch(() => null);

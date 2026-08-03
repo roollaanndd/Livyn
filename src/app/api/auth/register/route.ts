@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`register:${ip}`, 5, 10 * 60 * 1000);
+  const limited = await rateLimit(`register:${ip}`, 5, 10 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
   }

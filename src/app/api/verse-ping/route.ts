@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Silakan login" }, { status: 401 });
 
   // 20 verse pings per hour is plenty for genuine use — well below spam.
-  const limit = rateLimit(`verse-ping:${session.sub}`, 20, 60 * 60 * 1000);
+  const limit = await rateLimit(`verse-ping:${session.sub}`, 20, 60 * 60 * 1000);
   if (!limit.ok) return NextResponse.json({ error: "Terlalu banyak kiriman. Coba lagi nanti." }, { status: 429 });
 
   const parsed = versePingSchema.safeParse(await req.json().catch(() => null));

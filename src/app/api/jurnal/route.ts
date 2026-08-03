@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Silakan masuk terlebih dahulu" }, { status: 401 });
 
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`journal-create:${session.sub}`, 30, 60 * 60 * 1000);
+  const limited = await rateLimit(`journal-create:${session.sub}`, 30, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ error: "Terlalu banyak catatan dalam waktu singkat. Coba lagi nanti." }, { status: 429 });
   }

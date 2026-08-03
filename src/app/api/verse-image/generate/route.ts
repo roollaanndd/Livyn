@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Silakan login terlebih dahulu." }, { status: 401 });
   }
 
-  const limited = rateLimit(`verse-img:${session.sub}`, 15, 60 * 60 * 1000);
+  const limited = await rateLimit(`verse-img:${session.sub}`, 15, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json(
       { error: "Terlalu banyak permintaan. Coba lagi nanti." },
