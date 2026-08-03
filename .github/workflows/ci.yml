@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - claude/christian-daily-app-i6y1a1
+
+# Cancel superseded runs on the same ref so a rapid push does not stack
+# duplicate jobs behind each other.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 because @ai-sdk/* and ai@7 declare engines.node >=22, and
+      # npm's engine warnings become hard failures in some downstream tools.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      # NOTE: NODE_ENV is deliberately unset here. With NODE_ENV=production,
+      # `npm ci` skips devDependencies — including TypeScript — and the very
+      # next step's `npx tsc` then falls back to an unrelated npm package
+      # literally called `tsc` (v2.0.4, deprecated), which prints a helpful
+      # error and exits 1. That is what red the first Phase 1 run.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Unit tests
+        run: npm test
+
+      # NODE_ENV=production + a fake JWT_ACCESS_SECRET so the production
+      # build path is exercised (removeConsole, sourcemaps, etc.) with the
+      # secret contract satisfied. The secret is only required at request
+      # time in runtime code, but bare `next build` still touches modules
+      # that would otherwise throw — so we set a dummy value scoped to this
+      # step alone.
+      - name: Build
+        env:
+          NODE_ENV: production
+          JWT_ACCESS_SECRET: ci-build-only-secret-value-not-used-at-runtime
+        run: npm run build

@@ -28,6 +28,7 @@ export function VersionSelector({ current }: { current: string }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     fetch("/api/alkitab/versions")
       .then((r) => r.json())

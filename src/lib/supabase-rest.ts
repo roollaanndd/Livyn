@@ -12,14 +12,22 @@ const SUPABASE_URL =
     return "";
   })();
 
-// The anon key is Supabase's "publishable" key — designed for client-side use.
-// Security comes from RLS + SECURITY DEFINER functions, not key secrecy.
+// The anon key is Supabase's "publishable" key — designed for client-side use,
+// with security coming from RLS + SECURITY DEFINER — but we still require it
+// via env instead of a hardcoded fallback, because a hardcoded value pins a
+// specific project's identity into the repo and turns any fork into a client
+// of that project.
 const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY ??
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jdG5vbmd1ZGt1eWNvb3BieG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NDg5NzMsImV4cCI6MjEwMDAyNDk3M30.XwSmLiWGc3L2RRMBGHcrNl0AFS2OEZuO3qABa718e0M";
+  "";
 
 async function rpc<T>(fnName: string, params: Record<string, unknown>): Promise<T> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error(
+      "Supabase is not configured: set SUPABASE_URL (or DATABASE_URL) and SUPABASE_ANON_KEY in the deployment environment.",
+    );
+  }
   const url = `${SUPABASE_URL}/rest/v1/rpc/${fnName}`;
   const res = await fetch(url, {
     method: "POST",
