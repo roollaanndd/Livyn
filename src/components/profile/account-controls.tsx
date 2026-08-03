@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AlertTriangle, Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import { Card } from "@/components/ui/card";
  */
 
 export function AccountControls({ hasPassword }: { hasPassword: boolean }) {
-  const router = useRouter();
   const [exporting, setExporting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirm, setConfirm] = useState("");

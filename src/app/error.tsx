@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    // No-op unless NEXT_PUBLIC_SENTRY_DSN is configured; safe to always call.
+    Sentry.captureException(error);
     console.error("Global error:", error);
   }, [error]);
 

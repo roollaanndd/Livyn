@@ -5,10 +5,16 @@ import * as Sentry from "@sentry/nextjs";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function ContributorError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   useEffect(() => {
     Sentry.captureException(error);
-    console.error("App error:", error);
+    console.error("Contributor error:", error);
   }, [error]);
 
   return (
@@ -16,9 +22,9 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-warning/10">
         <AlertTriangle className="h-8 w-8 text-warning" />
       </div>
-      <h2 className="mt-5 font-display text-xl font-bold text-heading">Terjadi Kesalahan</h2>
-      <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-        Halaman tidak dapat dimuat. Periksa koneksi internetmu dan coba lagi.
+      <h2 className="mt-5 font-display text-xl font-bold text-heading">Dasbor kontributor tidak dapat dimuat</h2>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        Terjadi kesalahan. Refresh halaman atau kembali sebentar lagi.
       </p>
       <Button onClick={reset} className="mt-6 gap-2" size="lg">
         <RefreshCw className="h-4 w-4" />

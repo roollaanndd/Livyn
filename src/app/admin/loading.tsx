@@ -1,0 +1,9 @@
+import { LeafLoader } from "@/components/ui/loading";
+
+export default function AdminLoading() {
+  return (
+    <div className="flex min-h-[60dvh] items-center justify-center">
+      <LeafLoader size="lg" />
+    </div>
+  );
+}
