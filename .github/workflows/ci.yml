@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - claude/christian-daily-app-i6y1a1
+
+# Cancel superseded runs on the same ref so a rapid push does not stack
+# duplicate jobs behind each other.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Env vars set here so `requiredSecret()` succeeds during the build.
+      # These are fake dev values, not real secrets — CI does not connect
+      # to any real backend.
+      JWT_ACCESS_SECRET: ci-build-only-secret-value-not-used-at-runtime
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

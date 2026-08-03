@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -32,12 +33,12 @@ export default function OfflinePage() {
           Coba Lagi
         </button>
 
-        <a
+        <Link
           href="/app/alkitab"
           className="text-sm font-medium text-primary hover:underline"
         >
           Baca Alkitab Offline
-        </a>
+        </Link>
       </div>
     </div>
   );

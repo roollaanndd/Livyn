@@ -11,7 +11,7 @@ const SUPABASE_URL = (() => {
 const SUPABASE_KEY =
   process.env.SUPABASE_ANON_KEY ??
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jdG5vbmd1ZGt1eWNvb3BieG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NDg5NzMsImV4cCI6MjEwMDAyNDk3M30.XwSmLiWGc3L2RRMBGHcrNl0AFS2OEZuO3qABa718e0M";
+  "";
 
 const BASE = `${SUPABASE_URL}/rest/v1`;
 
@@ -227,6 +227,11 @@ function reviveDates(obj: unknown): unknown {
 }
 
 async function request(url: string, init?: RequestInit): Promise<Response> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    throw new Error(
+      "Supabase is not configured: set SUPABASE_URL (or DATABASE_URL) and SUPABASE_ANON_KEY in the deployment environment.",
+    );
+  }
   const headers: Record<string, string> = {
     apikey: SUPABASE_KEY,
     Authorization: `Bearer ${SUPABASE_KEY}`,

@@ -38,9 +38,11 @@ export function InstallPrompt() {
       const diff = Date.now() - Number(dismissedAt);
       if (diff < DISMISS_DAYS * 86_400_000) return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDismissed(false);
 
     if (isIos()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowIos(true);
       return;
     }

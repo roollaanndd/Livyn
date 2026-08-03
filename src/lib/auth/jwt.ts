@@ -1,7 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
+import { requiredSecret } from "@/lib/env";
 
 const ACCESS_SECRET = new TextEncoder().encode(
-  process.env.JWT_ACCESS_SECRET ?? "insecure-dev-secret-do-not-use-in-prod",
+  requiredSecret("JWT_ACCESS_SECRET", "insecure-dev-secret-do-not-use-in-prod"),
 );
 
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes

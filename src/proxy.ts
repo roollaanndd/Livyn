@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const ACCESS_SECRET = new TextEncoder().encode(
-  process.env.JWT_ACCESS_SECRET ?? "insecure-dev-secret-do-not-use-in-prod",
-);
+// Same requiredSecret contract as src/lib/env.ts, inlined here because the
+// proxy runs on the Edge runtime and cannot import "server-only" modules.
+function requireJwtSecret(): string {
+  const value = process.env.JWT_ACCESS_SECRET;
+  if (value && value.length > 0) return value;
+  if (process.env.NODE_ENV !== "production") {
+    return "insecure-dev-secret-do-not-use-in-prod";
+  }
+  throw new Error(
+    "Missing required environment variable: JWT_ACCESS_SECRET. Set it in the deployment environment; there is no safe default in production.",
+  );
+}
+
+const ACCESS_SECRET = new TextEncoder().encode(requireJwtSecret());
 
 const ROLE_RANK: Record<string, number> = {
   user: 0,
