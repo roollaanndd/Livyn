@@ -42,7 +42,6 @@ export function InstallPrompt() {
     setDismissed(false);
 
     if (isIos()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowIos(true);
       return;
     }
