@@ -238,6 +238,23 @@ function slugify(title: string) {
 }
 
 async function main() {
+  // Prod safety guard: the seed upserts hardcoded demo accounts with a
+  // globally-known password ("Livyn123!"). If it ever ran against the
+  // production database — even by accident — any real account that
+  // happened to share one of these emails would have its password reset
+  // to that public value. Refuse to run unless the operator explicitly
+  // acknowledges by setting FORCE_SEED_IN_PRODUCTION=true.
+  if (process.env.NODE_ENV === "production" && process.env.FORCE_SEED_IN_PRODUCTION !== "true") {
+    console.error(
+      "REFUSING: db:seed is a dev/staging tool. It writes demo accounts with a known password.\n" +
+        "If you truly intend to run it in production, set FORCE_SEED_IN_PRODUCTION=true and understand:\n" +
+        "  - superadmin@livyn.app / admin@livyn.app / moderator@livyn.app / kontributor@livyn.app / anaktuhan@livyn.app\n" +
+        "    will have their password reset to \"Livyn123!\" if they already exist.\n" +
+        "  - This is almost never what you want.",
+    );
+    process.exit(2);
+  }
+
   console.log("Seeding categories...");
   const categoryBySlug = new Map<string, string>();
   for (const c of CATEGORIES) {
