@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { TopBar } from "@/components/nav/top-bar";
 import { Card } from "@/components/ui/card";
 import { RevokeSessionsButton } from "@/components/profile/revoke-sessions-button";
+import { ChangePasswordForm } from "@/components/profile/change-password-form";
 
 export default async function SecurityPage() {
   const session = await getCurrentUser();
@@ -20,6 +21,8 @@ export default async function SecurityPage() {
     <div>
       <TopBar back title="Keamanan & Sesi Login" />
       <div className="px-5 pt-3">
+        <ChangePasswordForm />
+
         <Card className="mb-5 p-4">
           <p className="mb-3 text-sm text-muted-foreground">
             Keluar dari semua perangkat lain jika kamu curiga akunmu diakses tanpa izin. Kamu akan tetap masuk di perangkat ini.
