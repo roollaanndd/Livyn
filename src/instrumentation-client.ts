@@ -1,5 +1,6 @@
 /**
- * Sentry initialization for the browser runtime.
+ * Client-side instrumentation. Next.js auto-loads this file (root or `src/`)
+ * before the app becomes interactive — no `withSentryConfig` wrapper needed.
  *
  * All three Sentry configs (client, server, edge) share the same policy:
  * NEXT_PUBLIC_SENTRY_DSN (or SENTRY_DSN for the server-side files) drives
@@ -11,6 +12,14 @@
  * every error, sample 10% of traces. Adjust once you have volume — until
  * then, 100% error capture is what surfaces the issues nobody would
  * otherwise report.
+ *
+ * Historical note: this file used to live at `sentry.client.config.ts` at
+ * the repo root. That path is only auto-loaded by `@sentry/nextjs` when the
+ * Next.js config is wrapped with `withSentryConfig(nextConfig)` — which we
+ * don't do. Without the wrapper, that file is orphaned and every client
+ * `Sentry.captureException(...)` becomes a silent no-op. Using Next.js's
+ * native `instrumentation-client.ts` convention loads Sentry the same way
+ * regardless of any Sentry build-time plumbing.
  */
 import * as Sentry from "@sentry/nextjs";
 

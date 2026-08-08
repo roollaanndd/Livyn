@@ -3,8 +3,9 @@
  * runtime at startup. We dispatch to the appropriate Sentry config so the
  * SDK is initialised before any request is handled.
  *
- * Only fires on the server; the browser side is initialised from the root
- * `sentry.client.config.ts` (loaded via Next.js's Sentry auto-wiring).
+ * Only fires on the server; the browser side is initialised from
+ * `src/instrumentation-client.ts`, which Next.js auto-loads without needing
+ * `withSentryConfig`.
  */
 
 export async function register() {

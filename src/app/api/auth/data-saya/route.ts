@@ -90,31 +90,39 @@ export async function GET(req: NextRequest) {
     prisma.weeklyMission.findMany({ where: { createdById: userId } }),
     prisma.missionCheckIn.findMany({ where: { userId } }),
     prisma.circleBroadcast.findMany({ where: { createdById: userId } }),
-    prisma.contributorProfile.findUnique({ where: { userId } }).catch(() => null),
-    prisma.leaderProfile.findUnique({ where: { userId } }).catch(() => null),
+    // findUnique returns null on no match; a rejected promise here means a
+    // real DB error we should surface via Promise.all, not silently swallow.
+    prisma.contributorProfile.findUnique({ where: { userId } }),
+    prisma.leaderProfile.findUnique({ where: { userId } }),
     prisma.devotion.findMany({ where: { authorId: userId } }),
     prisma.sermon.findMany({ where: { authorId: userId } }),
   ]);
 
   // Strip sensitive fields; the goal is transparency, not a replay attack kit.
-  const sanitizedUser = user
-    ? (() => {
-        const record = user as Record<string, unknown>;
-        delete record.passwordHash;
-        delete record.twoFactorSecret;
-        return record;
-      })()
-    : null;
+  // Copy rather than mutate the Prisma-returned object — sharing the reference
+  // with any other consumer in the same request would leak the redaction.
+  let sanitizedUser: Record<string, unknown> | null = null;
+  if (user) {
+    const {
+      passwordHash: _pw,
+      twoFactorSecret: _tfa,
+      ...safe
+    } = user as Record<string, unknown>;
+    void _pw;
+    void _tfa;
+    sanitizedUser = safe;
+  }
 
-  const sanitizedPushSubs = (pushSubscriptions as Array<Record<string, unknown>>).map((s) => ({
-    ...s,
+  const sanitizedPushSubs = (pushSubscriptions as Array<Record<string, unknown>>).map((s) => {
     // Endpoint is per-device and knowing it enables push replay from another
-    // account holder if the file leaks — return only the browser identifier.
-    endpoint: undefined,
-    p256dh: undefined,
-    auth: undefined,
-    userAgent: s.userAgent,
-  }));
+    // account holder if the file leaks — drop endpoint/keys, keep only the
+    // browser identifier and any non-sensitive metadata.
+    const { endpoint: _e, p256dh: _p, auth: _a, ...safe } = s;
+    void _e;
+    void _p;
+    void _a;
+    return safe;
+  });
 
   await logAudit({ userId, action: "auth.data_exported" });
 
