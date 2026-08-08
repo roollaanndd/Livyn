@@ -28,13 +28,28 @@ function present(name: string): CheckState {
   return v && v.length > 0 ? "set" : "unset";
 }
 
+/**
+ * Reproduces the derivation in src/lib/prisma.ts / supabase-rest.ts: reports
+ * "set" only when we can actually resolve a Supabase base URL — either
+ * SUPABASE_URL is set directly, or DATABASE_URL is set AND the project ref
+ * regex matches. Answering "set" from mere presence of DATABASE_URL misled
+ * operators when the ref didn't match and every request threw at runtime.
+ */
+function supabaseUrlDerivable(): CheckState {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_URL.length > 0) return "set";
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  if (!dbUrl) return "unset";
+  const poolerMatch = dbUrl.match(/\/\/[^.]+\.([a-z]{20})[.:@]/);
+  const directMatch = dbUrl.match(/db\.([a-z]{20})\.supabase/);
+  return poolerMatch || directMatch ? "set" : "unset";
+}
+
 export async function GET() {
   const checks = {
     // Required — the app cannot serve traffic without these.
     required: {
       JWT_ACCESS_SECRET: present("JWT_ACCESS_SECRET"),
-      SUPABASE_URL_OR_DATABASE_URL:
-        present("SUPABASE_URL") === "set" || present("DATABASE_URL") === "set" ? "set" : "unset",
+      SUPABASE_URL_OR_DATABASE_URL: supabaseUrlDerivable(),
       SUPABASE_ANON_KEY:
         present("SUPABASE_ANON_KEY") === "set" || present("NEXT_PUBLIC_SUPABASE_ANON_KEY") === "set"
           ? "set"

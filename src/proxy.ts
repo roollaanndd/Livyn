@@ -59,7 +59,11 @@ function buildCsp(): string {
     : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.sentry-cdn.com`;
 
   const styleSrc = "style-src 'self' 'unsafe-inline'";
-  const connectSrc = "connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io";
+  // Cover every Sentry ingest region — the DSN's host varies by the Sentry
+  // organization's data residency (US, EU, .de). Limiting to us.sentry.io
+  // silently blocked EU-hosted org events at the browser CSP layer.
+  const connectSrc =
+    "connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.eu.sentry.io https://*.ingest.de.sentry.io";
 
   return [
     `default-src 'self'`,
@@ -163,9 +167,10 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip static assets, image optimizer output, favicons, and the manifest —
-    // headers on those don't change the app's behavior and running the
-    // middleware there just adds latency to every asset request.
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon-|apple-touch-icon).*)",
+    // Skip static assets, image optimizer output, favicons, the manifest,
+    // the service worker + workbox chunks, robots.txt and sitemap.xml —
+    // headers on those don't change app behavior and running the middleware
+    // there just adds latency to every asset request.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon-|apple-touch-icon|sw\\.js|workbox-|robots\\.txt|sitemap\\.xml).*)",
   ],
 };
