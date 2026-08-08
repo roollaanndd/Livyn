@@ -98,6 +98,22 @@ export const id = {
     alt: "Gambar ayat",
   },
 
+  devotionImage: {
+    cta: "Buat Gambar Renungan",
+    ctaSub: "Bagikan tema hari ini ke Story IG / Status WA",
+    generate: "Generate Gambar Renungan",
+    generateHint: "Kartu 9:16 dengan tema, judul, ayat, dan brand — siap bagi ke sosmed",
+    generating: "Membuat kartu renungan…",
+    generatingHint: "Sekitar 10-15 detik",
+    failed: "Gagal membuat gambar",
+    retry: "Coba Lagi",
+    regenerate: "Generate ulang",
+    save: "Simpan",
+    saved: "Tersimpan!",
+    share: "Bagikan",
+    alt: "Gambar renungan hari ini",
+  },
+
   prayers: {
     title: "Doa",
     remindersTitle: "Pengingat Doa",

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getTodaysDevotion, formatTodaysDate } from "@/lib/devotions/daily-themes";
 import { TopBar } from "@/components/nav/top-bar";
 import { DailyShareButton } from "@/components/devotion/daily-share-button";
+import { DevotionShareCard } from "@/components/devotion/devotion-share-card";
 import { ActivityBeacon } from "@/components/home/activity-beacon";
 
 // Simple, home-consistent gradient per accent — kept subtle so the writing stays hero.
@@ -135,8 +136,17 @@ export default async function DailyDevotionPage() {
           </div>
         </div>
 
-        {/* Share */}
-        <div className="mt-10">
+        {/* Share — image card leads because it's the more shareable format
+            on Story/Status; the text buttons follow for people who prefer
+            copy-paste or a link. */}
+        <div className="mt-10 space-y-4">
+          <DevotionShareCard
+            title={devotion.title}
+            theme={devotion.theme}
+            accent={accent}
+            verseText={devotion.verseText}
+            verseRef={`${devotion.verseRef} (TB)`}
+          />
           <DailyShareButton
             title={devotion.title}
             verseRef={devotion.verseRef}
