@@ -112,15 +112,39 @@ export const listCircleMembers = cache(async (circleId: string) =>
 
 // -------- PRAYER REQUESTS --------
 
-export const listCirclePrayers = cache(async (circleId: string, status = "open") =>
-  prisma.prayerRequest.findMany({
-    where: { circleId, status },
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: { select: { id: true, name: true, avatarUrl: true } },
-      _count: { select: { intercessions: true } },
-    },
-  }),
+type PrayerRow = {
+  id: string;
+  userId: string;
+  isAnonymous: boolean;
+  user: { id: string; name: string; avatarUrl: string | null } | null;
+  [k: string]: unknown;
+};
+
+/**
+ * List prayer requests in a circle. When `isAnonymous` is true and the
+ * caller is NOT the requester, the requester's identity is stripped —
+ * anonymous prayers were previously leaking the poster's name/id/avatar
+ * to every other member of the circle, defeating the point of the flag.
+ *
+ * The requester still sees their own identity so they can recognise
+ * their own posts.
+ */
+export const listCirclePrayers = cache(
+  async (circleId: string, viewerId: string, status = "open"): Promise<PrayerRow[]> => {
+    const rows = (await prisma.prayerRequest.findMany({
+      where: { circleId, status },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { id: true, name: true, avatarUrl: true } },
+        _count: { select: { intercessions: true } },
+      },
+    })) as PrayerRow[];
+
+    return rows.map((row) => {
+      if (!row.isAnonymous || row.userId === viewerId) return row;
+      return { ...row, userId: "", user: { id: "", name: "Anonim", avatarUrl: null } };
+    });
+  },
 );
 
 export const listMyOpenPrayerCountAcrossCircles = cache(async (userId: string): Promise<number> => {

@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
+
+// Bounded input — the previous shape (`await req.json()` with no schema)
+// threw uncaught on malformed bodies (500 with a leaky stack) and would
+// crash `text.toLowerCase()` if a non-string was passed. Length caps
+// prevent hostile payloads from bloating logs.
+const inputSchema = z.object({
+  text: z.string().min(1).max(4000),
+  ref: z.string().min(1).max(64),
+});
 
 export const maxDuration = 30;
 
@@ -134,10 +144,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { text, ref } = await req.json();
-  if (!text || !ref) {
-    return NextResponse.json({ error: "text and ref are required" }, { status: 400 });
+  const parsed = inputSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "text and ref are required" },
+      { status: 400 },
+    );
   }
+  const { text } = parsed.data;
 
   const query = getSearchQuery(text);
   // Random seed on every request so each generate produces a fresh background.

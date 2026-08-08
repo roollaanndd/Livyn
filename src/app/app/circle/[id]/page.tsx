@@ -32,7 +32,7 @@ export default async function CircleDetailPage({ params }: { params: Promise<{ i
 
   const [members, prayersRaw, missionsRaw, broadcasts] = await Promise.all([
     listCircleMembers(id),
-    listCirclePrayers(id).catch(() => []),
+    listCirclePrayers(id, session.sub).catch(() => []),
     listActiveMissionsForCircle(id).catch(() => []),
     listCircleBroadcasts(id, 20).catch(() => []),
   ]);

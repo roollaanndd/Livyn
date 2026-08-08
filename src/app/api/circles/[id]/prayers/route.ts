@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const role = await getMyCircleRole(id, session.sub);
   if (!role) return NextResponse.json({ error: "Bukan anggota circle" }, { status: 403 });
 
-  const prayers = await listCirclePrayers(id);
+  const prayers = await listCirclePrayers(id, session.sub);
   return NextResponse.json({ prayers });
 }
 
