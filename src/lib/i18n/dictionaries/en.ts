@@ -98,6 +98,22 @@ export const en: Dictionary = {
     alt: "Verse image",
   },
 
+  devotionImage: {
+    cta: "Create devotion image",
+    ctaSub: "Share today's theme to Instagram Story / WhatsApp Status",
+    generate: "Generate devotion image",
+    generateHint: "9:16 card with theme, title, verse and brand — ready to share on socials",
+    generating: "Creating devotion card…",
+    generatingHint: "About 10-15 seconds",
+    failed: "Couldn't create the image",
+    retry: "Try again",
+    regenerate: "Generate again",
+    save: "Save",
+    saved: "Saved!",
+    share: "Share",
+    alt: "Today's devotion image",
+  },
+
   prayers: {
     title: "Prayer",
     remindersTitle: "Prayer Reminders",
