@@ -7,7 +7,7 @@ Set every variable below in Vercel under both **Production** and **Preview** sco
 | Variable | Purpose | Where to get it |
 |---|---|---|
 | `DATABASE_URL` | Supabase Postgres connection string. Adapter derives Supabase project ID from it if `SUPABASE_URL` isn't set separately. | Supabase → Project Settings → Database → Connection string (URI, pooled if available) |
-| `SUPABASE_ANON_KEY` | Supabase publishable key used by the REST adapter. RLS on every table is what actually protects data — this is not a secret in the cryptographic sense, but pinning it in code was pinning a specific project ID. | Supabase → Project Settings → API → `anon`/`publishable` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Key the REST adapter authenticates with. **A real secret** — it bypasses RLS. Livyn authorizes in the app (`src/proxy.ts` + per-route RBAC), not through RLS, because it runs its own JWT auth so `auth.uid()` is always NULL; `anon` and `authenticated` are granted nothing at all. Never expose to the browser, never prefix `NEXT_PUBLIC_`. | Supabase → Project Settings → API → `service_role` key |
 | `JWT_ACCESS_SECRET` | HS256 signing secret for the access-token cookie. Any random 32+ byte string. **Never share, never commit.** | `openssl rand -base64 48` |
 
 ## Web push (prayer reminders + daily verse)
@@ -64,7 +64,7 @@ Optional. Without it, `/api/ai-pastor` returns 503 with a legible reason.
 
 ```
 DATABASE_URL=
-SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 JWT_ACCESS_SECRET=
 
 VAPID_PUBLIC_KEY=

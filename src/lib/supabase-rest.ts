@@ -1,3 +1,5 @@
+import "server-only";
+
 const SUPABASE_URL =
   process.env.SUPABASE_URL ??
   (() => {
@@ -12,28 +14,39 @@ const SUPABASE_URL =
     return "";
   })();
 
-// The anon key is Supabase's "publishable" key — designed for client-side use,
-// with security coming from RLS + SECURITY DEFINER — but we still require it
-// via env instead of a hardcoded fallback, because a hardcoded value pins a
-// specific project's identity into the repo and turns any fork into a client
-// of that project.
-const SUPABASE_ANON_KEY =
-  process.env.SUPABASE_ANON_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "";
+/**
+ * The service-role key, never the publishable ("anon") one.
+ *
+ * This module reaches PostgREST with no end-user identity attached: Livyn runs
+ * its own JWT auth (src/lib/auth/jwt.ts, `jose`), not Supabase Auth, so
+ * `auth.uid()` is always NULL inside Postgres and RLS cannot express a
+ * per-user rule for us. Authorization is done in the app — src/proxy.ts plus
+ * the RBAC check in every route handler — which makes this a trusted
+ * server-side client, and the service role is the identity for that.
+ *
+ * It used to send the anon key, which is publishable by design: the same key
+ * a browser would carry unlocked every table and every `auth_*` SECURITY
+ * DEFINER function, including one returning `passwordHash` for any email.
+ * With the service role, `anon` is granted nothing at all.
+ *
+ * Never expose this value to the browser: no NEXT_PUBLIC_ fallback, and the
+ * `server-only` import above makes a client import a build error rather than
+ * a leak.
+ */
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 async function rpc<T>(fnName: string, params: Record<string, unknown>): Promise<T> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
-      "Supabase is not configured: set SUPABASE_URL (or DATABASE_URL) and SUPABASE_ANON_KEY in the deployment environment.",
+      "Supabase is not configured: set SUPABASE_URL (or DATABASE_URL) and SUPABASE_SERVICE_ROLE_KEY in the deployment environment.",
     );
   }
   const url = `${SUPABASE_URL}/rest/v1/rpc/${fnName}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       "Content-Type": "application/json",
       Prefer: "return=representation",
     },
