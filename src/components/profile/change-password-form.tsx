@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, KeyRound } from "lucide-react";
+import { LivynSpinner, LivynKey } from "@/components/icons/livyn-icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,7 @@ export function ChangePasswordForm() {
     <Card className="mb-5 p-4">
       <div className="mb-3 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-soft text-primary">
-          <KeyRound className="h-4 w-4" />
+          <LivynKey className="h-4 w-4" />
         </div>
         <p className="text-sm font-semibold text-heading">Ganti kata sandi</p>
       </div>
@@ -87,7 +87,7 @@ export function ChangePasswordForm() {
           required
         />
         <Button type="submit" className="w-full" disabled={loading || !current || !next || !confirm}>
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {loading && <LivynSpinner className="h-4 w-4 animate-spin" />}
           Simpan kata sandi baru
         </Button>
       </form>

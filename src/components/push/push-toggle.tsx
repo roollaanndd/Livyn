@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { LivynSpinner } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/client";
 import { pushSupported, subscribeToPush, unsubscribeFromPush, currentSubscription } from "@/lib/push/client";
@@ -70,7 +70,7 @@ export function PushToggle() {
       aria-pressed={status === "on"}
     >
       {status === "loading" ? (
-        <Loader2 className="absolute inset-0 m-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        <LivynSpinner className="absolute inset-0 m-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
         <span
           className={cn(

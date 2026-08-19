@@ -3,14 +3,14 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Download,
-  Share2,
-  Image as ImageIcon,
-  Check,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react";
+  LivynDownload,
+  LivynShare,
+  LivynImage,
+  LivynCheck,
+  LivynSpinner,
+  LivynRefresh,
+  LivynSpark,
+} from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/client";
 
@@ -560,13 +560,13 @@ export function DevotionShareCard({
         className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-primary to-primary/85 px-4 py-3.5 text-left shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
       >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20">
-          <ImageIcon className="h-4.5 w-4.5 text-white" />
+          <LivynImage className="h-4.5 w-4.5 text-white" />
         </div>
         <div className="flex-1">
           <span className="block text-[14px] font-bold text-white">{t("devotionImage.cta")}</span>
           <span className="block text-[11.5px] text-white/80">{t("devotionImage.ctaSub")}</span>
         </div>
-        <Sparkles className="h-4.5 w-4.5 text-white/80" />
+        <LivynSpark className="h-4.5 w-4.5 text-white/80" />
       </button>
 
       <AnimatePresence>
@@ -590,7 +590,7 @@ export function DevotionShareCard({
                   />
                   {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                      <Loader2 className="h-8 w-8 animate-spin text-white" />
+                      <LivynSpinner className="h-8 w-8 animate-spin text-white" />
                     </div>
                   )}
                 </div>
@@ -601,7 +601,7 @@ export function DevotionShareCard({
                 >
                   {loading ? (
                     <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <LivynSpinner className="h-8 w-8 animate-spin text-primary" />
                       <p className="text-[13px] text-muted-foreground">
                         {t("devotionImage.generating")}
                       </p>
@@ -625,7 +625,7 @@ export function DevotionShareCard({
                   ) : (
                     <button onClick={generate} className="flex flex-col items-center gap-3 px-6">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-[var(--shadow-glow)]">
-                        <Sparkles className="h-6 w-6 text-white" />
+                        <LivynSpark className="h-6 w-6 text-white" />
                       </div>
                       <p className="text-[13px] font-semibold text-primary">
                         {t("devotionImage.generate")}
@@ -646,14 +646,14 @@ export function DevotionShareCard({
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-heading transition-colors hover:bg-surface-muted/80 disabled:opacity-50"
                     aria-label={t("devotionImage.regenerate")}
                   >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    {loading ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynRefresh className="h-4 w-4" />}
                   </button>
                   <button
                     onClick={download}
                     disabled={loading}
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-muted px-4 py-2.5 text-[13px] font-semibold text-heading transition-colors hover:bg-surface-muted/80 disabled:opacity-50"
                   >
-                    {downloadDone ? <Check className="h-4 w-4 text-primary" /> : <Download className="h-4 w-4" />}
+                    {downloadDone ? <LivynCheck className="h-4 w-4 text-primary" /> : <LivynDownload className="h-4 w-4" />}
                     <span>{downloadDone ? t("devotionImage.saved") : t("devotionImage.save")}</span>
                   </button>
                   {canShare && (
@@ -662,7 +662,7 @@ export function DevotionShareCard({
                       disabled={loading}
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
-                      <Share2 className="h-4 w-4" />
+                      <LivynShare className="h-4 w-4" />
                       <span>{t("devotionImage.share")}</span>
                     </button>
                   )}

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ShieldCheck, ShieldX } from "lucide-react";
+import { LivynShieldCheck, LivynShieldX } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { TopBar } from "@/components/nav/top-bar";
@@ -35,9 +35,9 @@ export default async function SecurityPage() {
           {events.map((e) => (
             <Card key={e.id} className="flex items-start gap-3 p-3.5">
               {e.success ? (
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                <LivynShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
               ) : (
-                <ShieldX className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                <LivynShieldX className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
               )}
               <div className="min-w-0">
                 <p className="text-sm font-medium">{e.success ? "Login berhasil" : "Login gagal"}</p>

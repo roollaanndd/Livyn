@@ -4,17 +4,27 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, BookOpenText, HandHeart, ArrowLeft, RotateCcw, AlertCircle, RefreshCw, Heart } from "lucide-react";
+import {
+  LivynSend,
+  LivynSpark,
+  LivynBible,
+  LivynPrayer,
+  LivynArrowLeft,
+  LivynUndo,
+  LivynAlertCircle,
+  LivynRefresh,
+  LivynHeart,
+} from "@/components/icons/livyn-icons";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { sanitizeReply } from "@/lib/ai-pastor/voice";
 import { LivynAiIcon } from "@/components/brand/logo";
 
 const SUGGESTED_PROMPTS = [
-  { icon: BookOpenText, text: "Jelaskan Yohanes 3:16", category: "Alkitab", color: "bg-blue-500/10 text-blue-600" },
-  { icon: HandHeart, text: "Saya sedang merasa cemas", category: "Doa", color: "bg-rose-500/10 text-rose-600" },
-  { icon: Sparkles, text: "Berikan renungan tentang kasih", category: "Renungan", color: "bg-amber-500/10 text-amber-600" },
-  { icon: Heart, text: "Bagaimana cara berdoa?", category: "Panduan", color: "bg-teal-500/10 text-teal-600" },
+  { icon: LivynBible, text: "Jelaskan Yohanes 3:16", category: "Alkitab", color: "bg-blue-500/10 text-blue-600" },
+  { icon: LivynPrayer, text: "Saya sedang merasa cemas", category: "Doa", color: "bg-rose-500/10 text-rose-600" },
+  { icon: LivynSpark, text: "Berikan renungan tentang kasih", category: "Renungan", color: "bg-amber-500/10 text-amber-600" },
+  { icon: LivynHeart, text: "Bagaimana cara berdoa?", category: "Panduan", color: "bg-teal-500/10 text-teal-600" },
 ];
 
 function TypingIndicator() {
@@ -180,7 +190,7 @@ export default function AiPastorPage() {
           onClick={() => router.back()}
           className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-muted/80 hover:bg-surface-muted transition-colors active:scale-95"
         >
-          <ArrowLeft className="h-[18px] w-[18px]" />
+          <LivynArrowLeft className="h-[18px] w-[18px]" />
         </button>
         <div className="flex items-center gap-3 flex-1">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-sm">
@@ -203,7 +213,7 @@ export default function AiPastorPage() {
             className="flex h-10 w-10 items-center justify-center rounded-2xl hover:bg-surface-muted transition-colors active:scale-95"
             aria-label="Reset percakapan"
           >
-            <RotateCcw className="h-4.5 w-4.5 text-muted-foreground" />
+            <LivynUndo className="h-4.5 w-4.5 text-muted-foreground" />
           </button>
         )}
       </header>
@@ -290,7 +300,7 @@ export default function AiPastorPage() {
             exit={{ opacity: 0 }}
             className="mt-4 flex items-start gap-3 rounded-2xl bg-error-soft border border-error/20 p-4"
           >
-            <AlertCircle className="h-5 w-5 text-error shrink-0 mt-0.5" />
+            <LivynAlertCircle className="h-5 w-5 text-error shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-[13px] font-semibold text-error">Terjadi Kesalahan</p>
               <p className="text-[12px] text-muted-foreground mt-1 leading-relaxed">{displayError}</p>
@@ -299,7 +309,7 @@ export default function AiPastorPage() {
               onClick={() => { setApiError(null); }}
               className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl hover:bg-error-soft transition-colors"
             >
-              <RefreshCw className="h-3.5 w-3.5 text-error" />
+              <LivynRefresh className="h-3.5 w-3.5 text-error" />
             </button>
           </motion.div>
         )}
@@ -336,7 +346,7 @@ export default function AiPastorPage() {
             )}
             whileTap={{ scale: 0.92 }}
           >
-            <Send className="h-[18px] w-[18px]" />
+            <LivynSend className="h-[18px] w-[18px]" />
           </motion.button>
         </div>
       </div>

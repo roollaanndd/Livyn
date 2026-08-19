@@ -1,14 +1,13 @@
 import Link from "next/link";
 import {
-  BookOpen,
-  BookMarked,
-  Bell,
-  MessageCircleHeart,
-  NotebookPen,
-  Video,
-  Target,
-  Users,
-} from "lucide-react";
+  LivynBible,
+  LivynBell,
+  LivynCircle,
+  LivynJournal,
+  LivynPrayer,
+  LivynSermon,
+  LivynTarget,
+} from "@/components/icons/livyn-icons";
 import { TryDemoButton } from "@/components/auth/try-demo-button";
 import { LivynMark, LivynWordmark } from "@/components/brand/logo";
 import "./marketing.css";
@@ -25,42 +24,42 @@ import "./marketing.css";
 
 const FEATURES = [
   {
-    icon: BookOpen,
+    icon: LivynBible,
     title: "Renungan harian",
     body: "Alur khotbah singkat setiap hari — pembuka, merenungkan firman, aplikasi, dan doa penutup.",
   },
   {
-    icon: BookMarked,
+    icon: LivynBible,
     title: "Alkitab",
     body: "Navigasi 66 kitab, sorot ayat yang menguatkan, dan tulis catatan pribadimu sendiri.",
   },
   {
-    icon: Bell,
+    icon: LivynBell,
     title: "Pengingat doa",
     body: "Tentukan waktumu sendiri — pagi, siang, malam. Livyn menjaga ritmenya, bukan mengganggumu.",
   },
   {
-    icon: MessageCircleHeart,
+    icon: LivynPrayer,
     title: "AI Pastor",
     body: "Tanya tentang Alkitab, minta ditemani berdoa, atau bicara soal apa yang sedang berat.",
   },
   {
-    icon: NotebookPen,
+    icon: LivynJournal,
     title: "Jurnal",
     body: "Curhat kepada Tuhan lewat tulisan, catat suasana hatimu, dan pulang membawa satu ayat penguat.",
   },
   {
-    icon: Video,
+    icon: LivynSermon,
     title: "Khotbah",
     body: "Tonton atau dengarkan saja, lanjutkan dari tempat terakhir, lengkap dengan transkrip.",
   },
   {
-    icon: Target,
+    icon: LivynTarget,
     title: "Tantangan & rencana baca",
     body: "Rencana bacaan harian yang terstruktur dan tantangan bulanan untuk menjaga langkahmu.",
   },
   {
-    icon: Users,
+    icon: LivynCircle,
     title: "Teman & circle",
     body: "Undang teman lewat kode unik, kirim ayat penguat, dan berdoa bersama dalam circle kecil.",
   },

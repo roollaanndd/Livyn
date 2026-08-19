@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Loader2 } from "lucide-react";
+import { LivynClock, LivynSpinner } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ export function SmartReminderCard({
     <Card className="mx-5 mb-4 p-4">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-          <Clock className="h-5 w-5" />
+          <LivynClock className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
@@ -99,7 +99,7 @@ export function SmartReminderCard({
               </p>
               <div className="mt-2.5 flex gap-2">
                 <Button size="sm" onClick={move} disabled={busy}>
-                  {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {busy && <LivynSpinner className="h-3.5 w-3.5 animate-spin" />}
                   {t("reminders.smartApply")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setDismissed(true)} disabled={busy}>

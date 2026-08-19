@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X } from "lucide-react";
+import { LivynCheck, LivynClose } from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -64,10 +64,10 @@ export function ModerationQueue({
               </div>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" onClick={() => act("devosi", d.id, "approve")}>
-                  <Check className="h-3.5 w-3.5" /> Setujui
+                  <LivynCheck className="h-3.5 w-3.5" /> Setujui
                 </Button>
                 <Button size="sm" variant="destructive" onClick={() => act("devosi", d.id, "reject")}>
-                  <X className="h-3.5 w-3.5" /> Tolak
+                  <LivynClose className="h-3.5 w-3.5" /> Tolak
                 </Button>
               </div>
             </Card>
@@ -90,10 +90,10 @@ export function ModerationQueue({
               </div>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" onClick={() => act("khotbah", s.id, "approve")}>
-                  <Check className="h-3.5 w-3.5" /> Setujui
+                  <LivynCheck className="h-3.5 w-3.5" /> Setujui
                 </Button>
                 <Button size="sm" variant="destructive" onClick={() => act("khotbah", s.id, "reject")}>
-                  <X className="h-3.5 w-3.5" /> Tolak
+                  <LivynClose className="h-3.5 w-3.5" /> Tolak
                 </Button>
               </div>
             </Card>

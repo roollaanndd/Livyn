@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Loader2 } from "lucide-react";
+import { LivynCheck, LivynSpinner } from "@/components/icons/livyn-icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LivynMark } from "@/components/brand/logo";
@@ -74,7 +74,7 @@ export function ConsentForm({ points }: { points: string[] }) {
             agreed ? "border-primary bg-primary text-white" : "border-border",
           )}
         >
-          {agreed && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+          {agreed && <LivynCheck className="h-3.5 w-3.5" strokeWidth={3} />}
         </span>
         <span className="text-[13px] leading-relaxed text-heading">{t("terms.checkbox")}</span>
       </button>
@@ -85,7 +85,7 @@ export function ConsentForm({ points }: { points: string[] }) {
         <Button size="lg" className="w-full" disabled={!agreed || saving} onClick={submit}>
           {saving ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" /> {t("terms.saving")}
+              <LivynSpinner className="h-4 w-4 animate-spin" /> {t("terms.saving")}
             </>
           ) : (
             t("terms.continue")

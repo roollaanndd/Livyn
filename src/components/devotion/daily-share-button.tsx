@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, Check, Copy } from "lucide-react";
+import { LivynShare, LivynCheck, LivynCopy } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ export function DailyShareButton({ title, verseRef, verseText, className }: Prop
         disabled={busy}
         className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-primary-foreground px-4 py-3 text-[14px] font-bold shadow-sm active:scale-[0.98] transition-transform disabled:opacity-60"
       >
-        <Share2 className="h-4 w-4" />
+        <LivynShare className="h-4 w-4" />
         Bagikan Renungan
       </button>
       <button
@@ -64,7 +64,7 @@ export function DailyShareButton({ title, verseRef, verseText, className }: Prop
         aria-label="Salin teks"
         className="flex h-11 w-11 items-center justify-center rounded-2xl bg-surface-muted text-muted-foreground active:scale-95 transition-transform"
       >
-        {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+        {copied ? <LivynCheck className="h-4 w-4 text-primary" /> : <LivynCopy className="h-4 w-4" />}
       </button>
     </div>
   );

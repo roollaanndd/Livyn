@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sun, Moon } from "lucide-react";
+import { LivynSun, LivynMoon } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import { DURATION, EASE_OUT, TAP } from "@/lib/motion";
 
@@ -45,7 +45,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
             transition={{ duration: DURATION.quick, ease: EASE_OUT }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            {isDark ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
+            {isDark ? <LivynMoon className="h-[18px] w-[18px]" /> : <LivynSun className="h-[18px] w-[18px]" />}
           </motion.span>
         )}
       </AnimatePresence>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { LivynSpinner } from "@/components/icons/livyn-icons";
 import { loadBook } from "@/lib/bible/offline-store";
 import { VerseList } from "@/components/bible/verse-list";
 
@@ -56,7 +56,7 @@ export function OfflineChapter({
   if (!verses) {
     return (
       <div className="flex items-center justify-center gap-2 py-14 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin text-primary" /> Memuat ayat...
+        <LivynSpinner className="h-4 w-4 animate-spin text-primary" /> Memuat ayat...
       </div>
     );
   }

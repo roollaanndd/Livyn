@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { Search } from "lucide-react";
+import { LivynSearch } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listBibleBooks, searchBibleVerses } from "@/lib/queries/bible";
 import { TopBar } from "@/components/nav/top-bar";
@@ -30,7 +30,7 @@ export default async function BibleBooksPage({ searchParams }: { searchParams: P
 
       <div className="px-5 pt-4">
         <form action="/app/alkitab" className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground/50" />
+          <LivynSearch className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground/50" />
           <input
             name="cari"
             defaultValue={cari}

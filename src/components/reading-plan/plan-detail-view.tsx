@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
-  Flame,
-  CheckCircle2,
-  Circle,
-  BookOpen,
-  Sparkles,
-  Trophy,
-} from "lucide-react";
+  LivynFlame,
+  LivynCheckCircle,
+  LivynRing,
+  LivynBible,
+  LivynSpark,
+  LivynTrophy,
+} from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -170,7 +170,7 @@ export function PlanDetailView({
           </div>
           <div className="mt-3 flex items-center gap-4 text-sm">
             <span className="flex items-center gap-1 font-semibold text-amber-500">
-              <Flame className="h-4 w-4" />
+              <LivynFlame className="h-4 w-4" />
               {enrollment?.currentStreak ?? 0} hari
             </span>
             <span className="text-xs text-muted-foreground">
@@ -188,7 +188,7 @@ export function PlanDetailView({
           size="lg"
           className="w-full"
         >
-          <Sparkles className="h-4 w-4" />
+          <LivynSpark className="h-4 w-4" />
           Mulai Rencana Bacaan
         </Button>
       )}
@@ -199,7 +199,7 @@ export function PlanDetailView({
           animate={{ scale: 1, opacity: 1 }}
           className="rounded-xl bg-emerald-500/10 p-4 text-center"
         >
-          <Trophy className="mx-auto h-8 w-8 text-emerald-500" />
+          <LivynTrophy className="mx-auto h-8 w-8 text-emerald-500" />
           <p className="mt-2 text-sm font-bold text-emerald-600">
             Rencana Bacaan Selesai!
           </p>
@@ -240,9 +240,9 @@ export function PlanDetailView({
                     className="shrink-0"
                   >
                     {done ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                      <LivynCheckCircle className="h-5 w-5 text-emerald-500" />
                     ) : (
-                      <Circle
+                      <LivynRing
                         className={cn(
                           "h-5 w-5",
                           isNext
@@ -281,7 +281,7 @@ export function PlanDetailView({
                       disabled={loading === item.day}
                       className="shrink-0 text-xs"
                     >
-                      <BookOpen className="h-3.5 w-3.5" />
+                      <LivynBible className="h-3.5 w-3.5" />
                       Baca
                     </Button>
                   )}

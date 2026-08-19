@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { LivynChevronLeft, LivynChevronRight } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   getBibleBookByCode,
@@ -69,14 +69,14 @@ export default async function ChapterReaderPage({
         <div className="mt-8 flex items-center justify-between">
           {prevChapter ? (
             <Link href={`/app/alkitab/${bookCode}/${prevChapter}`} className="flex items-center gap-1 text-sm font-semibold text-primary">
-              <ChevronLeft className="h-4 w-4" /> Pasal {prevChapter}
+              <LivynChevronLeft className="h-4 w-4" /> Pasal {prevChapter}
             </Link>
           ) : (
             <span />
           )}
           {nextChapter && (
             <Link href={`/app/alkitab/${bookCode}/${nextChapter}`} className="flex items-center gap-1 text-sm font-semibold text-primary">
-              Pasal {nextChapter} <ChevronRight className="h-4 w-4" />
+              Pasal {nextChapter} <LivynChevronRight className="h-4 w-4" />
             </Link>
           )}
         </div>

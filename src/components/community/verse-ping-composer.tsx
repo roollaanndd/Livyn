@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Send } from "lucide-react";
+import { LivynSpinner, LivynSend } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ export function VersePingComposer({ friendId, friendName }: { friendId: string; 
       </div>
 
       <Button type="submit" size="lg" className="w-full" disabled={busy || !verseRef.trim() || !verseText.trim()}>
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynSend className="h-4 w-4" />}
         Kirim Ayat
       </Button>
     </form>

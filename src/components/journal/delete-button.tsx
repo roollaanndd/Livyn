@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { LivynTrash } from "@/components/icons/livyn-icons";
 
 export function DeleteJournalButton({ id }: { id: string }) {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function DeleteJournalButton({ id }: { id: string }) {
       className="rounded-full p-2 text-red-500 hover:bg-red-500/10 disabled:opacity-50"
       aria-label="Hapus catatan"
     >
-      <Trash2 className="h-5 w-5" />
+      <LivynTrash className="h-5 w-5" />
     </button>
   );
 }

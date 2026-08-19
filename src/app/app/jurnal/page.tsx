@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PenLine, ChevronRight, BookHeart } from "lucide-react";
+import { LivynPen, LivynChevronRight, LivynJournal } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { TopBar } from "@/components/nav/top-bar";
@@ -33,13 +33,13 @@ export default async function JournalPage() {
               </div>
               <div className="relative flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
-                  <PenLine className="h-5 w-5 text-white" />
+                  <LivynPen className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="font-display font-bold text-white text-[15px]">Tulis Catatan Baru</p>
                   <p className="text-[13px] text-white/60">Ceritakan harimu, dapatkan ayat penguat</p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-white/40" />
+                <LivynChevronRight className="h-5 w-5 text-white/40" />
               </div>
             </div>
           </HeroCard>
@@ -48,7 +48,7 @@ export default async function JournalPage() {
         {entries.length === 0 ? (
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft">
-              <BookHeart className="h-7 w-7 text-primary" strokeWidth={1.5} />
+              <LivynJournal className="h-7 w-7 text-primary" strokeWidth={1.5} />
             </div>
             <div className="space-y-1.5">
               <h3 className="font-display text-base font-bold text-heading">Belum Ada Catatan</h3>
@@ -85,7 +85,7 @@ export default async function JournalPage() {
                           </p>
                         )}
                       </div>
-                      <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/40" />
+                      <LivynChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/40" />
                     </div>
                   </Card>
                 </Link>

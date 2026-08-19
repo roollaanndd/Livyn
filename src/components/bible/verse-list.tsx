@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Highlighter, StickyNote, Copy, Bookmark, BookmarkCheck } from "lucide-react";
+import {
+  LivynHighlight,
+  LivynNote,
+  LivynCopy,
+  LivynBookmark,
+  LivynBookmarkCheck,
+} from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/client";
 
@@ -120,7 +126,7 @@ export function VerseList({
 
             {note && !isActive && (
               <p className="ml-2 flex items-center gap-1 pb-1 text-xs text-muted-foreground">
-                <StickyNote className="h-3 w-3" /> {note}
+                <LivynNote className="h-3 w-3" /> {note}
               </p>
             )}
 
@@ -135,7 +141,7 @@ export function VerseList({
                       isFavorited ? "bg-primary text-primary-foreground" : "bg-surface text-muted-foreground",
                     )}
                   >
-                    {isFavorited ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+                    {isFavorited ? <LivynBookmarkCheck className="h-3.5 w-3.5" /> : <LivynBookmark className="h-3.5 w-3.5" />}
                     {isFavorited ? t("favorites.saved") : t("favorites.save")}
                   </button>
                   <button
@@ -145,7 +151,7 @@ export function VerseList({
                       isHighlighted ? "bg-amber-400 text-amber-950" : "bg-surface text-muted-foreground",
                     )}
                   >
-                    <Highlighter className="h-3.5 w-3.5" /> Sorot
+                    <LivynHighlight className="h-3.5 w-3.5" /> Sorot
                   </button>
                   <button
                     onClick={() => {
@@ -154,13 +160,13 @@ export function VerseList({
                     }}
                     className="flex items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground"
                   >
-                    <StickyNote className="h-3.5 w-3.5" /> Catatan
+                    <LivynNote className="h-3.5 w-3.5" /> Catatan
                   </button>
                   <button
                     onClick={() => copyVerse(v.verse, v.text)}
                     className="flex items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground"
                   >
-                    <Copy className="h-3.5 w-3.5" /> Salin
+                    <LivynCopy className="h-3.5 w-3.5" /> Salin
                   </button>
                 </div>
 

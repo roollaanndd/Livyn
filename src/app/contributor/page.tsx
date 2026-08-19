@@ -1,6 +1,13 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Eye, CheckCircle2, Clock, FileEdit, XCircle, Plus } from "lucide-react";
+import {
+  LivynEye,
+  LivynCheckCircle,
+  LivynClock,
+  LivynFileEdit,
+  LivynCloseCircle,
+  LivynPlus,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hasRole } from "@/lib/auth/rbac";
 import { getContributorStats, listContributorDevotions } from "@/lib/queries/contributor";
@@ -30,16 +37,16 @@ export default async function ContributorDashboardPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dasbor Kontributor</h1>
         <Link href="/contributor/renungan/baru">
-          <Button size="sm"><Plus className="h-4 w-4" /> Renungan Baru</Button>
+          <Button size="sm"><LivynPlus className="h-4 w-4" /> Renungan Baru</Button>
         </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard icon={Eye} label="Total Dilihat" value={formatViewCount(stats.totalViews)} />
-        <StatCard icon={CheckCircle2} label="Terbit" value={stats.published} accent="text-emerald-600" />
-        <StatCard icon={Clock} label="Menunggu" value={stats.pending} accent="text-amber-600" />
-        <StatCard icon={FileEdit} label="Draf" value={stats.draft} accent="text-muted-foreground" />
-        <StatCard icon={XCircle} label="Ditolak" value={stats.rejected} accent="text-red-500" />
+        <StatCard icon={LivynEye} label="Total Dilihat" value={formatViewCount(stats.totalViews)} />
+        <StatCard icon={LivynCheckCircle} label="Terbit" value={stats.published} accent="text-emerald-600" />
+        <StatCard icon={LivynClock} label="Menunggu" value={stats.pending} accent="text-amber-600" />
+        <StatCard icon={LivynFileEdit} label="Draf" value={stats.draft} accent="text-muted-foreground" />
+        <StatCard icon={LivynCloseCircle} label="Ditolak" value={stats.rejected} accent="text-red-500" />
       </div>
 
       <h2 className="font-display mt-8 mb-3 text-base font-bold">Kiriman Terbaru</h2>
@@ -69,7 +76,7 @@ export default async function ContributorDashboardPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, accent }: { icon: typeof Eye; label: string; value: string | number; accent?: string }) {
+function StatCard({ icon: Icon, label, value, accent }: { icon: typeof LivynEye; label: string; value: string | number; accent?: string }) {
   return (
     <Card className="p-4">
       <Icon className={`mb-2 h-4.5 w-4.5 ${accent ?? "text-primary"}`} />

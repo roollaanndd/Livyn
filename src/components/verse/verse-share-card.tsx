@@ -3,14 +3,14 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Download,
-  Share2,
-  Image as ImageIcon,
-  Check,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react";
+  LivynDownload,
+  LivynShare,
+  LivynImage,
+  LivynCheck,
+  LivynSpinner,
+  LivynRefresh,
+  LivynSpark,
+} from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/client";
 
@@ -561,7 +561,7 @@ export function VerseShareCard({
           aria-expanded={open}
           className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3.5 py-2 text-[12px] font-bold text-primary transition-transform active:scale-95"
         >
-          <ImageIcon className="h-3.5 w-3.5" />
+          <LivynImage className="h-3.5 w-3.5" />
           {t("verseImage.ctaCompact")}
         </button>
       ) : (
@@ -571,13 +571,13 @@ export function VerseShareCard({
           className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-primary to-primary/85 px-4 py-3.5 text-left shadow-md shadow-primary/20 transition-transform active:scale-[0.98]"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20">
-            <ImageIcon className="h-4.5 w-4.5 text-white" />
+            <LivynImage className="h-4.5 w-4.5 text-white" />
           </div>
           <div className="flex-1">
             <span className="block text-[14px] font-bold text-white">{t("verseImage.cta")}</span>
             <span className="block text-[11.5px] text-white/80">{t("verseImage.ctaSub")}</span>
           </div>
-          <Sparkles className="h-4.5 w-4.5 text-white/80" />
+          <LivynSpark className="h-4.5 w-4.5 text-white/80" />
         </button>
       )}
 
@@ -602,7 +602,7 @@ export function VerseShareCard({
                   />
                   {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                      <Loader2 className="h-8 w-8 animate-spin text-white" />
+                      <LivynSpinner className="h-8 w-8 animate-spin text-white" />
                     </div>
                   )}
                 </div>
@@ -613,7 +613,7 @@ export function VerseShareCard({
                 >
                   {loading ? (
                     <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <LivynSpinner className="h-8 w-8 animate-spin text-primary" />
                       <p className="text-[13px] text-muted-foreground">
                         {t("verseImage.generating")}
                       </p>
@@ -639,7 +639,7 @@ export function VerseShareCard({
                   ) : (
                     <button onClick={generate} className="flex flex-col items-center gap-3 px-6">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-[var(--shadow-glow)]">
-                        <Sparkles className="h-6 w-6 text-white" />
+                        <LivynSpark className="h-6 w-6 text-white" />
                       </div>
                       <p className="text-[13px] font-semibold text-primary">
                         {t("verseImage.generate")}
@@ -661,9 +661,9 @@ export function VerseShareCard({
                     aria-label={t("verseImage.regenerate")}
                   >
                     {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <LivynSpinner className="h-4 w-4 animate-spin" />
                     ) : (
-                      <RefreshCw className="h-4 w-4" />
+                      <LivynRefresh className="h-4 w-4" />
                     )}
                   </button>
                   <button
@@ -672,9 +672,9 @@ export function VerseShareCard({
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-muted px-4 py-2.5 text-[13px] font-semibold text-heading hover:bg-surface-muted/80 transition-colors disabled:opacity-50"
                   >
                     {downloadDone ? (
-                      <Check className="h-4 w-4 text-primary" />
+                      <LivynCheck className="h-4 w-4 text-primary" />
                     ) : (
-                      <Download className="h-4 w-4" />
+                      <LivynDownload className="h-4 w-4" />
                     )}
                     <span>{downloadDone ? t("verseImage.saved") : t("verseImage.save")}</span>
                   </button>
@@ -684,7 +684,7 @@ export function VerseShareCard({
                       disabled={loading}
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
                     >
-                      <Share2 className="h-4 w-4" />
+                      <LivynShare className="h-4 w-4" />
                       <span>{t("verseImage.share")}</span>
                     </button>
                   )}

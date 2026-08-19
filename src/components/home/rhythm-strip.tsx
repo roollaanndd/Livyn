@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { LivynCheck } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import type { Rhythm } from "@/lib/queries/rhythm";
 import type { TFunction } from "@/lib/i18n/translate";
@@ -30,7 +30,7 @@ export function RhythmStrip({ rhythm, t }: { rhythm: Rhythm; t: TFunction }) {
                 done ? "border-white bg-white text-primary" : "border-white/35 text-transparent",
               )}
             >
-              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+              <LivynCheck className="h-3.5 w-3.5" strokeWidth={3} />
             </span>
             <span className="text-[10px] font-semibold text-white/85">{t(step.labelKey)}</span>
           </Link>

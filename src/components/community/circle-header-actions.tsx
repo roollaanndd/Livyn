@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Copy, Check, Share2, LogOut, Loader2 } from "lucide-react";
+import {
+  LivynCopy,
+  LivynCheck,
+  LivynShare,
+  LivynLogOut,
+  LivynSpinner,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 
 export function CircleHeaderActions({
@@ -65,14 +71,14 @@ export function CircleHeaderActions({
         onClick={share}
         className="flex h-9 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-[12px] font-bold text-primary active:scale-95 transition-transform"
       >
-        <Share2 className="h-3.5 w-3.5" />
+        <LivynShare className="h-3.5 w-3.5" />
         Bagikan
       </button>
       <button
         onClick={copy}
         className="flex h-9 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-[12px] font-semibold text-muted-foreground active:scale-95 transition-transform"
       >
-        {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? <LivynCheck className="h-3.5 w-3.5 text-primary" /> : <LivynCopy className="h-3.5 w-3.5" />}
         <span className="tracking-widest">{joinCode}</span>
       </button>
       {!isOwner && (
@@ -82,7 +88,7 @@ export function CircleHeaderActions({
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-muted text-muted-foreground active:scale-95 transition-transform"
           aria-label="Keluar circle"
         >
-          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+          {busy ? <LivynSpinner className="h-3.5 w-3.5 animate-spin" /> : <LivynLogOut className="h-3.5 w-3.5" />}
         </button>
       )}
     </div>

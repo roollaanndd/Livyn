@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Megaphone, BookOpen, HandHeart, Plus, Loader2, X } from "lucide-react";
+import {
+  LivynMegaphone,
+  LivynBible,
+  LivynPrayer,
+  LivynPlus,
+  LivynSpinner,
+  LivynClose,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +26,9 @@ type Broadcast = {
 };
 
 const TYPE_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  announcement: { label: "Pengumuman", icon: Megaphone, color: "text-sky-600" },
-  sermon_note: { label: "Catatan Khotbah", icon: BookOpen, color: "text-amber-600" },
-  prayer_focus: { label: "Fokus Doa", icon: HandHeart, color: "text-rose-600" },
+  announcement: { label: "Pengumuman", icon: LivynMegaphone, color: "text-sky-600" },
+  sermon_note: { label: "Catatan Khotbah", icon: LivynBible, color: "text-amber-600" },
+  prayer_focus: { label: "Fokus Doa", icon: LivynPrayer, color: "text-rose-600" },
 };
 
 function relativeTime(iso: string): string {
@@ -83,7 +90,7 @@ export function BroadcastList({
           onClick={() => setShowForm(true)}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-primary/[0.04] px-4 py-3.5 text-[13px] font-bold text-primary active:scale-[0.99] transition-transform"
         >
-          <Plus className="h-4 w-4" /> Buat Siaran
+          <LivynPlus className="h-4 w-4" /> Buat Siaran
         </button>
       )}
 
@@ -91,7 +98,7 @@ export function BroadcastList({
         <form onSubmit={submit} className="space-y-3 rounded-2xl border border-border bg-surface p-4">
           <div className="flex items-center justify-between">
             <p className="font-display text-[14px] font-extrabold text-heading">Siaran Baru</p>
-            <button type="button" onClick={() => setShowForm(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+            <button type="button" onClick={() => setShowForm(false)}><LivynClose className="h-4 w-4 text-muted-foreground" /></button>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -132,14 +139,14 @@ export function BroadcastList({
             maxLength={200}
           />
           <Button type="submit" disabled={busy} className="w-full">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publikasikan"}
+            {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : "Publikasikan"}
           </Button>
         </form>
       )}
 
       {broadcasts.length === 0 && !showForm && (
         <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-          <Megaphone className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+          <LivynMegaphone className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
           <p className="text-[13px] text-muted-foreground">Belum ada siaran.</p>
           {canCreate && (
             <p className="mt-1 text-[12px] text-muted-foreground/70">

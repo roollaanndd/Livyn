@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { LivynSun, LivynMoon, LivynMonitor } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 import { SPRING } from "@/lib/motion";
 
 const OPTIONS = [
-  { value: "light", label: "Terang", icon: Sun },
-  { value: "dark", label: "Gelap", icon: Moon },
-  { value: "system", label: "Sistem", icon: Monitor },
+  { value: "light", label: "Terang", icon: LivynSun },
+  { value: "dark", label: "Gelap", icon: LivynMoon },
+  { value: "system", label: "Sistem", icon: LivynMonitor },
 ] as const;
 
 /**

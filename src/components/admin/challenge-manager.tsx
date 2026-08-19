@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Users } from "lucide-react";
+import { LivynPlus, LivynPeople } from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -91,7 +91,7 @@ export function ChallengeManager({ initialChallenges, books }: { initialChalleng
     <div>
       <div className="mb-5 flex justify-end">
         <Button onClick={() => setFormOpen((o) => !o)}>
-          <Plus className="h-4 w-4" /> Tantangan Baru
+          <LivynPlus className="h-4 w-4" /> Tantangan Baru
         </Button>
       </div>
 
@@ -184,7 +184,7 @@ export function ChallengeManager({ initialChallenges, books }: { initialChalleng
                   {MONTH_LABELS[c.month - 1]} {c.year} · {c.bookCode} {c.chapterFrom}–{c.chapterTo}
                 </p>
                 <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                  <Users className="h-3.5 w-3.5" /> {c.participantCount} peserta
+                  <LivynPeople className="h-3.5 w-3.5" /> {c.participantCount} peserta
                 </p>
               </div>
               <button

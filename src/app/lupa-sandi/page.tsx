@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
+import { LivynArrowLeft, LivynSpinner, LivynMailCheck } from "@/components/icons/livyn-icons";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
           href="/masuk"
           className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" /> Kembali ke masuk
+          <LivynArrowLeft className="h-4 w-4" /> Kembali ke masuk
         </Link>
 
         <motion.div
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
             className="flex flex-col items-center rounded-2xl border border-border-subtle bg-surface p-6 text-center gap-3"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-success-soft">
-              <MailCheck className="h-6 w-6 text-success" />
+              <LivynMailCheck className="h-6 w-6 text-success" />
             </div>
             <p className="text-[13px] text-foreground leading-relaxed">
               Jika <span className="font-semibold">{email}</span> terdaftar, tautan atur ulang telah dikirim. Periksa kotak masuk emailmu.
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
               />
             </div>
             <Button type="submit" size="lg" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="h-4.5 w-4.5 animate-spin" />}
+              {loading && <LivynSpinner className="h-4.5 w-4.5 animate-spin" />}
               Kirim Tautan Reset
             </Button>
           </motion.form>

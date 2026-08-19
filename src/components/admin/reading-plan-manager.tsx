@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Users, Trash2, BookOpen } from "lucide-react";
+import { LivynPlus, LivynPeople, LivynTrash, LivynBible } from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -148,7 +148,7 @@ export function ReadingPlanManager({ initialPlans, books }: { initialPlans: Plan
     <div>
       <div className="mb-5 flex justify-end">
         <Button onClick={() => setFormOpen((o) => !o)}>
-          <Plus className="h-4 w-4" /> Rencana Baru
+          <LivynPlus className="h-4 w-4" /> Rencana Baru
         </Button>
       </div>
 
@@ -245,7 +245,7 @@ export function ReadingPlanManager({ initialPlans, books }: { initialPlans: Plan
                     placeholder="Ps"
                   />
                   <button onClick={() => removeScheduleItem(idx)} className="shrink-0 text-muted-foreground hover:text-error">
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <LivynTrash className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
@@ -264,7 +264,7 @@ export function ReadingPlanManager({ initialPlans, books }: { initialPlans: Plan
       <div className="space-y-3">
         {plans.length === 0 && (
           <div className="py-12 text-center">
-            <BookOpen className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+            <LivynBible className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Belum ada rencana bacaan.</p>
           </div>
         )}
@@ -283,14 +283,14 @@ export function ReadingPlanManager({ initialPlans, books }: { initialPlans: Plan
                     <span>·</span>
                     <span>{DIFFICULTIES.find((d) => d.value === p.difficulty)?.label ?? p.difficulty}</span>
                     <span>·</span>
-                    <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {p.enrollmentCount} peserta</span>
+                    <span className="flex items-center gap-1"><LivynPeople className="h-3 w-3" /> {p.enrollmentCount} peserta</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {p.enrollmentCount === 0 && (
                   <button onClick={() => deletePlan(p)} className="text-muted-foreground hover:text-error" aria-label="Hapus">
-                    <Trash2 className="h-4 w-4" />
+                    <LivynTrash className="h-4 w-4" />
                   </button>
                 )}
                 <button

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { LivynPlus } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hasRole } from "@/lib/auth/rbac";
 import { listContributorSermons } from "@/lib/queries/contributor";
@@ -26,7 +26,7 @@ export default async function ContributorSermonsPage() {
       <div className="mb-5 flex items-center justify-between">
         <h1 className="font-display text-xl font-bold">Khotbah Saya</h1>
         <Link href="/contributor/khotbah/baru">
-          <Button size="sm"><Plus className="h-4 w-4" /> Baru</Button>
+          <Button size="sm"><LivynPlus className="h-4 w-4" /> Baru</Button>
         </Link>
       </div>
       <div className="space-y-2">

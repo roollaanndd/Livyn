@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Headphones, Video, FileText } from "lucide-react";
+import { LivynHeadphones, LivynSermon, LivynFileText } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 
 export function SermonPlayer({
@@ -68,7 +68,7 @@ export function SermonPlayer({
         />
         {audioOnly && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-white/80">
-            <Headphones className="h-8 w-8" />
+            <LivynHeadphones className="h-8 w-8" />
             <span className="text-sm">Mode audio saja aktif</span>
           </div>
         )}
@@ -82,7 +82,7 @@ export function SermonPlayer({
             audioOnly ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground",
           )}
         >
-          {audioOnly ? <Headphones className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}
+          {audioOnly ? <LivynHeadphones className="h-3.5 w-3.5" /> : <LivynSermon className="h-3.5 w-3.5" />}
           {audioOnly ? "Audio Saja" : "Mode Video"}
         </button>
         {transcript && (
@@ -93,7 +93,7 @@ export function SermonPlayer({
               showTranscript ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground",
             )}
           >
-            <FileText className="h-3.5 w-3.5" /> Transkrip
+            <LivynFileText className="h-3.5 w-3.5" /> Transkrip
           </button>
         )}
       </div>

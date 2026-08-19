@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { LivynCheckCircle, LivynSpinner, LivynShieldAlert } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +64,7 @@ function ResetInner() {
       <AuthLayout>
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
-            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+            <LivynCheckCircle className="h-8 w-8 text-emerald-500" />
           </div>
           <h1 className="font-display text-xl font-bold">Kata sandi diperbarui</h1>
           <p className="max-w-sm text-sm text-muted-foreground">
@@ -80,7 +80,7 @@ function ResetInner() {
       <AuthLayout>
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-warning/10">
-            <ShieldAlert className="h-8 w-8 text-warning" />
+            <LivynShieldAlert className="h-8 w-8 text-warning" />
           </div>
           <h1 className="font-display text-xl font-bold">Tautan tidak lengkap</h1>
           <p className="max-w-sm text-sm text-muted-foreground">
@@ -139,7 +139,7 @@ function ResetInner() {
           </div>
 
           <Button type="submit" size="lg" className="h-[52px] w-full text-[15px] font-bold" disabled={loading}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Simpan kata sandi baru"}
+            {loading ? <LivynSpinner className="h-5 w-5 animate-spin" /> : "Simpan kata sandi baru"}
           </Button>
         </form>
       </div>
@@ -153,7 +153,7 @@ export default function ResetPasswordPage() {
       fallback={
         <AuthLayout>
           <div className="flex justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <LivynSpinner className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         </AuthLayout>
       }

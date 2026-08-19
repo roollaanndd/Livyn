@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bookmark, BookmarkCheck, Share2, DownloadCloud, CloudCheck } from "lucide-react";
+import {
+  LivynBookmark,
+  LivynBookmarkCheck,
+  LivynShare,
+  LivynCloudDownload,
+  LivynCloudCheck,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -69,10 +75,10 @@ export function DevotionActions({
           bookmarked ? "bg-primary/10 text-primary" : "bg-surface-muted text-muted-foreground",
         )}
       >
-        {bookmarked ? <BookmarkCheck className="h-4.5 w-4.5" /> : <Bookmark className="h-4.5 w-4.5" />}
+        {bookmarked ? <LivynBookmarkCheck className="h-4.5 w-4.5" /> : <LivynBookmark className="h-4.5 w-4.5" />}
       </button>
       <button onClick={share} aria-label="Bagikan" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
-        <Share2 className="h-4.5 w-4.5" />
+        <LivynShare className="h-4.5 w-4.5" />
       </button>
       <button
         onClick={saveOffline}
@@ -83,7 +89,7 @@ export function DevotionActions({
           savedOffline ? "bg-accent/15 text-accent" : "bg-surface-muted text-muted-foreground",
         )}
       >
-        {savedOffline ? <CloudCheck className="h-4.5 w-4.5" /> : <DownloadCloud className="h-4.5 w-4.5" />}
+        {savedOffline ? <LivynCloudCheck className="h-4.5 w-4.5" /> : <LivynCloudDownload className="h-4.5 w-4.5" />}
       </button>
     </div>
   );

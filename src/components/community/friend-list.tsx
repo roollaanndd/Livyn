@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserMinus, Send } from "lucide-react";
+import { LivynUserMinus, LivynSend } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 
 type Friend = { id: string; name: string; avatarUrl: string | null };
@@ -43,14 +43,14 @@ export function FriendList({ friends: initial }: { friends: Friend[] }) {
             className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform"
             aria-label={`Kirim ayat ke ${f.name}`}
           >
-            <Send className="h-4 w-4" />
+            <LivynSend className="h-4 w-4" />
           </a>
           <button
             onClick={() => remove(f.id, f.name)}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-muted-foreground active:scale-95 transition-transform"
             aria-label={`Hapus ${f.name}`}
           >
-            <UserMinus className="h-4 w-4" />
+            <LivynUserMinus className="h-4 w-4" />
           </button>
         </li>
       ))}

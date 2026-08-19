@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Flame, Trophy, BookOpenCheck, Sparkles } from "lucide-react";
+import {
+  LivynFlame,
+  LivynTrophy,
+  LivynReadingPlan,
+  LivynSpark,
+} from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -96,7 +101,7 @@ export function ChallengeView({
               <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Levelmu</p>
               <p className="font-display text-2xl font-bold">{currentLevel.name}</p>
             </div>
-            <Trophy className="h-9 w-9 text-amber-300" />
+            <LivynTrophy className="h-9 w-9 text-amber-300" />
           </div>
           <p className="mt-1 text-sm text-white/75">{currentPoints} poin total</p>
           {nextTier && (
@@ -114,7 +119,7 @@ export function ChallengeView({
 
       <Card className="p-5">
         <div className="mb-2 flex items-center gap-2">
-          <BookOpenCheck className="h-4.5 w-4.5 text-primary" />
+          <LivynReadingPlan className="h-4.5 w-4.5 text-primary" />
           <h2 className="font-display font-bold">{challenge.title}</h2>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -133,13 +138,13 @@ export function ChallengeView({
         </div>
 
         <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-amber-500">
-          <Flame className="h-4 w-4" /> {progress.currentStreak} hari berturut-turut
+          <LivynFlame className="h-4 w-4" /> {progress.currentStreak} hari berturut-turut
           <span className="ml-1 font-normal text-muted-foreground">(rekor: {progress.longestStreak})</span>
         </div>
 
         {nextChapter !== null ? (
           <Button onClick={() => markRead(nextChapter)} disabled={loading} size="lg" className="mt-4 w-full">
-            <Sparkles className="h-4 w-4" />
+            <LivynSpark className="h-4 w-4" />
             Tandai {challenge.bookName} {nextChapter} Selesai Dibaca
           </Button>
         ) : (

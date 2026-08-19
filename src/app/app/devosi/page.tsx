@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
-import { BookOpen, Sparkles, Heart, HandHeart, MessageSquareQuote } from "lucide-react";
+import {
+  LivynBible,
+  LivynSpark,
+  LivynHeart,
+  LivynPrayer,
+  LivynQuote,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getTodaysDevotion, formatTodaysDate } from "@/lib/devotions/daily-themes";
 import { TopBar } from "@/components/nav/top-bar";
@@ -62,7 +68,7 @@ export default async function DailyDevotionPage() {
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${ACCENT_BADGE[accent]}`}
             >
-              <Sparkles className="h-3 w-3" />
+              <LivynSpark className="h-3 w-3" />
               {devotion.theme}
             </span>
           </div>
@@ -75,7 +81,7 @@ export default async function DailyDevotionPage() {
         {/* Featured verse */}
         <div className={`animate-slide-up-fade mt-6 rounded-2xl border p-5 ${ACCENT_VERSE[accent]}`}>
           <div className="mb-3 flex items-center gap-2">
-            <MessageSquareQuote className="h-4 w-4 text-primary/70" />
+            <LivynQuote className="h-4 w-4 text-primary/70" />
             <span className="text-[11px] font-bold uppercase tracking-wider text-primary/70">
               Ayat Renungan
             </span>
@@ -88,19 +94,19 @@ export default async function DailyDevotionPage() {
 
         {/* Sermon flow: opening → unpacking → application → reflection → prayer */}
         <div className="mt-8 space-y-8">
-          <Section icon={<Heart className="h-4 w-4" />} label="Pembuka">
+          <Section icon={<LivynHeart className="h-4 w-4" />} label="Pembuka">
             <p className="devotion-body text-[15.5px] leading-[1.85] text-foreground/90">
               {devotion.opening}
             </p>
           </Section>
 
-          <Section icon={<BookOpen className="h-4 w-4" />} label="Merenungkan Firman">
+          <Section icon={<LivynBible className="h-4 w-4" />} label="Merenungkan Firman">
             <p className="devotion-body text-[15.5px] leading-[1.85] text-foreground/90">
               {devotion.unpacking}
             </p>
           </Section>
 
-          <Section icon={<Sparkles className="h-4 w-4" />} label="Dalam Hidup Kita">
+          <Section icon={<LivynSpark className="h-4 w-4" />} label="Dalam Hidup Kita">
             <p className="devotion-body text-[15.5px] leading-[1.85] text-foreground/90">
               {devotion.application}
             </p>
@@ -109,7 +115,7 @@ export default async function DailyDevotionPage() {
           {/* Reflection questions — visually distinct */}
           <div className="rounded-2xl border border-border-subtle bg-surface p-5">
             <div className="mb-3 flex items-center gap-2 text-primary">
-              <MessageSquareQuote className="h-4 w-4" />
+              <LivynQuote className="h-4 w-4" />
               <span className="text-[11px] font-bold uppercase tracking-wider">Refleksi</span>
             </div>
             <ul className="space-y-3">
@@ -127,7 +133,7 @@ export default async function DailyDevotionPage() {
           {/* Prayer */}
           <div className={`rounded-2xl border p-5 ${ACCENT_VERSE[accent]}`}>
             <div className="mb-3 flex items-center gap-2 text-primary">
-              <HandHeart className="h-4 w-4" />
+              <LivynPrayer className="h-4 w-4" />
               <span className="text-[11px] font-bold uppercase tracking-wider">Doa Penutup</span>
             </div>
             <p className="font-display text-[15px] italic leading-[1.8] text-heading">

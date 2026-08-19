@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BookOpenCheck, Download, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  LivynReadingPlan,
+  LivynDownload,
+  LivynSpinner,
+  LivynCheckCircle,
+} from "@/components/icons/livyn-icons";
 import { downloadFullBible, isBibleDownloaded } from "@/lib/bible/offline-store";
 
 export function DownloadBibleCard() {
@@ -28,7 +33,7 @@ export function DownloadBibleCard() {
   if (state === "done") {
     return (
       <div className="mx-5 mt-4 flex items-center gap-2.5 rounded-2xl border border-primary/15 bg-primary-soft/40 px-4 py-3">
-        <CheckCircle2 className="h-4.5 w-4.5 shrink-0 text-primary" />
+        <LivynCheckCircle className="h-4.5 w-4.5 shrink-0 text-primary" />
         <p className="text-[12.5px] font-medium text-heading">
           Alkitab TB lengkap tersedia — bisa dibaca offline
         </p>
@@ -44,7 +49,7 @@ export function DownloadBibleCard() {
     >
       <div className="flex items-start gap-3.5">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15">
-          <BookOpenCheck className="h-5.5 w-5.5" />
+          <LivynReadingPlan className="h-5.5 w-5.5" />
         </div>
         <div className="flex-1">
           <h3 className="text-[15px] font-bold">Unduh Alkitab Lengkap</h3>
@@ -62,7 +67,7 @@ export function DownloadBibleCard() {
                 />
               </div>
               <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-white/90">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Mengunduh... {progress}%
+                <LivynSpinner className="h-3.5 w-3.5 animate-spin" /> Mengunduh... {progress}%
               </p>
             </div>
           ) : (
@@ -70,7 +75,7 @@ export function DownloadBibleCard() {
               onClick={start}
               className="mt-3 flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-[13.5px] font-bold text-primary transition-transform active:scale-95"
             >
-              <Download className="h-4 w-4" />
+              <LivynDownload className="h-4 w-4" />
               {state === "error" ? "Coba Unduh Lagi" : "Unduh Sekarang"}
             </button>
           )}

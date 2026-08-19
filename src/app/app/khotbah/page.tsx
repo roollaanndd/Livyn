@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PlayCircle } from "lucide-react";
+import { LivynPlay } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listPublishedSermons } from "@/lib/queries/sermons";
 import { listCategories } from "@/lib/queries/devotions";
@@ -52,7 +52,7 @@ export default async function SermonListPage({ searchParams }: { searchParams: P
         {sermons.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft">
-              <PlayCircle className="h-6 w-6 text-primary" />
+              <LivynPlay className="h-6 w-6 text-primary" />
             </div>
             <p className="text-[13px] text-muted-foreground">Belum ada khotbah pada kategori ini.</p>
           </div>
@@ -62,7 +62,7 @@ export default async function SermonListPage({ searchParams }: { searchParams: P
             <Card className="animate-slide-up-fade overflow-hidden p-0 active:scale-[0.98] transition-transform">
               <div className="relative flex h-32 items-center justify-center" style={{ background: "var(--gradient-verse)" }}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
-                  <PlayCircle className="h-6 w-6 text-white/90" />
+                  <LivynPlay className="h-6 w-6 text-white/90" />
                 </div>
                 <span className="absolute bottom-2.5 right-3 rounded-lg bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
                   {formatDurationShort(s.durationSec)}

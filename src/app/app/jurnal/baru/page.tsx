@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { LivynSpinner } from "@/components/icons/livyn-icons";
 import { motion } from "framer-motion";
 import { TopBar } from "@/components/nav/top-bar";
 import { Input } from "@/components/ui/input";
@@ -107,7 +107,7 @@ export default function NewJournalEntryPage() {
         </p>
 
         <Button onClick={submit} size="lg" className="w-full" disabled={loading}>
-          {loading && <Loader2 className="h-4.5 w-4.5 animate-spin" />}
+          {loading && <LivynSpinner className="h-4.5 w-4.5 animate-spin" />}
           Simpan Catatan
         </Button>
       </motion.div>

@@ -3,7 +3,13 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Eye, EyeOff, Check, X } from "lucide-react";
+import {
+  LivynSpinner,
+  LivynEye,
+  LivynEyeOff,
+  LivynCheck,
+  LivynClose,
+} from "@/components/icons/livyn-icons";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -139,7 +145,7 @@ export default function RegisterPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                {showPassword ? <LivynEyeOff className="h-4.5 w-4.5" /> : <LivynEye className="h-4.5 w-4.5" />}
               </button>
             </div>
 
@@ -165,9 +171,9 @@ export default function RegisterPage() {
                   {strength.checks.map((check) => (
                     <div key={check.label} className="flex items-center gap-1.5">
                       {check.met ? (
-                        <Check className="h-3 w-3 text-success" />
+                        <LivynCheck className="h-3 w-3 text-success" />
                       ) : (
-                        <X className="h-3 w-3 text-muted-foreground/40" />
+                        <LivynClose className="h-3 w-3 text-muted-foreground/40" />
                       )}
                       <span className={cn("text-[11px]", check.met ? "text-success" : "text-muted-foreground/60")}>
                         {check.label}
@@ -180,7 +186,7 @@ export default function RegisterPage() {
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Daftar"}
+            {loading ? <LivynSpinner className="h-4.5 w-4.5 animate-spin" /> : "Daftar"}
           </Button>
         </motion.form>
 
