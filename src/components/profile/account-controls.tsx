@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Download, Loader2, Trash2 } from "lucide-react";
+import {
+  LivynAlert,
+  LivynDownload,
+  LivynSpinner,
+  LivynTrash,
+} from "@/components/icons/livyn-icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -83,9 +88,9 @@ export function AccountControls({ hasPassword }: { hasPassword: boolean }) {
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-muted">
             {exporting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <LivynSpinner className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
-              <Download className="h-4 w-4 text-muted-foreground" />
+              <LivynDownload className="h-4 w-4 text-muted-foreground" />
             )}
           </div>
           <div className="flex-1">
@@ -101,7 +106,7 @@ export function AccountControls({ hasPassword }: { hasPassword: boolean }) {
           className="flex w-full items-center gap-3.5 p-4 text-left transition-colors hover:bg-red-500/5"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10">
-            <Trash2 className="h-4 w-4 text-red-500" />
+            <LivynTrash className="h-4 w-4 text-red-500" />
           </div>
           <div className="flex-1">
             <span className="text-[13px] font-medium text-red-600 dark:text-red-400">
@@ -125,7 +130,7 @@ export function AccountControls({ hasPassword }: { hasPassword: boolean }) {
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <LivynAlert className="h-5 w-5 text-red-500" />
               </div>
               <div className="min-w-0">
                 <h3 className="font-display text-base font-bold text-heading">
@@ -170,7 +175,7 @@ export function AccountControls({ hasPassword }: { hasPassword: boolean }) {
                 onClick={deleteAccount}
                 disabled={deleting || confirm.length === 0}
               >
-                {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {deleting && <LivynSpinner className="h-4 w-4 animate-spin" />}
                 Hapus Akun
               </Button>
             </div>

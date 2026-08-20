@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Clock } from "lucide-react";
+import { LivynBible, LivynCheckCircle, LivynClock } from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 
 type Plan = {
@@ -47,17 +47,17 @@ export function PlanCard({ plan, enrollment }: { plan: Plan; enrollment: Enrollm
             </p>
             <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
+                <LivynClock className="h-3 w-3" />
                 {plan.totalDays} hari
               </span>
               <span className="flex items-center gap-1">
-                <BookOpen className="h-3 w-3" />
+                <LivynBible className="h-3 w-3" />
                 {DIFFICULTY_LABEL[plan.difficulty] ?? plan.difficulty}
               </span>
             </div>
           </div>
           {isComplete && (
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+            <LivynCheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
           )}
         </div>
 

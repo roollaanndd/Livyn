@@ -50,10 +50,11 @@ export async function GET() {
     required: {
       JWT_ACCESS_SECRET: present("JWT_ACCESS_SECRET"),
       SUPABASE_URL_OR_DATABASE_URL: supabaseUrlDerivable(),
-      SUPABASE_ANON_KEY:
-        present("SUPABASE_ANON_KEY") === "set" || present("NEXT_PUBLIC_SUPABASE_ANON_KEY") === "set"
-          ? "set"
-          : "unset",
+      // The data layer authenticates as the service role, so this is the key
+      // that has to be present. Deliberately not falling back to
+      // SUPABASE_ANON_KEY: with `anon` now granted nothing, reporting an anon
+      // key as sufficient would say "healthy" while every query 401s.
+      SUPABASE_SERVICE_ROLE_KEY: present("SUPABASE_SERVICE_ROLE_KEY"),
     },
     // Optional but tied to specific features. Missing = that feature disabled.
     features: {

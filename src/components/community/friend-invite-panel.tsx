@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Share2, Loader2, UserPlus } from "lucide-react";
+import {
+  LivynCopy,
+  LivynCheck,
+  LivynShare,
+  LivynSpinner,
+  LivynUserPlus,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,7 +97,7 @@ export function FriendInvitePanel({ onFriendAdded }: { onFriendAdded?: () => voi
         </p>
         <div className="mt-4 flex gap-2">
           <Button onClick={share} disabled={!code || busy} className="flex-1">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+            {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynShare className="h-4 w-4" />}
             Bagikan
           </Button>
           <button
@@ -100,7 +106,7 @@ export function FriendInvitePanel({ onFriendAdded }: { onFriendAdded?: () => voi
             aria-label="Salin kode"
             className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-muted text-muted-foreground active:scale-95 transition-transform"
           >
-            {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+            {copied ? <LivynCheck className="h-4 w-4 text-primary" /> : <LivynCopy className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -116,7 +122,7 @@ export function FriendInvitePanel({ onFriendAdded }: { onFriendAdded?: () => voi
             maxLength={12}
           />
           <Button onClick={accept} disabled={accepting || !enterCode.trim()}>
-            {accepting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+            {accepting ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynUserPlus className="h-4 w-4" />}
             Tambah
           </Button>
         </div>

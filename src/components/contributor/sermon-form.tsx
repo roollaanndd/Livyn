@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Save, Send } from "lucide-react";
+import { LivynSpinner, LivynSave, LivynSend } from "@/components/icons/livyn-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -116,11 +116,11 @@ export function SermonForm({ categories }: { categories: Category[] }) {
 
       <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={() => save(false)} disabled={saving !== null}>
-          {saving === "draft" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {saving === "draft" ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynSave className="h-4 w-4" />}
           Simpan Draf
         </Button>
         <Button onClick={() => save(true)} disabled={saving !== null}>
-          {saving === "submit" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {saving === "submit" ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynSend className="h-4 w-4" />}
           Kirim untuk Ditinjau
         </Button>
       </div>

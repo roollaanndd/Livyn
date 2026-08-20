@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
+import { LivynSpinner, LivynEye, LivynEyeOff, LivynSpark } from "@/components/icons/livyn-icons";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,7 @@ export default function LoginPage() {
           <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/15 blur-2xl" />
           <div className="relative flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-              <Sparkles className="h-[18px] w-[18px]" />
+              <LivynSpark className="h-[18px] w-[18px]" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-display text-[13.5px] font-extrabold leading-tight text-heading">
@@ -148,14 +148,14 @@ export default function LoginPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                {showPassword ? <LivynEyeOff className="h-4.5 w-4.5" /> : <LivynEye className="h-4.5 w-4.5" />}
               </button>
             </div>
           </div>
 
           <motion.div whileTap={loading ? undefined : TAP}>
             <Button type="submit" className="h-[52px] w-full text-[15px] font-bold" size="lg" disabled={loading}>
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Masuk"}
+              {loading ? <LivynSpinner className="h-5 w-5 animate-spin" /> : "Masuk"}
             </Button>
           </motion.div>
         </motion.form>

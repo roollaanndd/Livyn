@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Smartphone } from "lucide-react";
+import { LivynDevice } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { TopBar } from "@/components/nav/top-bar";
@@ -33,7 +33,7 @@ export default async function DevicesPage() {
         <div className="space-y-2 pb-8">
           {Array.from(devices.values()).map((d, i) => (
             <Card key={i} className="flex items-center gap-3 p-4">
-              <Smartphone className="h-5 w-5 text-muted-foreground" />
+              <LivynDevice className="h-5 w-5 text-muted-foreground" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{d.userAgent}</p>
                 <p className="text-xs text-muted-foreground">

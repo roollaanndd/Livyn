@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Share } from "lucide-react";
+import { LivynDownload, LivynClose, LivynShareUp } from "@/components/icons/livyn-icons";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -89,12 +89,12 @@ export function InstallPrompt() {
             className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:bg-surface-muted"
             aria-label="Tutup"
           >
-            <X className="h-4 w-4" />
+            <LivynClose className="h-4 w-4" />
           </button>
 
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
-              <Download className="h-5 w-5 text-primary" />
+              <LivynDownload className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 pr-4">
               <p className="font-display text-sm font-bold text-foreground">
@@ -103,7 +103,7 @@ export function InstallPrompt() {
               {showIos ? (
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                   Ketuk{" "}
-                  <Share className="inline h-3.5 w-3.5 -translate-y-px text-primary" />{" "}
+                  <LivynShareUp className="inline h-3.5 w-3.5 -translate-y-px text-primary" />{" "}
                   lalu pilih <span className="font-semibold">&quot;Tambahkan ke Layar Utama&quot;</span>
                 </p>
               ) : (

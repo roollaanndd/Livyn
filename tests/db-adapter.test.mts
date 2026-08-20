@@ -1,8 +1,13 @@
+// Run via `npm test`, which passes --conditions=react-server. The adapter
+// imports "server-only" so a Client Component importing it is a build error
+// rather than a leaked service-role key; that package resolves to a no-op
+// under the react-server condition and throws under any other, so a bare
+// `tsx --test` here would fail on the import alone.
 import { beforeEach, describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
 
 process.env.SUPABASE_URL = "https://project.example";
-process.env.SUPABASE_ANON_KEY = "test-key";
+process.env.SUPABASE_SERVICE_ROLE_KEY = "test-key";
 
 const { prisma } = await import("@/lib/prisma");
 

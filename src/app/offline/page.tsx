@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { WifiOff, RefreshCw } from "lucide-react";
+import { LivynOffline, LivynRefresh } from "@/components/icons/livyn-icons";
 import { motion } from "framer-motion";
 
 export default function OfflinePage() {
@@ -13,7 +13,7 @@ export default function OfflinePage() {
         transition={{ type: "spring", duration: 0.5 }}
         className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary-soft"
       >
-        <WifiOff className="h-10 w-10 text-primary" />
+        <LivynOffline className="h-10 w-10 text-primary" />
       </motion.div>
 
       <h1 className="mb-2 font-display text-xl font-bold text-foreground">
@@ -29,7 +29,7 @@ export default function OfflinePage() {
           onClick={() => window.location.reload()}
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
         >
-          <RefreshCw className="h-4 w-4" />
+          <LivynRefresh className="h-4 w-4" />
           Coba Lagi
         </button>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
+import { LivynBookmark, LivynBookmarkCheck, LivynSpinner } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/client";
@@ -58,7 +58,7 @@ export function FavoriteButton({
     setPending(false);
   }
 
-  const Icon = pending ? Loader2 : favorited ? BookmarkCheck : Bookmark;
+  const Icon = pending ? LivynSpinner : favorited ? LivynBookmarkCheck : LivynBookmark;
 
   if (variant === "icon") {
     return (

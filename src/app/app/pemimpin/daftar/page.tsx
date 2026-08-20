@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Crown } from "lucide-react";
+import { LivynSpinner, LivynCrown } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { TopBar } from "@/components/nav/top-bar";
 import { Button } from "@/components/ui/button";
@@ -69,13 +69,13 @@ export default function ApplyLeaderPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <LivynSpinner className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <form onSubmit={submit} className="space-y-5 px-5 pb-10 pt-2">
           <div className="rounded-2xl border border-primary/15 bg-primary/[0.04] p-4">
             <div className="mb-2 flex items-center gap-2 text-primary">
-              <Crown className="h-4 w-4" />
+              <LivynCrown className="h-4 w-4" />
               <p className="text-[11px] font-bold uppercase tracking-wider">Verifikasi Pemimpin</p>
             </div>
             <p className="text-[12.5px] leading-relaxed text-muted-foreground">
@@ -123,7 +123,7 @@ export default function ApplyLeaderPage() {
           </div>
 
           <Button type="submit" size="lg" className="w-full" disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Kirim Aplikasi"}
+            {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : "Kirim Aplikasi"}
           </Button>
         </form>
       )}

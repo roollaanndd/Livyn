@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Trophy, Loader2, Plus, X } from "lucide-react";
+import {
+  LivynCheckCircle,
+  LivynTrophy,
+  LivynSpinner,
+  LivynPlus,
+  LivynClose,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,7 +133,7 @@ export function MissionList({
           onClick={() => setShowForm(true)}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-primary/[0.04] px-4 py-3.5 text-[13px] font-bold text-primary active:scale-[0.99] transition-transform"
         >
-          <Plus className="h-4 w-4" /> Buat Misi Mingguan
+          <LivynPlus className="h-4 w-4" /> Buat Misi Mingguan
         </button>
       )}
 
@@ -135,7 +141,7 @@ export function MissionList({
         <form onSubmit={submit} className="space-y-3 rounded-2xl border border-border bg-surface p-4">
           <div className="flex items-center justify-between">
             <p className="font-display text-[14px] font-extrabold text-heading">Misi Baru</p>
-            <button type="button" onClick={() => setShowForm(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+            <button type="button" onClick={() => setShowForm(false)}><LivynClose className="h-4 w-4 text-muted-foreground" /></button>
           </div>
 
           <div>
@@ -189,14 +195,14 @@ export function MissionList({
           </div>
 
           <Button type="submit" disabled={busy} className="w-full">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publikasikan"}
+            {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : "Publikasikan"}
           </Button>
         </form>
       )}
 
       {missions.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-          <Trophy className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+          <LivynTrophy className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
           <p className="text-[13px] text-muted-foreground">Belum ada misi aktif.</p>
           {canCreate && (
             <p className="mt-1 text-[12px] text-muted-foreground/70">
@@ -249,7 +255,7 @@ export function MissionList({
                       : "bg-primary text-primary-foreground",
                   )}
                 >
-                  <CheckCircle2 className="h-4 w-4" />
+                  <LivynCheckCircle className="h-4 w-4" />
                   {m.haveICheckedIn ? "Sudah selesai" : "Aku selesai"}
                 </button>
                 {canCreate && (
@@ -258,7 +264,7 @@ export function MissionList({
                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-muted text-muted-foreground active:scale-95"
                     aria-label="Hapus misi"
                   >
-                    <X className="h-4 w-4" />
+                    <LivynClose className="h-4 w-4" />
                   </button>
                 )}
               </div>

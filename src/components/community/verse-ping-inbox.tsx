@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquareQuote, BookOpen } from "lucide-react";
+import { LivynQuote, LivynBible } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 
 type Ping = {
@@ -38,7 +38,7 @@ export function VersePingInbox({ pings: initial }: { pings: Ping[] }) {
   if (pings.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-        <MessageSquareQuote className="h-8 w-8 text-muted-foreground/40" />
+        <LivynQuote className="h-8 w-8 text-muted-foreground/40" />
         <p className="text-[13px] text-muted-foreground">Belum ada ayat yang dikirim ke kamu.</p>
         <p className="text-[12px] text-muted-foreground/70">
           Kirim ayat penguat dari halaman Alkitab ke temanmu — mereka akan menerimanya di sini.
@@ -74,7 +74,7 @@ export function VersePingInbox({ pings: initial }: { pings: Ping[] }) {
                 &ldquo;{p.verseText}&rdquo;
               </blockquote>
               <p className="mt-2 flex items-center gap-1.5 text-[12px] font-bold text-primary">
-                <BookOpen className="h-3.5 w-3.5" /> {p.verseRef}
+                <LivynBible className="h-3.5 w-3.5" /> {p.verseRef}
               </p>
 
               {p.note && (

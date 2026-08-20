@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Trash2, PenLine, Check, Loader2 } from "lucide-react";
+import { LivynTrash, LivynPen, LivynCheck, LivynSpinner } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { VerseShareCard } from "@/components/verse/verse-share-card";
@@ -62,14 +62,14 @@ export function FavoriteList({ favorites, locale }: { favorites: FavoriteVerseRo
                   aria-label={t("favorites.noteLabel")}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 active:scale-95"
                 >
-                  <PenLine className="h-4 w-4" />
+                  <LivynPen className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => remove(row.id)}
                   aria-label={t("common.delete")}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 active:scale-95"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <LivynTrash className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -143,7 +143,7 @@ function NoteEditor({
         disabled={saving}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white active:scale-95 disabled:opacity-60"
       >
-        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+        {saving ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynCheck className="h-4 w-4" />}
       </button>
     </div>
   );

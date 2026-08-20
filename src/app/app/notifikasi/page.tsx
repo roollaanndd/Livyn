@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Bell } from "lucide-react";
+import { LivynBell } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { TopBar } from "@/components/nav/top-bar";
@@ -21,7 +21,7 @@ export default async function NotificationsPage() {
       <div className="space-y-2 px-4 pb-6 pt-3">
         {notifications.length === 0 && (
           <div className="flex flex-col items-center py-16 text-center text-sm text-muted-foreground">
-            <Bell className="mb-3 h-8 w-8 text-muted-foreground/50" />
+            <LivynBell className="mb-3 h-8 w-8 text-muted-foreground/50" />
             Belum ada notifikasi. Ayat harian, pengingat doa, dan khotbah baru akan muncul di sini.
           </div>
         )}

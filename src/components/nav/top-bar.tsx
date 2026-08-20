@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { LivynArrowLeft } from "@/components/icons/livyn-icons";
 import { cn } from "@/lib/utils";
 
 export function TopBar({
@@ -35,7 +35,7 @@ export function TopBar({
           className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-muted/80 hover:bg-surface-muted transition-colors active:scale-95"
           aria-label="Kembali"
         >
-          <ArrowLeft className="h-[18px] w-[18px]" />
+          <LivynArrowLeft className="h-[18px] w-[18px]" />
         </button>
       )}
       {title && (

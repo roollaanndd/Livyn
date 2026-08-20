@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, X, Loader2 } from "lucide-react";
+import { LivynBell, LivynClose, LivynSpinner } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/client";
@@ -74,12 +74,12 @@ export function PushSoftPrompt() {
               aria-label={t("common.close")}
               className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/60 active:scale-95"
             >
-              <X className="h-4 w-4" />
+              <LivynClose className="h-4 w-4" />
             </button>
 
             <div className="flex items-start gap-3 pr-7">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                <Bell className="h-5 w-5" />
+                <LivynBell className="h-5 w-5" />
               </div>
               <div className="min-w-0">
                 <p className="font-display text-[14px] font-extrabold text-heading">{t("push.softPromptTitle")}</p>
@@ -91,7 +91,7 @@ export function PushSoftPrompt() {
 
             <div className="mt-3.5 flex gap-2">
               <Button size="sm" className="flex-1" onClick={accept} disabled={busy}>
-                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                {busy ? <LivynSpinner className="h-3.5 w-3.5 animate-spin" /> : null}
                 {t("push.softPromptAccept")}
               </Button>
               <Button size="sm" variant="ghost" onClick={dismiss} disabled={busy}>

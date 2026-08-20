@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpenText, AlarmClock, BookOpen, type LucideIcon } from "lucide-react";
+import {
+  LivynHome,
+  LivynDevotion,
+  LivynPrayer,
+  LivynBible,
+  type LivynIconComponent,
+} from "@/components/icons/livyn-icons";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LivynAiIcon } from "@/components/brand/logo";
@@ -13,17 +19,17 @@ import type { TKey } from "@/lib/i18n/translate";
 type Tab = {
   href: string;
   labelKey: TKey;
-  icon: LucideIcon | null;
+  icon: LivynIconComponent | null;
   exact?: boolean;
   isCenter?: boolean;
 };
 
 const TABS: Tab[] = [
-  { href: "/app", labelKey: "nav.home", icon: Home, exact: true },
-  { href: "/app/alkitab", labelKey: "nav.bible", icon: BookOpen },
+  { href: "/app", labelKey: "nav.home", icon: LivynHome, exact: true },
+  { href: "/app/alkitab", labelKey: "nav.bible", icon: LivynBible },
   { href: "/app/ai-pastor", labelKey: "nav.aiPastor", icon: null, isCenter: true },
-  { href: "/app/devosi", labelKey: "nav.devotion", icon: BookOpenText },
-  { href: "/app/doa", labelKey: "nav.prayer", icon: AlarmClock },
+  { href: "/app/devosi", labelKey: "nav.devotion", icon: LivynDevotion },
+  { href: "/app/doa", labelKey: "nav.prayer", icon: LivynPrayer },
 ];
 
 export function BottomNav() {

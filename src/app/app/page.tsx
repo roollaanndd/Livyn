@@ -2,9 +2,20 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  Search, Bell, ChevronRight, Flame, PlayCircle, CalendarHeart, Sparkles,
-  BookOpenText, HandHeart, Users, Headphones, Crown, Trophy,
-} from "lucide-react";
+  LivynSearch,
+  LivynBell,
+  LivynChevronRight,
+  LivynFlame,
+  LivynPlay,
+  LivynCalendar,
+  LivynSpark,
+  LivynBible,
+  LivynPrayer,
+  LivynPeople,
+  LivynHeadphones,
+  LivynCrown,
+  LivynTrophy,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -93,13 +104,13 @@ export default async function HomePage() {
             <Link href="/app/ai-pastor">
               <Card className="flex items-center gap-4 p-4 active:scale-[0.98] transition-transform border-primary/15 bg-gradient-to-r from-primary-soft to-transparent">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/15">
-                  <Sparkles className="h-5.5 w-5.5 text-white" />
+                  <LivynSpark className="h-5.5 w-5.5 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-display font-extrabold text-heading text-[15px]">{t("home.askAiPastor")}</p>
                   <p className="truncate text-[12px] text-muted-foreground">{t("home.askAiPastorSub")}</p>
                 </div>
-                <ChevronRight className="h-4.5 w-4.5 shrink-0 text-primary/50" />
+                <LivynChevronRight className="h-4.5 w-4.5 shrink-0 text-primary/50" />
               </Card>
             </Link>
           </div>
@@ -120,10 +131,10 @@ export default async function HomePage() {
           </SectionLabel>
           <div className="grid grid-cols-4 gap-3">
             {([
-              { href: "/app/alkitab", label: t("nav.bible"), icon: BookOpenText, bg: "bg-primary-soft", fg: "text-primary" },
-              { href: "/app/doa", label: t("nav.prayer"), icon: HandHeart, bg: "bg-amber-500/10", fg: "text-amber-600" },
-              { href: "/app/circle", label: "Circle", icon: Users, bg: "bg-violet-500/10", fg: "text-violet-600" },
-              { href: "/app/khotbah", label: "Khotbah", icon: Headphones, bg: "bg-sky-500/10", fg: "text-sky-600" },
+              { href: "/app/alkitab", label: t("nav.bible"), icon: LivynBible, bg: "bg-primary-soft", fg: "text-primary" },
+              { href: "/app/doa", label: t("nav.prayer"), icon: LivynPrayer, bg: "bg-amber-500/10", fg: "text-amber-600" },
+              { href: "/app/circle", label: "Circle", icon: LivynPeople, bg: "bg-violet-500/10", fg: "text-violet-600" },
+              { href: "/app/khotbah", label: "Khotbah", icon: LivynHeadphones, bg: "bg-sky-500/10", fg: "text-sky-600" },
             ] as const).map((a) => (
               <Link key={a.href} href={a.href} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
                 <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl ${a.bg} shadow-[var(--shadow-sm)]`}>
@@ -186,10 +197,10 @@ async function IdentityCard({ userId, firstName, t }: { userId: string; firstNam
               {/* On-dark overrides: these controls normally sit on a light surface. */}
               <ThemeSwitch className="bg-white/15 text-white/85 hover:text-white" />
               <IconLink href="/app/cari" label="Cari" className="text-white/85 hover:bg-white/15 hover:text-white">
-                <Search className="h-[18px] w-[18px]" />
+                <LivynSearch className="h-[18px] w-[18px]" />
               </IconLink>
               <IconLink href="/app/notifikasi" label="Notifikasi" className="text-white/85 hover:bg-white/15 hover:text-white">
-                <Bell className="h-[18px] w-[18px]" />
+                <LivynBell className="h-[18px] w-[18px]" />
               </IconLink>
               <Link
                 href="/app/profil"
@@ -207,12 +218,12 @@ async function IdentityCard({ userId, firstName, t }: { userId: string; firstNam
               href="/app/tantangan"
               className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur-sm active:scale-95 transition-transform"
             >
-              <Trophy className="h-3.5 w-3.5 text-amber-300" />
+              <LivynTrophy className="h-3.5 w-3.5 text-amber-300" />
               <span className="text-[11.5px] font-bold text-white">{t("home.points", { count: points })}</span>
               <span className="text-[11.5px] font-medium text-white/55">· {level.name}</span>
             </Link>
             <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur-sm">
-              <Flame className="h-3.5 w-3.5 text-amber-300" />
+              <LivynFlame className="h-3.5 w-3.5 text-amber-300" />
               <span className="text-[11.5px] font-bold text-white">{t("home.streakDays", { count: streak })}</span>
             </span>
           </div>
@@ -295,7 +306,7 @@ function TodayDevotionSection({ t }: { t: TFunction }) {
           <div className="mt-3.5 flex items-center justify-between">
             <span className="text-[12px] font-medium text-muted-foreground">{devotion.verseRef}</span>
             <span className="flex items-center gap-1 text-[12px] font-bold text-primary">
-              {t("common.read")} <ChevronRight className="h-3.5 w-3.5" />
+              {t("common.read")} <LivynChevronRight className="h-3.5 w-3.5" />
             </span>
           </div>
         </div>
@@ -326,13 +337,13 @@ async function CommunitySection({ userId, role, t }: { userId: string; role: str
         <Link href={pingCount > 0 ? "/app/teman" : "/app/circle"}>
           <Card className="flex items-center gap-3.5 p-4 active:scale-[0.98] transition-transform">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600">
-              <Users className="h-5 w-5" />
+              <LivynPeople className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-display text-[14.5px] font-extrabold text-heading">{t("home.communityTitle")}</p>
               <p className="truncate text-[12px] text-muted-foreground">{summary.join(" · ")}</p>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+            <LivynChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40" />
           </Card>
         </Link>
       )}
@@ -341,13 +352,13 @@ async function CommunitySection({ userId, role, t }: { userId: string; role: str
         <Link href="/app/pemimpin">
           <Card className="flex items-center gap-3 border-amber-500/20 bg-gradient-to-r from-amber-50 to-transparent p-3.5 active:scale-[0.98] transition-transform dark:from-amber-950/20">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600">
-              <Crown className="h-4.5 w-4.5" />
+              <LivynCrown className="h-4.5 w-4.5" />
             </div>
             <div className="flex-1">
               <p className="text-[12.5px] font-bold text-heading">{t("home.leaderCtaTitle")}</p>
               <p className="text-[11px] text-muted-foreground">{t("home.leaderCtaSub")}</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-amber-500/50" />
+            <LivynChevronRight className="h-4 w-4 text-amber-500/50" />
           </Card>
         </Link>
       )}
@@ -366,7 +377,7 @@ async function ContinueWatchingSection({ userId, t }: { userId: string; t: TFunc
           <Link key={w.id} href={`/app/khotbah/${w.sermon.slug}`} className="w-52 shrink-0">
             <Card className="overflow-hidden p-0 active:scale-[0.98] transition-transform">
               <div className="relative flex h-28 items-center justify-center" style={{ background: "var(--gradient-verse)" }}>
-                <PlayCircle className="h-9 w-9 text-white/80" />
+                <LivynPlay className="h-9 w-9 text-white/80" />
               </div>
               <div className="p-3.5">
                 <p className="line-clamp-1 text-[13px] font-bold text-heading">{w.sermon.title}</p>
@@ -397,7 +408,7 @@ async function LatestSermonSection({ t }: { t: TFunction }) {
       <Link href={`/app/khotbah/${sermon.slug}`}>
         <Card className="overflow-hidden p-0 active:scale-[0.98] transition-transform">
           <div className="relative flex h-40 items-center justify-center" style={{ background: "var(--gradient-verse)" }}>
-            <PlayCircle className="h-12 w-12 text-white/80" />
+            <LivynPlay className="h-12 w-12 text-white/80" />
             <span className="absolute bottom-3 right-3 rounded-lg bg-black/50 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
               {formatDurationShort(sermon.durationSec)}
             </span>
@@ -424,7 +435,7 @@ async function ChristianEventsSection({ t }: { t: TFunction }) {
           {upcomingChristianEvents(3).map((e) => (
             <li key={e.name} className="flex items-center gap-3.5 p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                <CalendarHeart className="h-4.5 w-4.5" />
+                <LivynCalendar className="h-4.5 w-4.5" />
               </div>
               <div className="flex-1">
                 <p className="text-[13px] font-bold text-heading">{e.name}</p>

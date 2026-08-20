@@ -2,34 +2,45 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Sparkles, Clapperboard, Users, ClipboardCheck, Tags, ScrollText, Trophy, BookOpen, Crown } from "lucide-react";
+import {
+  LivynDashboard,
+  LivynSpark,
+  LivynSermon,
+  LivynPeople,
+  LivynClipboardCheck,
+  LivynTags,
+  LivynScroll,
+  LivynTrophy,
+  LivynBible,
+  LivynCrown,
+} from "@/components/icons/livyn-icons";
 import { LivynMark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 export type DashboardNavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
-const ICONS = { LayoutDashboard, Sparkles, Clapperboard, Users, ClipboardCheck, Tags, ScrollText, Trophy, BookOpen, Crown };
+const ICONS = { LivynDashboard, LivynSpark, LivynSermon, LivynPeople, LivynClipboardCheck, LivynTags, LivynScroll, LivynTrophy, LivynBible, LivynCrown };
 
 const NAV_CONFIG: Record<"contributor" | "admin", { homeHref: string; items: Array<{ href: string; label: string; icon: keyof typeof ICONS }> }> = {
   contributor: {
     homeHref: "/contributor",
     items: [
-      { href: "/contributor", label: "Dasbor", icon: "LayoutDashboard" },
-      { href: "/contributor/renungan", label: "Renungan Saya", icon: "Sparkles" },
-      { href: "/contributor/khotbah", label: "Khotbah Saya", icon: "Clapperboard" },
+      { href: "/contributor", label: "Dasbor", icon: "LivynDashboard" },
+      { href: "/contributor/renungan", label: "Renungan Saya", icon: "LivynSpark" },
+      { href: "/contributor/khotbah", label: "Khotbah Saya", icon: "LivynSermon" },
     ],
   },
   admin: {
     homeHref: "/admin",
     items: [
-      { href: "/admin", label: "Dasbor", icon: "LayoutDashboard" },
-      { href: "/admin/moderasi", label: "Moderasi", icon: "ClipboardCheck" },
-      { href: "/admin/pemimpin", label: "Pemimpin", icon: "Crown" },
-      { href: "/admin/pengguna", label: "Pengguna", icon: "Users" },
-      { href: "/admin/kategori", label: "Kategori", icon: "Tags" },
-      { href: "/admin/tantangan", label: "Tantangan", icon: "Trophy" },
-      { href: "/admin/rencana-baca", label: "Rencana Bacaan", icon: "BookOpen" },
-      { href: "/admin/audit", label: "Log Audit", icon: "ScrollText" },
+      { href: "/admin", label: "Dasbor", icon: "LivynDashboard" },
+      { href: "/admin/moderasi", label: "Moderasi", icon: "LivynClipboardCheck" },
+      { href: "/admin/pemimpin", label: "Pemimpin", icon: "LivynCrown" },
+      { href: "/admin/pengguna", label: "Pengguna", icon: "LivynPeople" },
+      { href: "/admin/kategori", label: "Kategori", icon: "LivynTags" },
+      { href: "/admin/tantangan", label: "Tantangan", icon: "LivynTrophy" },
+      { href: "/admin/rencana-baca", label: "Rencana Bacaan", icon: "LivynBible" },
+      { href: "/admin/audit", label: "Log Audit", icon: "LivynScroll" },
     ],
   },
 };

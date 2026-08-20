@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { LivynSpinner } from "@/components/icons/livyn-icons";
 import { LivynMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -359,7 +359,7 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
             }}
           >
             {leaving ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <LivynSpinner className="h-5 w-5 animate-spin" />
             ) : isLast ? (
               "Mulai Perjalananmu"
             ) : (

@@ -1,6 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookmarkCheck, ShieldCheck, Smartphone, LayoutDashboard, ClipboardList, ChevronRight, BookHeart, Trophy, Users, MessageSquareQuote, Crown, Compass, HandHeart, ScrollText } from "lucide-react";
+import {
+  LivynBookmarkCheck,
+  LivynShieldCheck,
+  LivynDevice,
+  LivynDashboard,
+  LivynClipboardList,
+  LivynChevronRight,
+  LivynJournal,
+  LivynTrophy,
+  LivynPeople,
+  LivynQuote,
+  LivynCrown,
+  LivynCompass,
+  LivynPrayer,
+  LivynScroll,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { hasRole } from "@/lib/auth/rbac";
@@ -99,22 +114,22 @@ export default async function ProfilePage() {
       <div className="mt-6">
         <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Menu</p>
         <Card className="divide-y divide-border-subtle overflow-hidden">
-          <ProfileLink href="/app/favorit" icon={BookmarkCheck} label={t("profile.favorites")} />
-          <ProfileLink href="/app/doa" icon={HandHeart} label={t("profile.answeredPrayers")} />
-          <ProfileLink href="/app/teman" icon={MessageSquareQuote} label="Teman & Ayat Masuk" />
-          <ProfileLink href="/app/circle" icon={Users} label="Circle" />
-          <ProfileLink href="/app/pemimpin" icon={Crown} label="Pemimpin" />
-          <ProfileLink href="/app/jurnal" icon={BookHeart} label="Jurnal Curhatku" />
-          <ProfileLink href="/app/tantangan" icon={Trophy} label="Tantangan Bulanan" />
-          <ProfileLink href="/app/devosi/tersimpan" icon={BookmarkCheck} label="Renungan Tersimpan" />
-          <ProfileLink href="/app/profil/keamanan" icon={ShieldCheck} label="Keamanan & Sesi Login" />
-          <ProfileLink href="/app/profil/perangkat" icon={Smartphone} label="Perangkat Terhubung" />
-          <ProfileLink href="/onboarding" icon={Compass} label="Lihat Panduan Livyn" />
+          <ProfileLink href="/app/favorit" icon={LivynBookmarkCheck} label={t("profile.favorites")} />
+          <ProfileLink href="/app/doa" icon={LivynPrayer} label={t("profile.answeredPrayers")} />
+          <ProfileLink href="/app/teman" icon={LivynQuote} label="Teman & Ayat Masuk" />
+          <ProfileLink href="/app/circle" icon={LivynPeople} label="Circle" />
+          <ProfileLink href="/app/pemimpin" icon={LivynCrown} label="Pemimpin" />
+          <ProfileLink href="/app/jurnal" icon={LivynJournal} label="Jurnal Curhatku" />
+          <ProfileLink href="/app/tantangan" icon={LivynTrophy} label="Tantangan Bulanan" />
+          <ProfileLink href="/app/devosi/tersimpan" icon={LivynBookmarkCheck} label="Renungan Tersimpan" />
+          <ProfileLink href="/app/profil/keamanan" icon={LivynShieldCheck} label="Keamanan & Sesi Login" />
+          <ProfileLink href="/app/profil/perangkat" icon={LivynDevice} label="Perangkat Terhubung" />
+          <ProfileLink href="/onboarding" icon={LivynCompass} label="Lihat Panduan Livyn" />
           {hasRole(user.role, "contributor") && (
-            <ProfileLink href="/contributor" icon={ClipboardList} label="Dasbor Kontributor" />
+            <ProfileLink href="/contributor" icon={LivynClipboardList} label="Dasbor Kontributor" />
           )}
           {hasRole(user.role, "moderator") && (
-            <ProfileLink href="/admin" icon={LayoutDashboard} label="Dasbor Admin" />
+            <ProfileLink href="/admin" icon={LivynDashboard} label="Dasbor Admin" />
           )}
         </Card>
       </div>
@@ -125,8 +140,8 @@ export default async function ProfilePage() {
           {t("profile.sectionAbout")}
         </p>
         <Card className="divide-y divide-border-subtle overflow-hidden">
-          <ProfileLink href="/syarat-ketentuan" icon={ScrollText} label={t("profile.terms")} />
-          <ProfileLink href="/kebijakan-privasi" icon={ShieldCheck} label={t("profile.privacy")} />
+          <ProfileLink href="/syarat-ketentuan" icon={LivynScroll} label={t("profile.terms")} />
+          <ProfileLink href="/kebijakan-privasi" icon={LivynShieldCheck} label={t("profile.privacy")} />
         </Card>
       </div>
 
@@ -148,14 +163,14 @@ export default async function ProfilePage() {
   );
 }
 
-function ProfileLink({ href, icon: Icon, label }: { href: string; icon: typeof BookmarkCheck; label: string }) {
+function ProfileLink({ href, icon: Icon, label }: { href: string; icon: typeof LivynBookmarkCheck; label: string }) {
   return (
     <Link href={href} className="flex items-center gap-3.5 p-4 hover:bg-surface-muted/50 transition-colors">
       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-muted">
         <Icon className="h-[16px] w-[16px] text-muted-foreground" />
       </div>
       <span className="flex-1 text-[13px] font-medium text-heading">{label}</span>
-      <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+      <LivynChevronRight className="h-4 w-4 text-muted-foreground/40" />
     </Link>
   );
 }

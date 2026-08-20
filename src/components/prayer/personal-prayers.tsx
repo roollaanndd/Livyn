@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check, Trash2, Loader2, HandHeart, Sparkles } from "lucide-react";
+import {
+  LivynPlus,
+  LivynCheck,
+  LivynTrash,
+  LivynSpinner,
+  LivynPrayer,
+  LivynSpark,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,7 +102,7 @@ export function PersonalPrayers({ initial, locale }: { initial: Row[]; locale: L
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-display text-[15px] font-extrabold text-heading">{t("prayers.personalTitle")}</h2>
         <Button size="sm" variant="ghost" onClick={() => setFormOpen((v) => !v)}>
-          <Plus className="h-4 w-4" /> {t("prayers.personalNew")}
+          <LivynPlus className="h-4 w-4" /> {t("prayers.personalNew")}
         </Button>
       </div>
 
@@ -130,7 +137,7 @@ export function PersonalPrayers({ initial, locale }: { initial: Row[]; locale: L
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={create} disabled={saving || title.trim().length < 2}>
-              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {saving && <LivynSpinner className="h-3.5 w-3.5 animate-spin" />}
               {t("common.save")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setFormOpen(false)} disabled={saving}>
@@ -142,7 +149,7 @@ export function PersonalPrayers({ initial, locale }: { initial: Row[]; locale: L
 
       {open.length === 0 && answered.length === 0 ? (
         <Card className="p-5 text-center">
-          <HandHeart className="mx-auto h-7 w-7 text-primary/40" />
+          <LivynPrayer className="mx-auto h-7 w-7 text-primary/40" />
           <p className="mt-2.5 text-[13px] text-muted-foreground">{t("prayers.emptyOpen")}</p>
         </Card>
       ) : (
@@ -163,7 +170,7 @@ export function PersonalPrayers({ initial, locale }: { initial: Row[]; locale: L
                     aria-label={t("common.delete")}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/50 active:scale-95"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <LivynTrash className="h-4 w-4" />
                   </button>
                 </div>
 
@@ -181,7 +188,7 @@ export function PersonalPrayers({ initial, locale }: { initial: Row[]; locale: L
                     onClick={() => setAnswering(row.id)}
                     className="mt-3 flex items-center gap-1.5 rounded-full bg-primary-soft px-3.5 py-2 text-[12px] font-bold text-primary active:scale-95"
                   >
-                    <Check className="h-3.5 w-3.5" /> {t("prayers.markAnswered")}
+                    <LivynCheck className="h-3.5 w-3.5" /> {t("prayers.markAnswered")}
                   </button>
                 )}
               </Card>
@@ -193,7 +200,7 @@ export function PersonalPrayers({ initial, locale }: { initial: Row[]; locale: L
       {answered.length > 0 && (
         <div className="mt-7">
           <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <LivynSpark className="h-4 w-4 text-primary" />
             <h2 className="font-display text-[15px] font-extrabold text-heading">{t("prayers.answeredTitle")}</h2>
             <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-primary">
               {answered.length}
@@ -262,7 +269,7 @@ function AnsweredForm({
           }}
           disabled={saving}
         >
-          {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          {saving && <LivynSpinner className="h-3.5 w-3.5 animate-spin" />}
           {saveLabel}
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={saving}>

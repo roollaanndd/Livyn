@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { Users, Crown } from "lucide-react";
+import { LivynPeople, LivynCrown } from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   getCircleById,
@@ -116,11 +116,11 @@ export default async function CircleDetailPage({ params }: { params: Promise<{ i
               <div className="flex flex-wrap items-center gap-1.5">
                 {isPastoral && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                    <Crown className="h-3 w-3" /> Pastoral
+                    <LivynCrown className="h-3 w-3" /> Pastoral
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <Users className="h-3 w-3" /> {totalMembers}/{circle.memberLimit}
+                  <LivynPeople className="h-3 w-3" /> {totalMembers}/{circle.memberLimit}
                 </span>
               </div>
               <h1 className="mt-1.5 font-display text-[22px] font-extrabold leading-tight text-heading">
@@ -183,7 +183,7 @@ function MemberList({
               {new Date(m.joinedAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
             </p>
           </div>
-          {m.user.id === ownerId && <Crown className="h-4 w-4 text-amber-500" />}
+          {m.user.id === ownerId && <LivynCrown className="h-4 w-4 text-amber-500" />}
         </li>
       ))}
     </ul>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, KeyRound } from "lucide-react";
+import { LivynSpinner, LivynKey } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { TopBar } from "@/components/nav/top-bar";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export default function JoinCirclePage() {
       <TopBar title="Gabung Circle" back />
       <div className="px-5 pb-10 pt-6">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-          <KeyRound className="h-7 w-7" />
+          <LivynKey className="h-7 w-7" />
         </div>
 
         <div className="mx-auto max-w-sm text-center">
@@ -66,7 +66,7 @@ export default function JoinCirclePage() {
             required
           />
           <Button type="submit" size="lg" className="w-full" disabled={busy || !code.trim()}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gabung"}
+            {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : "Gabung"}
           </Button>
         </form>
       </div>

@@ -6,7 +6,7 @@ Aplikasi pendamping rohani harian: renungan, Alkitab, pengingat doa, dan khotbah
 
 ```bash
 npm install
-cp .env.example .env          # isi DATABASE_URL dengan connection string Postgres (mis. Supabase)
+cp .env.example .env          # isi DATABASE_URL + SUPABASE_SERVICE_ROLE_KEY (wajib, lihat Arsitektur)
 npx prisma migrate deploy     # menerapkan skema ke database
 npm run db:seed               # mengisi data contoh (kategori, Alkitab, renungan, khotbah, pengguna)
 npm run dev
@@ -27,9 +27,10 @@ Buka http://localhost:3000.
 ## Arsitektur
 
 - **Next.js 16 App Router + TypeScript + Tailwind v4** — satu aplikasi full-stack (UI, API routes, dan proxy/middleware) dalam satu deploy unit.
-- **Prisma + PostgreSQL (Supabase)** — satu database yang sama dipakai untuk dev dan produksi lewat `DATABASE_URL`. Row-Level Security aktif di semua tabel (deny-all secara default) untuk mengunci REST API bawaan Supabase; aplikasi ini sendiri hanya terhubung lewat koneksi Postgres langsung via Prisma, bukan lewat API tersebut.
+- **PostgreSQL (Supabase) lewat PostgREST** — satu database yang sama dipakai untuk dev dan produksi. Skemanya tetap dikelola Prisma (`prisma/schema.prisma`, `prisma migrate`), tapi pada saat runtime aplikasi **tidak** memakai Prisma Client dan tidak membuka koneksi Postgres: `src/lib/prisma.ts` adalah adapter Proxy yang meniru API Prisma dan menerjemahkan setiap query menjadi panggilan HTTP ke REST API Supabase (dulu dipilih untuk menghindari connection pooler yang bermasalah). Konsekuensinya: `DATABASE_URL` saja tidak cukup — ia hanya dipakai untuk menurunkan project ref — dan **`SUPABASE_SERVICE_ROLE_KEY` wajib ada**, karena kunci itulah yang dikirim sebagai header `apikey`/`Authorization` di setiap query. Kalau tidak ada, semua panggilan database melempar dan `/api/health` menjawab 503.
 - **Autentikasi kustom**: hashing kata sandi Argon2id (`@node-rs/argon2`), JWT access token (15 menit, `jose`) di cookie httpOnly, refresh token rotation dengan deteksi reuse (family revocation) tersimpan sebagai hash di database.
 - **RBAC**: `user < contributor < moderator < admin < super_admin`, ditegakkan di `src/proxy.ts` (proteksi route) *dan* di setiap route handler API (defense in depth).
+- **Otorisasi ada di aplikasi, bukan di RLS.** Livyn memakai autentikasi JWT-nya sendiri, bukan Supabase Auth, jadi `auth.uid()` selalu NULL di dalam Postgres dan RLS secara teknis tidak bisa menyatakan aturan per-pengguna untuk kita. Karena itu aplikasi terhubung sebagai **service role**, dan REST API bawaan Supabase ditutup rapat: role `anon` dan `authenticated` tidak diberi hak apa pun, dan RLS aktif di **semua** tabel tanpa satu pun policy — yaitu deny-all — sebagai lapis kedua (`prisma/migrations/20260819180000_lock_rest_surface_to_service_role` lalu `20260820030000_drop_dead_anon_policies`). Policy permisif lama sengaja dihapus semuanya: tanpa grant ia memang tidak terpakai, tapi satu `GRANT ... TO anon` di kemudian hari akan membuka lagi tabel-tabel yang memilikinya. Sebelumnya aplikasi memakai kunci `anon` yang memang dirancang untuk dibagikan ke browser — kunci itu membuka seluruh tabel dan seluruh fungsi `auth_*` `SECURITY DEFINER`, termasuk `auth_find_user_by_email` yang mengembalikan `passwordHash` dan `twoFactorSecret`.
 - **Keamanan**: rate limiting in-memory pada endpoint auth, security headers + CSP di `src/proxy.ts`, validasi input Zod di semua route mutasi, audit log (`AuditLog`) untuk aksi sensitif, riwayat login (`LoginEvent`), refresh-token-reuse detection.
 
 ## Struktur fitur
@@ -142,10 +143,11 @@ Master prompt aslinya meminta stack yang jauh lebih besar (aplikasi native Flutt
 Database Postgres (Supabase, proyek `livyn`, region `ap-southeast-1`) sudah disiapkan dan diisi data awal yang sama seperti di atas.
 
 1. Set `DATABASE_URL` di Vercel ke connection string Supabase (Project Settings → Database → Connection string; gunakan mode "Transaction" / connection pooling untuk fungsi serverless).
-2. Set `JWT_ACCESS_SECRET` dan `JWT_REFRESH_SECRET` yang kuat (`openssl rand -base64 48`) sebagai environment variable di Vercel — jangan pakai nilai dev.
-3. Untuk AI Pastor, set `OPENROUTER_API_KEY` (dapatkan di https://openrouter.ai/keys). Opsional: set `AI_PASTOR_MODEL` (comma-separated, terbaik dulu) untuk mengarahkan pilihan model; defaultnya memakai daftar kandidat gratis di `src/lib/ai-pastor/model.ts`.
-4. Untuk notifikasi push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (generate dengan `npx web-push generate-vapid-keys`), `VAPID_SUBJECT` (`mailto:...`), dan `CRON_SECRET` (string acak apa saja — Vercel Cron otomatis mengirimkannya sebagai header `Authorization: Bearer $CRON_SECRET` ke endpoint cron bila env var ini bernama persis `CRON_SECRET`).
-5. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.
+2. **Set `SUPABASE_SERVICE_ROLE_KEY`** (Project Settings → API → kunci `service_role`). Aplikasi berbicara ke database lewat PostgREST, bukan lewat protokol Postgres, jadi `DATABASE_URL` saja tidak cukup — ia hanya menyumbang project ref. Tanpa kunci ini **setiap** panggilan database melempar "Supabase is not configured" dan `/api/health` menjawab 503. **Ini rahasia sungguhan** (ia melewati RLS): jangan pernah di-commit, jangan diberi awalan `NEXT_PUBLIC_`, jangan sampai ke browser. Kunci `anon` tidak bisa dipakai di sini — role itu sengaja tidak diberi hak apa pun.
+3. Set `JWT_ACCESS_SECRET` dan `JWT_REFRESH_SECRET` yang kuat (`openssl rand -base64 48`) sebagai environment variable di Vercel — jangan pakai nilai dev.
+4. Untuk AI Pastor, set `OPENROUTER_API_KEY` (dapatkan di https://openrouter.ai/keys). Opsional: set `AI_PASTOR_MODEL` (comma-separated, terbaik dulu) untuk mengarahkan pilihan model; defaultnya memakai daftar kandidat gratis di `src/lib/ai-pastor/model.ts`.
+5. Untuk notifikasi push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (generate dengan `npx web-push generate-vapid-keys`), `VAPID_SUBJECT` (`mailto:...`), dan `CRON_SECRET` (string acak apa saja — Vercel Cron otomatis mengirimkannya sebagai header `Authorization: Bearer $CRON_SECRET` ke endpoint cron bila env var ini bernama persis `CRON_SECRET`).
+6. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.
 
 **Region fungsi.** `vercel.json` menyetel `"regions": ["sin1"]` (Singapura) supaya fungsi
 berjalan bersebelahan dengan database Supabase di `ap-southeast-1`. Aplikasi ini

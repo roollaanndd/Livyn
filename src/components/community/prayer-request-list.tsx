@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { HandHeart, CheckCircle2, Sparkles, Plus, Loader2 } from "lucide-react";
+import {
+  LivynPrayer,
+  LivynCheckCircle,
+  LivynSpark,
+  LivynPlus,
+  LivynSpinner,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,7 +145,7 @@ export function PrayerRequestList({
           onClick={() => setShowForm(true)}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-primary/[0.04] px-4 py-3.5 text-[13px] font-bold text-primary active:scale-[0.99] transition-transform"
         >
-          <Plus className="h-4 w-4" /> Tambah Permintaan Doa
+          <LivynPlus className="h-4 w-4" /> Tambah Permintaan Doa
         </button>
       ) : (
         <form onSubmit={submit} className="space-y-3 rounded-2xl border border-border bg-surface p-4">
@@ -172,7 +178,7 @@ export function PrayerRequestList({
               Batal
             </Button>
             <Button type="submit" disabled={busy} className="flex-1">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Kirim"}
+              {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : "Kirim"}
             </Button>
           </div>
         </form>
@@ -180,7 +186,7 @@ export function PrayerRequestList({
 
       {prayers.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-          <HandHeart className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+          <LivynPrayer className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
           <p className="text-[13px] text-muted-foreground">Belum ada permintaan doa.</p>
           <p className="mt-1 text-[12px] text-muted-foreground/70">
             Bagikan pergumulanmu — teman-teman circle akan mendoakan.
@@ -212,7 +218,7 @@ export function PrayerRequestList({
                 </div>
                 {answered && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                    <Sparkles className="h-3 w-3" /> Dijawab
+                    <LivynSpark className="h-3 w-3" /> Dijawab
                   </span>
                 )}
               </div>
@@ -237,7 +243,7 @@ export function PrayerRequestList({
                       : "bg-primary/10 text-primary hover:bg-primary/15",
                   )}
                 >
-                  <HandHeart className="h-3.5 w-3.5" />
+                  <LivynPrayer className="h-3.5 w-3.5" />
                   {p.haveIPrayed ? "Sudah didoakan" : "Aku doakan"}
                   <span className="text-[11px] font-semibold opacity-80">· {p._count.intercessions}</span>
                 </button>
@@ -247,7 +253,7 @@ export function PrayerRequestList({
                     onClick={() => markAnswered(p)}
                     className="flex items-center gap-1 rounded-xl px-2 py-1 text-[11.5px] font-bold text-emerald-700 hover:bg-emerald-500/10"
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <LivynCheckCircle className="h-3.5 w-3.5" />
                     Sudah dijawab
                   </button>
                 )}

@@ -3,8 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  Flame, Plus, Sunrise, Sun, Moon, MoonStar, Sparkles, Trash2, Pencil, Check, BellRing,
-} from "lucide-react";
+  LivynFlame,
+  LivynPlus,
+  LivynSunrise,
+  LivynSun,
+  LivynMoon,
+  LivynMoonStar,
+  LivynSpark,
+  LivynTrash,
+  LivynPen,
+  LivynCheck,
+  LivynBellRing,
+} from "@/components/icons/livyn-icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -26,12 +36,12 @@ type Reminder = {
   active: boolean;
 };
 
-const SLOT_META: Record<string, { label: string; icon: typeof Sun }> = {
-  morning: { label: "Pagi", icon: Sunrise },
-  lunch: { label: "Siang", icon: Sun },
-  evening: { label: "Malam", icon: Moon },
-  midnight: { label: "Tengah Malam", icon: MoonStar },
-  custom: { label: "Kustom", icon: Sparkles },
+const SLOT_META: Record<string, { label: string; icon: typeof LivynSun }> = {
+  morning: { label: "Pagi", icon: LivynSunrise },
+  lunch: { label: "Siang", icon: LivynSun },
+  evening: { label: "Malam", icon: LivynMoon },
+  midnight: { label: "Tengah Malam", icon: LivynMoonStar },
+  custom: { label: "Kustom", icon: LivynSpark },
 };
 
 const DAY_LABELS = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
@@ -215,7 +225,7 @@ export function PrayerReminders({
           <p className="text-xs font-medium uppercase tracking-wide text-white/70">Streak Doa</p>
           <p className="font-display text-2xl font-bold">{streak} Hari Berturut-turut</p>
         </div>
-        <Flame className="h-9 w-9 text-amber-300" />
+        <LivynFlame className="h-9 w-9 text-amber-300" />
       </Card>
 
       {pushStatus === "off" && (
@@ -224,7 +234,7 @@ export function PrayerReminders({
           disabled={subscribing}
           className="mb-5 flex w-full items-center gap-3 rounded-md border border-dashed border-primary/40 bg-primary/5 p-3.5 text-left disabled:opacity-60"
         >
-          <BellRing className="h-5 w-5 shrink-0 text-primary" />
+          <LivynBellRing className="h-5 w-5 shrink-0 text-primary" />
           <span className="text-sm text-foreground">
             Aktifkan notifikasi supaya Livyn bisa mengingatkanmu berdoa walau aplikasi tertutup.
           </span>
@@ -234,7 +244,7 @@ export function PrayerReminders({
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-display text-base font-bold">Pengingatku</h2>
         <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Tambah
+          <LivynPlus className="h-4 w-4" /> Tambah
         </Button>
       </div>
 
@@ -283,13 +293,13 @@ export function PrayerReminders({
                         done ? "bg-emerald-500/15 text-emerald-600" : "bg-surface-muted text-foreground",
                       )}
                     >
-                      <Check className="h-3.5 w-3.5" /> {done ? "Sudah Berdoa" : "Tandai Sudah Berdoa"}
+                      <LivynCheck className="h-3.5 w-3.5" /> {done ? "Sudah Berdoa" : "Tandai Sudah Berdoa"}
                     </button>
                     <button onClick={() => openEdit(r)} className="rounded-full p-1.5 text-muted-foreground hover:bg-surface-muted" aria-label="Ubah">
-                      <Pencil className="h-3.5 w-3.5" />
+                      <LivynPen className="h-3.5 w-3.5" />
                     </button>
                     <button onClick={() => remove(r.id)} className="rounded-full p-1.5 text-red-500 hover:bg-red-500/10" aria-label="Hapus">
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <LivynTrash className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>

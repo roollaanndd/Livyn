@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { LivynPlus, LivynTrash } from "@/components/icons/livyn-icons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export function CategoryManager({ initialCategories, canEdit }: { initialCategor
       {canEdit && (
         <div className="mb-5 flex gap-2">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama kategori baru" />
-          <Button onClick={addCategory}><Plus className="h-4 w-4" /> Tambah</Button>
+          <Button onClick={addCategory}><LivynPlus className="h-4 w-4" /> Tambah</Button>
         </div>
       )}
 
@@ -56,7 +56,7 @@ export function CategoryManager({ initialCategories, canEdit }: { initialCategor
             </div>
             {canEdit && (
               <button onClick={() => removeCategory(c.id)} className="rounded-full p-2 text-red-500 hover:bg-red-500/10" aria-label="Hapus">
-                <Trash2 className="h-4 w-4" />
+                <LivynTrash className="h-4 w-4" />
               </button>
             )}
           </Card>

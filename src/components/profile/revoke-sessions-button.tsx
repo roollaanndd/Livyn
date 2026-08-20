@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, LogOut } from "lucide-react";
+import { LivynSpinner, LivynLogOut } from "@/components/icons/livyn-icons";
 import { Button } from "@/components/ui/button";
 
 export function RevokeSessionsButton() {
@@ -18,7 +18,7 @@ export function RevokeSessionsButton() {
 
   return (
     <Button variant="outline" size="sm" onClick={revoke} disabled={loading}>
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+      {loading ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynLogOut className="h-4 w-4" />}
       Keluar dari Perangkat Lain
     </Button>
   );

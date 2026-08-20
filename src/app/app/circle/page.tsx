@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, KeyRound, Users, HandHeart, Trophy, Crown } from "lucide-react";
+import {
+  LivynPlus,
+  LivynKey,
+  LivynPeople,
+  LivynPrayer,
+  LivynTrophy,
+  LivynCrown,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listMyCircles } from "@/lib/queries/community";
 import { TopBar } from "@/components/nav/top-bar";
@@ -22,7 +29,7 @@ export default async function CircleListPage() {
           <Link href="/app/circle/buat">
             <Card className="flex items-center gap-3 p-4 active:scale-[0.98] transition-transform">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Plus className="h-5 w-5" />
+                <LivynPlus className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-[13px] font-bold text-heading">Buat Circle</p>
@@ -33,7 +40,7 @@ export default async function CircleListPage() {
           <Link href="/app/circle/gabung">
             <Card className="flex items-center gap-3 p-4 active:scale-[0.98] transition-transform">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                <KeyRound className="h-5 w-5" />
+                <LivynKey className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-[13px] font-bold text-heading">Gabung Circle</p>
@@ -48,7 +55,7 @@ export default async function CircleListPage() {
           <h2 className="mb-3 font-display text-[15px] font-extrabold text-heading">Circle-mu</h2>
           {circles.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-              <Users className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+              <LivynPeople className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
               <p className="text-[13px] text-muted-foreground">
                 Belum tergabung di circle mana pun.
               </p>
@@ -71,7 +78,7 @@ export default async function CircleListPage() {
                             <p className="truncate font-display text-[15px] font-extrabold text-heading">{c.name}</p>
                             {c.type === "pastoral" && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                                <Crown className="h-3 w-3" /> Pastoral
+                                <LivynCrown className="h-3 w-3" /> Pastoral
                               </span>
                             )}
                           </div>
@@ -80,14 +87,14 @@ export default async function CircleListPage() {
                           )}
                           <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" /> {c._count?.members ?? 0}
+                              <LivynPeople className="h-3 w-3" /> {c._count?.members ?? 0}
                             </span>
                             <span className="flex items-center gap-1">
-                              <HandHeart className="h-3 w-3" /> {c._count?.prayers ?? 0}
+                              <LivynPrayer className="h-3 w-3" /> {c._count?.prayers ?? 0}
                             </span>
                             {(c._count?.missions ?? 0) > 0 && (
                               <span className="flex items-center gap-1">
-                                <Trophy className="h-3 w-3" /> {c._count?.missions ?? 0}
+                                <LivynTrophy className="h-3 w-3" /> {c._count?.missions ?? 0}
                               </span>
                             )}
                           </div>

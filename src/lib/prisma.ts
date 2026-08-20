@@ -1,6 +1,8 @@
 /* PostgREST-based adapter that exposes a Prisma-compatible API.
  * Bypasses the broken Supavisor connection pooler by using HTTP. */
 
+import "server-only";
+
 const SUPABASE_URL = (() => {
   if (process.env.SUPABASE_URL) return process.env.SUPABASE_URL;
   const dbUrl = process.env.DATABASE_URL ?? "";
@@ -8,10 +10,12 @@ const SUPABASE_URL = (() => {
   return m ? `https://${m[1]}.supabase.co` : "";
 })();
 
-const SUPABASE_KEY =
-  process.env.SUPABASE_ANON_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "";
+/* Service-role key, not the publishable one — see the note in
+ * src/lib/supabase-rest.ts. Livyn authorizes in the app (src/proxy.ts + a
+ * check in every route handler), never through RLS, because it runs its own
+ * JWT auth and Postgres therefore has no idea which user is asking. Sending a
+ * key a browser could also hold made every table world-writable. */
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 const BASE = `${SUPABASE_URL}/rest/v1`;
 
@@ -229,7 +233,7 @@ function reviveDates(obj: unknown): unknown {
 async function request(url: string, init?: RequestInit): Promise<Response> {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error(
-      "Supabase is not configured: set SUPABASE_URL (or DATABASE_URL) and SUPABASE_ANON_KEY in the deployment environment.",
+      "Supabase is not configured: set SUPABASE_URL (or DATABASE_URL) and SUPABASE_SERVICE_ROLE_KEY in the deployment environment.",
     );
   }
   const headers: Record<string, string> = {

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, BookOpenText, Sparkles, Clapperboard, Tag } from "lucide-react";
+import {
+  LivynSearch,
+  LivynBible,
+  LivynSpark,
+  LivynSermon,
+  LivynTag,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { unifiedSearch } from "@/lib/queries/search";
 import { TopBar } from "@/components/nav/top-bar";
@@ -19,7 +25,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       <TopBar title="Cari" back />
       <div className="px-5 pt-4">
         <form action="/app/cari" className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground/50" />
+          <LivynSearch className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground/50" />
           <input
             name="q"
             defaultValue={q}
@@ -34,7 +40,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         {!q && (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft">
-              <Search className="h-6 w-6 text-primary" />
+              <LivynSearch className="h-6 w-6 text-primary" />
             </div>
             <p className="text-[13px] text-muted-foreground max-w-[240px] leading-relaxed">
               Cari lintas renungan, ayat Alkitab, khotbah, dan topik dalam satu tempat.
@@ -45,14 +51,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         {q && totalResults === 0 && (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-muted">
-              <Search className="h-6 w-6 text-muted-foreground" />
+              <LivynSearch className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-[13px] text-muted-foreground">Tidak ada hasil untuk &ldquo;{q}&rdquo;.</p>
           </div>
         )}
 
         {results && results.categories.length > 0 && (
-          <ResultSection title="Topik" icon={Tag}>
+          <ResultSection title="Topik" icon={LivynTag}>
             <div className="flex flex-wrap gap-2">
               {results.categories.map((c) => (
                 <Link
@@ -68,7 +74,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         )}
 
         {results && results.devotions.length > 0 && (
-          <ResultSection title="Renungan" icon={Sparkles}>
+          <ResultSection title="Renungan" icon={LivynSpark}>
             <div className="stagger space-y-2.5">
               {results.devotions.map((d) => (
                 <Link key={d.id} href={`/app/devosi/${d.slug}`}>
@@ -83,7 +89,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         )}
 
         {results && results.verses.length > 0 && (
-          <ResultSection title="Ayat Alkitab" icon={BookOpenText}>
+          <ResultSection title="Ayat Alkitab" icon={LivynBible}>
             <div className="stagger space-y-2.5">
               {results.verses.map((v) => (
                 <Link key={v.id} href={`/app/alkitab/${v.book.code}/${v.chapter}#v${v.verse}`}>
@@ -98,7 +104,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         )}
 
         {results && results.sermons.length > 0 && (
-          <ResultSection title="Khotbah" icon={Clapperboard}>
+          <ResultSection title="Khotbah" icon={LivynSermon}>
             <div className="stagger space-y-2.5">
               {results.sermons.map((s) => (
                 <Link key={s.id} href={`/app/khotbah/${s.slug}`}>
@@ -116,7 +122,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   );
 }
 
-function ResultSection({ title, icon: Icon, children }: { title: string; icon: typeof Search; children: React.ReactNode }) {
+function ResultSection({ title, icon: Icon, children }: { title: string; icon: typeof LivynSearch; children: React.ReactNode }) {
   return (
     <div>
       <h2 className="mb-3 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground">

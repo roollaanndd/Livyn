@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { LivynMapPin } from "@/components/icons/livyn-icons";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6 text-center font-sans">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft">
-        <MapPin className="h-8 w-8 text-primary" />
+        <LivynMapPin className="h-8 w-8 text-primary" />
       </div>
       <h2 className="mt-5 font-display text-xl font-bold text-heading">Halaman tidak ditemukan</h2>
       <p className="mt-2 max-w-xs text-sm text-muted-foreground">

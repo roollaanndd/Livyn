@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { LivynSpinner, LivynSpark } from "@/components/icons/livyn-icons";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -34,7 +34,7 @@ export function TryDemoButton({ variant = "secondary", className }: { variant?: 
 
   return (
     <Button type="button" variant={variant} size="lg" className={className} onClick={tryDemo} disabled={loading}>
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+      {loading ? <LivynSpinner className="h-4 w-4 animate-spin" /> : <LivynSpark className="h-4 w-4" />}
       Coba Sekarang Tanpa Akun
     </Button>
   );

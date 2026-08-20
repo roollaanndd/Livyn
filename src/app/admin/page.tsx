@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, ClipboardCheck, BookOpen, Clapperboard, Flag } from "lucide-react";
+import {
+  LivynPeople,
+  LivynClipboardCheck,
+  LivynBible,
+  LivynSermon,
+  LivynFlag,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { canModerate } from "@/lib/auth/rbac";
 import { getAdminStats } from "@/lib/queries/admin";
@@ -17,12 +23,12 @@ export default async function AdminDashboardPage() {
       <h1 className="font-display mb-6 text-2xl font-bold">Dasbor Admin</h1>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <StatCard icon={Users} label="Total Pengguna" value={stats.totalUsers} />
-        <StatCard icon={Users} label="Kontributor+" value={stats.totalContributors} />
-        <StatCard icon={ClipboardCheck} label="Menunggu Tinjauan" value={stats.pendingDevotions + stats.pendingSermons} accent="text-amber-600" href="/admin/moderasi" />
-        <StatCard icon={BookOpen} label="Renungan Terbit" value={stats.publishedDevotions} accent="text-emerald-600" />
-        <StatCard icon={Clapperboard} label="Khotbah Terbit" value={stats.publishedSermons} accent="text-emerald-600" />
-        <StatCard icon={Flag} label="Laporan Terbuka" value={stats.openReports} accent="text-red-500" />
+        <StatCard icon={LivynPeople} label="Total Pengguna" value={stats.totalUsers} />
+        <StatCard icon={LivynPeople} label="Kontributor+" value={stats.totalContributors} />
+        <StatCard icon={LivynClipboardCheck} label="Menunggu Tinjauan" value={stats.pendingDevotions + stats.pendingSermons} accent="text-amber-600" href="/admin/moderasi" />
+        <StatCard icon={LivynBible} label="Renungan Terbit" value={stats.publishedDevotions} accent="text-emerald-600" />
+        <StatCard icon={LivynSermon} label="Khotbah Terbit" value={stats.publishedSermons} accent="text-emerald-600" />
+        <StatCard icon={LivynFlag} label="Laporan Terbuka" value={stats.openReports} accent="text-red-500" />
       </div>
 
       {stats.pendingDevotions + stats.pendingSermons > 0 && (
@@ -46,7 +52,7 @@ function StatCard({
   accent,
   href,
 }: {
-  icon: typeof Users;
+  icon: typeof LivynPeople;
   label: string;
   value: number;
   accent?: string;

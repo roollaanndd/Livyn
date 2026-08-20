@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { LivynChevronLeft } from "@/components/icons/livyn-icons";
 import type { PolicyDocument } from "@/lib/terms/content";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -28,7 +28,7 @@ export function PolicyPage({
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-muted text-muted-foreground"
           aria-label={locale === "en" ? "Back" : "Kembali"}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <LivynChevronLeft className="h-5 w-5" />
         </Link>
       </div>
 

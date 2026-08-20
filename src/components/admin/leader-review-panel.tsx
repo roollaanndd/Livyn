@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Loader2, Phone, MapPin, Crown } from "lucide-react";
+import {
+  LivynCheckCircle,
+  LivynCloseCircle,
+  LivynSpinner,
+  LivynPhone,
+  LivynMapPin,
+  LivynCrown,
+} from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,7 +55,7 @@ export function LeaderReviewPanel({ applications: initial }: { applications: App
   if (apps.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-        <Crown className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+        <LivynCrown className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
         <p className="text-[13px] text-muted-foreground">Tidak ada aplikasi pemimpin yang menunggu.</p>
       </div>
     );
@@ -83,19 +90,19 @@ export function LeaderReviewPanel({ applications: initial }: { applications: App
                 <div className="flex flex-wrap gap-3 text-[12.5px] text-muted-foreground">
                   {app.denomination && (
                     <span className="inline-flex items-center gap-1">
-                      <Crown className="h-3 w-3" /> {app.denomination}
+                      <LivynCrown className="h-3 w-3" /> {app.denomination}
                     </span>
                   )}
                   {app.city && (
                     <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {app.city}
+                      <LivynMapPin className="h-3 w-3" /> {app.city}
                     </span>
                   )}
                 </div>
               )}
               {app.phone && (
                 <p className="flex items-center gap-1 text-[12.5px] text-muted-foreground">
-                  <Phone className="h-3 w-3" /> {app.phone}
+                  <LivynPhone className="h-3 w-3" /> {app.phone}
                 </p>
               )}
               {app.bio && <p className="pt-1 text-[13px] italic leading-relaxed text-foreground/85">{app.bio}</p>}
@@ -108,9 +115,9 @@ export function LeaderReviewPanel({ applications: initial }: { applications: App
                 className="flex-1"
               >
                 {busy === app.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <LivynSpinner className="h-4 w-4 animate-spin" />
                 ) : (
-                  <CheckCircle2 className="h-4 w-4" />
+                  <LivynCheckCircle className="h-4 w-4" />
                 )}
                 Setujui
               </Button>
@@ -120,7 +127,7 @@ export function LeaderReviewPanel({ applications: initial }: { applications: App
                 disabled={busy === app.id}
                 className="flex-1"
               >
-                <XCircle className="h-4 w-4" />
+                <LivynCloseCircle className="h-4 w-4" />
                 Tolak
               </Button>
             </div>

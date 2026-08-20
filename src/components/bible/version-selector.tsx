@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { LivynChevronDown, LivynSpinner } from "@/components/icons/livyn-icons";
 
 interface BibleVersion {
   id: string;
@@ -49,7 +49,7 @@ export function VersionSelector({ current }: { current: string }) {
   if (loading) {
     return (
       <div className="flex h-9 items-center gap-1.5 rounded-xl bg-surface-muted/80 px-3">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        <LivynSpinner className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -69,7 +69,7 @@ export function VersionSelector({ current }: { current: string }) {
         className="flex h-9 items-center gap-1 rounded-xl bg-primary/10 px-3 text-[12px] font-bold text-primary hover:bg-primary/15 transition-colors"
       >
         {current}
-        <ChevronDown className="h-3.5 w-3.5" />
+        <LivynChevronDown className="h-3.5 w-3.5" />
       </button>
       {open && (
         <>

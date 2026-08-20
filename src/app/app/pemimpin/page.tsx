@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Crown, Users, Sparkles, ClipboardCheck, ClipboardList, ChevronRight } from "lucide-react";
+import {
+  LivynCrown,
+  LivynPeople,
+  LivynSpark,
+  LivynClipboardCheck,
+  LivynClipboardList,
+  LivynChevronRight,
+} from "@/components/icons/livyn-icons";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getLeaderProfile, listMyCircles } from "@/lib/queries/community";
 import { isLeader } from "@/lib/community/permissions";
@@ -29,7 +36,7 @@ export default async function LeaderDashboardPage() {
         {!profile && (
           <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.06] to-transparent p-5">
             <div className="mb-3 flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary" />
+              <LivynCrown className="h-5 w-5 text-primary" />
               <p className="font-display text-[16px] font-extrabold text-heading">Kamu Pendeta atau Pemimpin?</p>
             </div>
             <p className="text-[13px] leading-relaxed text-muted-foreground">
@@ -40,7 +47,7 @@ export default async function LeaderDashboardPage() {
               href="/app/pemimpin/daftar"
               className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-primary-foreground active:scale-95 transition-transform"
             >
-              Ajukan Verifikasi <ChevronRight className="h-3.5 w-3.5" />
+              Ajukan Verifikasi <LivynChevronRight className="h-3.5 w-3.5" />
             </Link>
           </Card>
         )}
@@ -48,7 +55,7 @@ export default async function LeaderDashboardPage() {
         {pending && (
           <Card className="border-amber-500/25 bg-amber-500/[0.06] p-5">
             <div className="mb-2 flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-amber-600" />
+              <LivynClipboardList className="h-5 w-5 text-amber-600" />
               <p className="font-display text-[15px] font-extrabold text-heading">Aplikasi sedang direview</p>
             </div>
             <p className="text-[13px] leading-relaxed text-muted-foreground">
@@ -70,7 +77,7 @@ export default async function LeaderDashboardPage() {
               href="/app/pemimpin/daftar"
               className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-primary"
             >
-              Kirim ulang aplikasi <ChevronRight className="h-3.5 w-3.5" />
+              Kirim ulang aplikasi <LivynChevronRight className="h-3.5 w-3.5" />
             </Link>
           </Card>
         )}
@@ -78,7 +85,7 @@ export default async function LeaderDashboardPage() {
         {verified && profile && (
           <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.08] to-transparent p-5">
             <div className="mb-2 flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-emerald-600" />
+              <LivynClipboardCheck className="h-5 w-5 text-emerald-600" />
               <p className="font-display text-[15px] font-extrabold text-heading">
                 Pemimpin Terverifikasi
               </p>
@@ -100,7 +107,7 @@ export default async function LeaderDashboardPage() {
           </div>
           {circles.filter((c) => c.ownerId === session.sub).length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-              <Users className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+              <LivynPeople className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
               <p className="text-[13px] text-muted-foreground">Belum ada circle yang kamu buat.</p>
             </div>
           ) : (
@@ -120,7 +127,7 @@ export default async function LeaderDashboardPage() {
                             {c._count?.members ?? 0}/{c.memberLimit} anggota · kode {c.joinCode}
                           </p>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                        <LivynChevronRight className="h-4 w-4 text-muted-foreground/40" />
                       </Card>
                     </Link>
                   </li>
@@ -132,7 +139,7 @@ export default async function LeaderDashboardPage() {
         {/* Tips */}
         <Card className="p-5">
           <div className="mb-2 flex items-center gap-2 text-primary">
-            <Sparkles className="h-4 w-4" />
+            <LivynSpark className="h-4 w-4" />
             <p className="text-[11px] font-bold uppercase tracking-wider">Tips Menggembalakan</p>
           </div>
           <ul className="space-y-2 text-[13px] leading-relaxed text-muted-foreground">

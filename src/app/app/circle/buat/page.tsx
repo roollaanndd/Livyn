@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { LivynSpinner } from "@/components/icons/livyn-icons";
 import { toast } from "sonner";
 import { TopBar } from "@/components/nav/top-bar";
 import { Button } from "@/components/ui/button";
@@ -96,7 +96,7 @@ export default function CreateCirclePage() {
         </div>
 
         <Button type="submit" size="lg" className="w-full" disabled={busy}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buat Circle"}
+          {busy ? <LivynSpinner className="h-4 w-4 animate-spin" /> : "Buat Circle"}
         </Button>
       </form>
     </div>
