@@ -149,6 +149,41 @@ Database Postgres (Supabase, proyek `livyn`, region `ap-southeast-1`) sudah disi
 5. Untuk notifikasi push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (generate dengan `npx web-push generate-vapid-keys`), `VAPID_SUBJECT` (`mailto:...`), dan `CRON_SECRET` (string acak apa saja — Vercel Cron otomatis mengirimkannya sebagai header `Authorization: Bearer $CRON_SECRET` ke endpoint cron bila env var ini bernama persis `CRON_SECRET`).
 6. Deploy ke Vercel. `NODE_ENV=production` otomatis mengaktifkan HSTS dan cookie `secure`.
 
+### Kalau seluruh aplikasi mati
+
+Dua hal yang pernah menjatuhkan produksi secara total, keduanya konfigurasi/infra —
+bukan kode. Cek berurutan; keduanya terlihat dari satu URL:
+
+```
+curl https://<domain>/api/health
+```
+
+1. **`SUPABASE_SERVICE_ROLE_KEY` belum di-set di Vercel.** `/api/health` menjawab
+   `503` dengan `"SUPABASE_SERVICE_ROLE_KEY": "unset"`, dan setiap halaman yang
+   menyentuh database gagal — bukan satu fitur, tapi seluruh aplikasi. Ini terjadi
+   ketika data layer berpindah dari kunci `anon` ke `service_role`
+   (`prisma/migrations/20260819180000_lock_rest_surface_to_service_role`): kunci lama
+   sudah tidak punya hak apa pun, kunci baru harus ditambahkan sendiri di
+   Project Settings → Environment Variables untuk **Production dan Preview**, lalu
+   redeploy (env var hanya terbaca oleh deployment baru). Halaman publik `/`,
+   `/syarat-ketentuan` dan `/kebijakan-privasi` sengaja tidak menyentuh database,
+   jadi situsnya tetap terbaca walau aplikasinya tidak bisa dipakai.
+
+2. **Proyek Supabase ter-pause.** Proyek free-tier otomatis di-pause setelah tidak ada
+   aktivitas, dan begitu di-pause semua panggilan PostgREST gagal walau semua env var
+   benar. Restore dari dashboard Supabase (Project → Restore); datanya utuh — restore
+   mengembalikan seluruh skema dan isinya. Untuk memastikan setelah restore:
+
+   ```sql
+   select (select count(*) from public."User") as users,
+          (select count(*) from public."Devotion") as devotions,
+          (select count(*) from public."BibleVerse") as verses;
+   ```
+
+Kalau `/api/health` menjawab `200` tapi query tetap gagal, cek hak `service_role`:
+skema ini deny-all untuk `anon`/`authenticated` dan mengandalkan `service_role` yang
+memegang seluruh grant tabel plus `EXECUTE` untuk ke-13 fungsi `auth_*`.
+
 **Region fungsi.** `vercel.json` menyetel `"regions": ["sin1"]` (Singapura) supaya fungsi
 berjalan bersebelahan dengan database Supabase di `ap-southeast-1`. Aplikasi ini
 berbicara ke database lewat HTTP (PostgREST), jadi setiap query membayar satu round

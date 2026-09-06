@@ -1,8 +1,10 @@
 /* Theme for the vendored scroll-world engine.
  *
- * The engine ships its own tokens inside `@layer sw`, so everything here is
- * deliberately unlayered — unlayered rules beat any layered rule regardless of
- * order, which is exactly how the engine expects to be re-themed.
+ * The engine ships its own tokens inside `@layer sw` (`injectCSS()` in
+ * scrub-engine.js appends a <style> whose whole body is wrapped in that
+ * layer), so everything here is deliberately unlayered — unlayered rules beat
+ * any layered rule regardless of order, which is exactly how the engine
+ * expects to be re-themed.
  *
  * The landing page commits to one look (deep-green night, warm gold light) in
  * both colour schemes: the scenes are lit for a dark backdrop, and a cinematic
@@ -22,6 +24,15 @@
 body:has(.sw-page) {
   background: #0a1610;
   color: #edf3ef;
+  /* The engine's own `body { overflow-x: hidden }` hides the horizontal
+   * overhang of its parallax layers, but `hidden` also turns <body> into a
+   * scroll container — and a scroll container between the viewport and a
+   * `position: sticky` element silently stops it sticking. That is what kept
+   * the marketing header (site-header.tsx) scrolling away instead of pinning
+   * at the seam. `clip` hides exactly the same overflow without creating a
+   * scroll container. A browser too old to know `clip` drops the declaration
+   * and simply gets the old, non-sticky header back. */
+  overflow-x: clip;
 }
 
 /* The engine's defaults assume a light page: its buttons and chips are filled
@@ -79,18 +90,16 @@ body:has(.sw-page) {
 .sw-root.sw-done .sw-copylayer,
 .sw-root.sw-done .sw-route,
 .sw-root.sw-done .sw-hint,
-.sw-root.sw-done .sw-scrollbar {
+.sw-root.sw-done .sw-scrollbar,
+.sw-root.sw-done .sw-topbar {
   visibility: hidden;
 }
 
-/* The top bar is the exception: it survives as the page's nav, so the way back
- * into the app is on screen the whole way down. It needs a backdrop once it is
- * over content rather than over the sky. */
-.sw-root.sw-done .sw-topbar {
-  background: color-mix(in srgb, #0a1610 88%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid color-mix(in srgb, var(--sw-accent) 14%, transparent);
-}
+/* The top bar used to be the exception here — it stayed on as the page's nav,
+ * because nothing below the flight offered one. The marketing page now brings
+ * its own (src/components/landing/site-header.tsx), which sticks at exactly
+ * this seam and carries the section links as well as the way in, so keeping
+ * the engine's bar left two bars stacked on top of each other. */
 
 /* Section nav belongs to the flight; past the seam it would scroll you back
  * into the cinematic from a page that has its own sections. */
