@@ -8,10 +8,25 @@
  * (z-10), which is what lets the hand-off in scroll-world.css work. */
 
 .lv-page {
+  /* Scoped to the landing page so none of it can leak into the app, which has
+     its own light/dark token set in globals.css. */
+  --lv-ink: #0a1610;
+  --lv-ink-raised: #0e1d16;
+  --lv-gold: #c89b3c;
+  --lv-gold-bright: #e2bd6a;
+  --lv-sage: #4caf7d;
+  --lv-text: #edf3ef;
+  --lv-muted: #93a79c;
+  --lv-faint: #6d7f76;
+  --lv-line: rgba(200, 155, 60, 0.14);
+  --lv-line-strong: rgba(200, 155, 60, 0.3);
+  --lv-surface: rgba(255, 255, 255, 0.03);
+  --lv-bar-h: 3.75rem;
+
   position: relative;
   z-index: 5;
-  background: #0a1610;
-  color: #edf3ef;
+  background: var(--lv-ink);
+  color: var(--lv-text);
   font-family: var(--font-inter), system-ui, sans-serif;
   /* The engine reserves a trailing viewport so the last clip can finish
      playing. Left alone that reads as a screen of nothing between the film and
@@ -19,49 +34,275 @@
   margin-top: -70vh;
 }
 
+/* A slow gold bloom behind the first two sections, so the seam out of the
+   cinematic's golden door keeps its light instead of hitting flat black. */
+.lv-page::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 90vh;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 50% 0%, rgba(200, 155, 60, 0.14), transparent 72%),
+    radial-gradient(40% 35% at 85% 18%, rgba(76, 175, 125, 0.08), transparent 70%);
+}
+
+.lv-page > * {
+  position: relative;
+}
+
+.lv-gold {
+  color: var(--lv-gold-bright);
+}
+
+/* Sticky bar ------------------------------------------------------------- *
+ *
+ * Sticky rather than fixed: it starts holding the top edge at exactly the
+ * moment `.lv-page` reaches it, which is the same moment the engine retires
+ * its own fixed bar (see scroll-world.tsx). Two bars can never overlap and
+ * there is no scroll listener to drift. */
+
+.lv-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--lv-ink) 97%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid var(--lv-line);
+}
+
+.lv-bar__inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  height: var(--lv-bar-h);
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.lv-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: var(--lv-text);
+  flex: none;
+}
+
+.lv-bar__nav {
+  display: none;
+  gap: 1.6rem;
+  margin-inline: auto;
+}
+
+.lv-bar__nav a {
+  color: var(--lv-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.18s ease;
+}
+
+.lv-bar__nav a:hover {
+  color: var(--lv-text);
+}
+
+.lv-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.lv-bar__link {
+  color: var(--lv-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.2rem;
+}
+
+.lv-bar__link:hover {
+  color: var(--lv-text);
+}
+
+@media (min-width: 62rem) {
+  .lv-bar__nav {
+    display: flex;
+  }
+
+  .lv-bar__actions {
+    margin-left: 0;
+  }
+}
+
+/* Sections ---------------------------------------------------------------- */
+
 .lv-section {
   max-width: 72rem;
   margin: 0 auto;
-  padding: clamp(4rem, 10vw, 7rem) clamp(1.25rem, 5vw, 4rem);
-  /* The top bar stays fixed over this page, so anchored jumps have to stop
-     clear of it rather than landing underneath. */
-  scroll-margin-top: 6rem;
+  padding: clamp(3.5rem, 9vw, 6.5rem) clamp(1.25rem, 5vw, 4rem);
+  /* The bar stays stuck over this page, so anchored jumps have to stop clear
+     of it rather than landing underneath. */
+  scroll-margin-top: calc(var(--lv-bar-h) + 1rem);
 }
 
 .lv-eyebrow {
   font-family: var(--font-manrope), system-ui, sans-serif;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #c89b3c;
-  margin: 0 0 0.75rem;
+  color: var(--lv-gold);
+  margin: 0 0 0.85rem;
+}
+
+.lv-h1,
+.lv-h2 {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--lv-text);
+  text-wrap: balance;
+}
+
+.lv-h1 {
+  font-size: clamp(2.15rem, 6vw, 3.85rem);
+  max-width: 16ch;
 }
 
 .lv-h2 {
-  font-family: var(--font-manrope), system-ui, sans-serif;
-  font-weight: 700;
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-  margin: 0;
-  color: #edf3ef;
-  max-width: 20ch;
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+  max-width: 22ch;
 }
 
 .lv-lede {
   margin: 1.25rem 0 0;
   font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.65;
+  color: var(--lv-muted);
+  max-width: 54ch;
+  text-wrap: pretty;
+}
+
+/* Intro ------------------------------------------------------------------- */
+
+.lv-intro {
+  padding-top: clamp(3rem, 7vw, 5rem);
+}
+
+.lv-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 2.25rem 0 0;
+  padding: 0;
+}
+
+.lv-chip {
+  font-size: 0.82rem;
+  color: var(--lv-muted);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--lv-line);
+  background: var(--lv-surface);
+}
+
+/* Rhythm ------------------------------------------------------------------ */
+
+.lv-rhythm {
+  list-style: none;
+  margin: clamp(2rem, 5vw, 3.25rem) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  counter-reset: beat;
+}
+
+.lv-beat {
+  position: relative;
+  padding: 1.6rem 1.5rem 1.5rem;
+  border-radius: 1.35rem;
+  background: linear-gradient(180deg, var(--lv-surface), rgba(255, 255, 255, 0.012));
+  border: 1px solid var(--lv-line);
+  counter-increment: beat;
+}
+
+.lv-beat::after {
+  content: "0" counter(beat);
+  position: absolute;
+  top: 1.35rem;
+  right: 1.4rem;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--lv-faint);
+}
+
+.lv-beat__icon,
+.lv-card__icon,
+.lv-trust__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.85rem;
+  background: rgba(200, 155, 60, 0.12);
+  border: 1px solid rgba(200, 155, 60, 0.16);
+  color: var(--lv-gold-bright);
+  flex: none;
+}
+
+.lv-beat__when {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lv-gold);
+}
+
+.lv-beat__title {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.25;
+  margin: 0 0 0.55rem;
+  color: var(--lv-text);
+}
+
+.lv-beat__body {
+  margin: 0;
+  font-size: 0.95rem;
   line-height: 1.6;
-  color: #93a79c;
-  max-width: 52ch;
+  color: var(--lv-muted);
+}
+
+.lv-beat__where {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+}
+
+.lv-beat__where li {
+  font-size: 0.75rem;
+  color: var(--lv-faint);
+  border: 1px solid var(--lv-line);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
 }
 
 /* Features ---------------------------------------------------------------- */
 
 .lv-grid {
   list-style: none;
-  margin: clamp(2rem, 5vw, 3.5rem) 0 0;
+  margin: clamp(2rem, 5vw, 3.25rem) 0 0;
   padding: 0;
   display: grid;
   gap: 1rem;
@@ -71,18 +312,68 @@
 .lv-card {
   padding: 1.5rem;
   border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(200, 155, 60, 0.14);
+  background: var(--lv-surface);
+  border: 1px solid var(--lv-line);
+  transition:
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.lv-card:hover {
+  border-color: var(--lv-line-strong);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+/* The two surfaces people open daily get the width, so the grid has a reading
+   order instead of eight identical boxes.
+ *
+ * Explicit column counts rather than auto-fit from here up: with auto-fit the
+ * track count depends on the viewport, so a card spanning two tracks could not
+ * fit in the remainder of a row and wrapped, leaving holes in the grid. Fixed
+ * counts make both breakpoints divide exactly — 2 leads + 6 standard cards,
+ * no gaps. */
+@media (min-width: 48rem) {
+  .lv-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .lv-card,
+  .lv-card--lead {
+    grid-column: span 2;
+  }
+
+  .lv-card--lead {
+    padding: 1.9rem;
+    background: linear-gradient(140deg, rgba(200, 155, 60, 0.09), var(--lv-surface) 55%);
+  }
+
+  .lv-card--lead .lv-card__title {
+    font-size: 1.3rem;
+  }
+
+  .lv-card--lead .lv-card__body {
+    font-size: 1rem;
+    max-width: 46ch;
+  }
+}
+
+@media (min-width: 68rem) {
+  .lv-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .lv-card {
+    grid-column: span 2;
+  }
+
+  .lv-card--lead {
+    grid-column: span 3;
+  }
 }
 
 .lv-card__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.85rem;
-  background: rgba(200, 155, 60, 0.12);
-  color: #d9b45f;
   margin-bottom: 1rem;
 }
 
@@ -91,23 +382,137 @@
   font-weight: 700;
   font-size: 1.05rem;
   margin: 0 0 0.4rem;
-  color: #edf3ef;
+  color: var(--lv-text);
 }
 
 .lv-card__body {
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.55;
-  color: #93a79c;
+  color: var(--lv-muted);
+}
+
+/* Contrast ---------------------------------------------------------------- */
+
+.lv-contrast {
+  border-top: 1px solid var(--lv-line);
+  border-bottom: 1px solid var(--lv-line);
+}
+
+.lv-contrast__head {
+  max-width: 40rem;
+}
+
+.lv-contrast__cols {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.lv-list {
+  list-style: none;
+  margin: 0;
+  padding: 1.6rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--lv-line);
+  display: grid;
+  gap: 0.85rem;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.lv-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.lv-list li::before {
+  flex: none;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lv-list--absent {
+  color: var(--lv-faint);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.lv-list--absent li::before {
+  content: "—";
+  color: #55655d;
+}
+
+.lv-list--present {
+  color: var(--lv-text);
+  background: linear-gradient(150deg, rgba(76, 175, 125, 0.1), var(--lv-surface) 60%);
+  border-color: rgba(76, 175, 125, 0.22);
+}
+
+.lv-list--present li::before {
+  content: "+";
+  color: var(--lv-sage);
+}
+
+/* Trust ------------------------------------------------------------------- */
+
+.lv-trust {
+  list-style: none;
+  margin: clamp(2rem, 5vw, 3rem) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+}
+
+.lv-trust__item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.4rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--lv-line);
+  background: var(--lv-surface);
+}
+
+.lv-trust__title {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0.15rem 0 0.4rem;
+  color: var(--lv-text);
+}
+
+.lv-trust__body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--lv-muted);
+}
+
+.lv-note {
+  margin: 1.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--lv-faint);
+}
+
+.lv-note a {
+  color: var(--lv-muted);
+  text-underline-offset: 3px;
+}
+
+.lv-note a:hover {
+  color: var(--lv-text);
 }
 
 /* Call to action ---------------------------------------------------------- */
 
 .lv-cta {
   text-align: center;
-  border-top: 1px solid rgba(200, 155, 60, 0.12);
-  border-bottom: 1px solid rgba(200, 155, 60, 0.12);
-  background: radial-gradient(60% 80% at 50% 0%, rgba(200, 155, 60, 0.1), transparent 70%);
+  border-top: 1px solid var(--lv-line);
+  border-bottom: 1px solid var(--lv-line);
+  background: radial-gradient(60% 80% at 50% 0%, rgba(200, 155, 60, 0.12), transparent 70%);
 }
 
 .lv-cta .lv-h2,
@@ -124,6 +529,10 @@
   margin-top: 2rem;
 }
 
+.lv-actions--start {
+  justify-content: flex-start;
+}
+
 .lv-btn {
   display: inline-flex;
   align-items: center;
@@ -133,7 +542,15 @@
   font-size: 0.95rem;
   padding: 0.9rem 1.6rem;
   border-radius: 999px;
-  transition: transform 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.lv-btn--sm {
+  font-size: 0.85rem;
+  padding: 0.5rem 1.05rem;
 }
 
 .lv-btn:hover {
@@ -142,27 +559,33 @@
 
 .lv-btn--primary {
   color: #08120d;
-  background: #c89b3c;
+  background: linear-gradient(135deg, var(--lv-gold-bright), var(--lv-gold));
+  box-shadow: 0 6px 24px -12px rgba(200, 155, 60, 0.9);
 }
 
 .lv-btn--ghost {
-  color: #edf3ef;
+  color: var(--lv-text);
   border: 1.5px solid rgba(237, 243, 239, 0.28);
+}
+
+.lv-btn--ghost:hover {
+  border-color: rgba(237, 243, 239, 0.5);
 }
 
 /* The demo button is the app's own component; only its skin is adjusted so it
    sits next to the link buttons above rather than looking transplanted. */
 .lv-demo {
   border-radius: 999px !important;
-  background: #c89b3c !important;
+  background: linear-gradient(135deg, var(--lv-gold-bright), var(--lv-gold)) !important;
   color: #08120d !important;
   border: 0 !important;
+  box-shadow: 0 6px 24px -12px rgba(200, 155, 60, 0.9) !important;
 }
 
 .lv-proof {
   margin: 1.75rem 0 0;
   font-size: 0.9rem;
-  color: #7d8f86;
+  color: var(--lv-faint);
 }
 
 /* FAQ --------------------------------------------------------------------- */
@@ -171,13 +594,20 @@
   margin-top: clamp(2rem, 5vw, 3rem);
   display: grid;
   gap: 0.65rem;
+  max-width: 52rem;
 }
 
 .lv-faq__item {
   border-radius: 1rem;
-  border: 1px solid rgba(200, 155, 60, 0.14);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--lv-line);
+  background: var(--lv-surface);
   padding: 1.1rem 1.35rem;
+  transition: border-color 0.2s ease;
+}
+
+.lv-faq__item[open],
+.lv-faq__item:hover {
+  border-color: var(--lv-line-strong);
 }
 
 .lv-faq__q {
@@ -185,7 +615,7 @@
   font-family: var(--font-manrope), system-ui, sans-serif;
   font-weight: 600;
   font-size: 1rem;
-  color: #edf3ef;
+  color: var(--lv-text);
   list-style: none;
   display: flex;
   justify-content: space-between;
@@ -197,36 +627,58 @@
   display: none;
 }
 
-.lv-faq__q::after {
-  content: "+";
-  color: #c89b3c;
-  font-size: 1.35rem;
-  line-height: 1;
+/* Drawn rather than typed: a "+" glyph rotating into a "–" keeps its optical
+   weight, where swapping the two characters made the row jump. */
+.lv-faq__sign {
+  position: relative;
   flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
-.lv-faq__item[open] .lv-faq__q::after {
-  content: "–";
+.lv-faq__sign::before,
+.lv-faq__sign::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--lv-gold);
+  transition: transform 0.22s ease;
+}
+
+.lv-faq__sign::after {
+  transform: rotate(90deg);
+}
+
+.lv-faq__item[open] .lv-faq__sign::after {
+  transform: rotate(0deg);
 }
 
 .lv-faq__a {
   margin: 0.75rem 0 0;
   font-size: 0.95rem;
-  line-height: 1.6;
-  color: #93a79c;
-  max-width: 60ch;
+  line-height: 1.65;
+  color: var(--lv-muted);
+  max-width: 62ch;
 }
 
 /* Footer ------------------------------------------------------------------ */
 
 .lv-footer {
-  border-top: 1px solid rgba(200, 155, 60, 0.12);
+  border-top: 1px solid var(--lv-line);
   max-width: 72rem;
   margin: 0 auto;
   padding: clamp(2.5rem, 6vw, 4rem) clamp(1.25rem, 5vw, 4rem)
     calc(clamp(2.5rem, 6vw, 4rem) + env(safe-area-inset-bottom));
   display: grid;
-  gap: 1.75rem;
+  gap: 2.25rem;
+}
+
+.lv-footer__top {
+  display: grid;
+  gap: 2.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
 }
 
 .lv-footer__brand {
@@ -240,33 +692,98 @@
   font-size: 0.7rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #6d7f76;
+  color: var(--lv-faint);
 }
 
-.lv-footer__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.75rem;
+.lv-footer__cols {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  grid-column: span 2;
 }
 
-.lv-footer__links a {
-  color: #93a79c;
+.lv-footer__col {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+}
+
+.lv-footer__h {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lv-faint);
+  margin: 0 0 0.15rem;
+}
+
+.lv-footer__col a {
+  color: var(--lv-muted);
   text-decoration: none;
   font-size: 0.92rem;
 }
 
-.lv-footer__links a:hover {
-  color: #edf3ef;
+.lv-footer__col a:hover {
+  color: var(--lv-text);
 }
 
 .lv-footer__legal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--lv-line);
   font-size: 0.82rem;
-  color: #5f7169;
+  color: var(--lv-faint);
+}
+
+/* Focus ------------------------------------------------------------------- *
+ *
+ * The app's global focus ring is tuned for a light surface and disappears on
+ * this one, so the landing page states its own. */
+.lv-page a:focus-visible,
+.lv-page button:focus-visible,
+.lv-page summary:focus-visible {
+  outline: 2px solid var(--lv-gold-bright);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+/* Reveal ------------------------------------------------------------------ *
+ *
+ * Visible by default. The hidden state only exists once the observer has
+ * mounted and stamped <html data-reveal-ready>, so no-JS and pre-hydration
+ * visitors read a normal page rather than an empty column. */
+[data-reveal-ready] .lv-page [data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+[data-reveal-ready] .lv-page [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lv-btn:hover {
+  .lv-btn:hover,
+  .lv-card:hover {
+    transform: none;
+  }
+
+  [data-reveal-ready] .lv-page [data-reveal],
+  .lv-faq__sign::before,
+  .lv-faq__sign::after {
+    transition: none;
+  }
+
+  [data-reveal-ready] .lv-page [data-reveal] {
+    opacity: 1;
     transform: none;
   }
 }

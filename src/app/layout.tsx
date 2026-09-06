@@ -5,11 +5,16 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import { Toaster } from "sonner";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Set once here so every route resolves relative OG/Twitter image and
+  // canonical paths against the real origin instead of falling back to
+  // localhost, which is what Next warns about at build time.
+  metadataBase: new URL(SITE_URL),
   title: "Livyn — Faith. Every Day. Every Step.",
   description:
     "Livyn menemani perjalanan imanmu setiap hari: renungan, Alkitab, AI Pastor, pengingat doa, dan khotbah — tanpa gangguan media sosial.",
